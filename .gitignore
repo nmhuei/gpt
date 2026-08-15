@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Raw reverse captures and browser profiles must never enter Git.
+webchat-reverse/
+chatgpt-profile/
+artifacts/
+traces/
+*.trace.zip
