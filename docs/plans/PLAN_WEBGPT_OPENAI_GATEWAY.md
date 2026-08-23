@@ -1,6 +1,11 @@
-# PLAN_WEBGPT_OPENAI_GATEWAY.md
-
 # WebGPT OpenAI-Compatible Agent Gateway — Implementation & Acceptance Plan
+
+> Implementation update (2026-08-16): The gateway now has a validated request
+> boundary, explicit model alias resolution, opt-in persisted conversation
+> metadata, and mutable-DOM stream-revision fixtures. Model and reasoning
+> controls remain evidence-driven: no account tier or model is inferred from a
+> missing picker. Offline validation is 64 passing tests; this is not a new
+> live acceptance result.
 
 ## 0. Objective
 
@@ -242,7 +247,7 @@ Codex/agent compatibility patterns if present
 Create a document before finalizing Gateway API implementation:
 
 ```text
-docs/DS2API_COMPAT_NOTES.md
+../guides/DS2API_COMPAT_NOTES.md
 ```
 
 It must contain at least:
@@ -315,7 +320,7 @@ The API compatibility implementation MUST NOT be considered ready for acceptance
 
 ```text
 [ ] ds2api repository has been inspected locally/directly
-[ ] docs/DS2API_COMPAT_NOTES.md exists
+[ ] ../guides/DS2API_COMPAT_NOTES.md exists
 [ ] compatibility matrix is completed from evidence
 [ ] differences are explicitly documented
 [ ] WebGPT API schemas are reviewed against the findings
@@ -1826,7 +1831,7 @@ with:
 
 ```text
 1. inspect ds2api reference repository
-2. write docs/DS2API_COMPAT_NOTES.md
+2. write ../guides/DS2API_COMPAT_NOTES.md
 3. freeze API compatibility contract
 4. API schemas
 5. persistent browser backend
@@ -1946,4 +1951,3 @@ The gateway supports fully automated, zero-interaction authentication via `AutoL
 - Computes TOTP 2FA code dynamically using RFC 6238 (`pyotp`) if secret key is provided, or enters static code.
 - Verifies session establishment and stores browser context to persistent profile (`0700` permissions).
 - Can be invoked via CLI: `python -m gpt.debug login -u <user> -p <pass> -2fa <secret>` or `--cred 'user|pass|2fa'` or stdin.
-

@@ -5,10 +5,12 @@ from gpt.auth import (
     InvalidCredentialsError,
     LoginCredentials,
     LoginError,
+    generate_totp_code,
 )
-from gpt.browser import BrowserManager
-from gpt.session import ChatGPTWebSession
+from gpt.config import AppConfig, get_config, load_config
+from gpt.gateway import CompletionRuntime, create_api_app, create_app
 from gpt.state import SessionState, SessionStateMachine
+from gpt.transport import BrowserManager, ChatGPTWebSession, ChatGPTWorkerFactory
 from gpt.types import (
     ElementFingerprint,
     Experiment,
@@ -27,16 +29,19 @@ from gpt.types import (
 )
 
 __all__ = [
+    "AppConfig",
     "AutoLoginManager",
-    "LoginCredentials",
-    "LoginError",
-    "InvalidCredentialsError",
-    "Invalid2FACodeError",
-    "CaptchaChallengeError",
     "BrowserManager",
+    "CaptchaChallengeError",
     "ChatGPTWebSession",
+    "ChatGPTWorkerFactory",
+    "CompletionRuntime",
     "ElementFingerprint",
     "Experiment",
+    "Invalid2FACodeError",
+    "InvalidCredentialsError",
+    "LoginCredentials",
+    "LoginError",
     "ModelInfo",
     "ProbeEvent",
     "ProtocolFingerprint",
@@ -51,4 +56,9 @@ __all__ = [
     "SessionStateMachine",
     "Turn",
     "TurnResult",
+    "create_api_app",
+    "create_app",
+    "generate_totp_code",
+    "get_config",
+    "load_config",
 ]

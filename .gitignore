@@ -4,13 +4,22 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .venv/
+venv/
+ENV/
 dist/
 build/
 *.egg-info/
 
-# Raw reverse captures and browser profiles must never enter Git.
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+
+# Raw reverse captures, scratch files and browser profiles must never enter Git.
 webchat-reverse/
 chatgpt-profile/
 artifacts/
 traces/
 *.trace.zip
+scratch/
+diff.txt

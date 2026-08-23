@@ -1,5 +1,3 @@
-from pathlib import Path
-import pytest
 import pyotp
 
 from gpt.auth import AutoLoginManager, LoginCredentials

@@ -1,0 +1,8 @@
+{
+  "client": "opencode",
+  "version": "1.18.18",
+  "captured_from": "/home/light/Downloads/webgpt/runs/opencode/fake-20260817-065814/requests.jsonl",
+  "endpoint": "/v1/chat/completions",
+  "request_count": 2,
+  "headers_persisted": false
+}

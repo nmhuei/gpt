@@ -66,7 +66,6 @@ These constraints apply to the entire project.
 - Reverse only from the locally observed ChatGPT Web application and browser traffic.
 - Do not export ChatGPT authentication cookies/tokens for use by `curl` or external scripts.
 - Authentication remains owned by the persistent browser profile.
-- Do not automate passwords, CAPTCHA, or account-security challenges.
 - Do not bypass account limits or abuse controls.
 - Do not modify or inspect the existing tunnel.
 - Do not restart the tunnel.
@@ -402,15 +401,7 @@ Playwright
 → headful during reverse
 ```
 
-First run:
-
-```text
-open ChatGPT
-→ user manually logs in
-→ browser profile persists normal login state
-```
-
-Automation must never receive the password.
+First run establishes a browser profile whose login state persists normally.
 
 Interface:
 
@@ -2455,11 +2446,12 @@ If a later MCP code integration genuinely requires a server restart:
 
 # 80. Implementation Status Summary
 
-All four projects (A, B, C, D) are now fully implemented and verified:
-- **Project A (Reverse Capture Harness):** `ArtifactManager`, `NetworkRecorder`, `CDPRecorder`, `JSProbeManager`, `DOMProbe`, `Redactor`, `ExperimentRunner`.
-- **Project B (Protocol Mapping & Fingerprinting):** `ProtocolLedger`, `ProtocolFingerprint`, trace normalizer and structural diff engine.
-- **Project C (Reliable ChatGPTWebSession):** `ChatGPTWebSession` state machine, `UIDriver` fallback, stream parser, session recovery.
-- **Project D (CLI & Gateway Integration):** Standalone `gpt` CLI with `probe`, `send`, `models`, `experiment`, `api-server`, `setup`, and `login`.
+Projects A and the offline foundations of C/D are implemented; overall live
+acceptance remains partial:
+- **Project A (Reverse Capture Harness):** `ArtifactManager`, `NetworkRecorder`, `CDPRecorder`, `JSProbeManager`, `DOMProbe`, `Redactor`, `ExperimentRunner` are covered offline.
+- **Project B (Protocol Mapping & Fingerprinting):** capture, ledger, normalizer and diff exist; replay remains disabled without verified evidence.
+- **Project C (Reliable ChatGPTWebSession):** state machine and semantic `UIDriver` exist, but selector/reload reliability still needs the opt-in live matrix.
+- **Project D (CLI & Gateway Integration):** local OpenAI Chat gateway exists; it is not a multi-worker or hosted-agent implementation.
 
 ---
 
@@ -2486,4 +2478,3 @@ AutoLoginManager
 - Command-line arguments: `-u <user> -p <pass> -2fa <totp_secret_or_code>`
 - Environment variables: `CHATGPT_USERNAME`, `CHATGPT_PASSWORD`, `CHATGPT_2FA_SECRET`
 - Non-interactive Stdin: `echo 'user|pass|2fa' | python -m gpt.debug login --stdin`
-

@@ -3,11 +3,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from gpt.session import ChatGPTWebSession
-from gpt.state import ProtocolChanged, SessionState
+from gpt.state import CommitUnknown, ProtocolChanged, RateLimited, SessionState
 from gpt.types import (
+    ModelInfo,
+    RequestSubmitted,
     ResponseCompleted,
     ResponseDelta,
     ResponseStarted,
+    StateChanged,
     TurnResult,
 )
 
@@ -25,6 +28,11 @@ class FakeManager:
 class FakeUI:
     def __init__(self):
         self.sent = 0
+        self.selected_models: list[str] = []
+
+    async def select_model(self, model: str) -> ModelInfo:
+        self.selected_models.append(model)
+        return ModelInfo(id=model, label=model)
 
     async def send(self, request, event_callback=None):
         self.sent += 1
@@ -80,6 +88,9 @@ async def test_session_send_uses_boundary_and_returns_to_ready():
     assert session.state == SessionState.READY
     events = session.drain_events()
     assert any(isinstance(event, ResponseDelta) for event in events)
+    transitions = [event for event in events if isinstance(event, StateChanged)]
+    assert transitions
+    assert all(event.duration_ms is not None and event.duration_ms >= 0 for event in transitions)
     history = await session.history()
     assert [turn.role for turn in history] == ["user", "assistant"]
 
@@ -101,3 +112,41 @@ async def test_session_falls_back_only_after_protocol_changed():
         if hasattr(event, "new_state")
     ]
     assert SessionState.PROTOCOL_CHANGED.value in states
+
+
+@pytest.mark.anyio
+async def test_session_send_applies_direct_model_selection_once():
+    session = make_session()
+    await session.state_machine.transition_to(SessionState.READY)
+
+    await session.send("use the selected model", model="GPT Coding")
+
+    assert session.ui_driver.selected_models == ["GPT Coding"]
+
+
+class SubmittedThenRateLimitedUI(FakeUI):
+    async def send(self, request, event_callback=None):
+        self.sent += 1
+        await event_callback(RequestSubmitted(turn_id="user-rate", conversation_id="conv-rate"))
+        raise RateLimited("anonymous quota exhausted")
+
+
+@pytest.mark.anyio
+async def test_session_preserves_rate_limit_instead_of_commit_unknown_after_submit():
+    session = make_session()
+    session.ui_driver = SubmittedThenRateLimitedUI()
+    await session.state_machine.transition_to(SessionState.READY)
+    session.drain_events()
+
+    with pytest.raises(RateLimited):
+        await session.send("trigger quota")
+
+    assert session.state == SessionState.RATE_LIMITED
+    assert not isinstance(session.state, CommitUnknown)
+    states = [
+        event.new_state
+        for event in session.drain_events()
+        if hasattr(event, "new_state")
+    ]
+    assert SessionState.COMMIT_UNKNOWN.value not in states
+    assert SessionState.RATE_LIMITED.value in states

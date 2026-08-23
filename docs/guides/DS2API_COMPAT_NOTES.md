@@ -28,20 +28,19 @@ server-issued `DeepSeekHashV1` proof-of-work nonce and emits an
 `x-ds-pow-response` header.  ChatGPT Web neither exposes that DeepSeek
 protocol nor needs this component in the browser-driven gateway.
 
-## Authentication decision
+## Authentication boundary
 
-ChatGPT Web uses its own browser session and security challenges.  The gateway
-therefore does not accept, export, or persist passwords, TOTP secrets, cookie
-dumps, access tokens, or browser `storage_state` snapshots.
+ChatGPT Web authentication remains browser-profile based. The toolkit supports
+both `gpt-web setup` for an interactive persistent-profile login and the
+separate `gpt-web login` command for a supplied username/password plus optional
+TOTP flow. The latter writes the resulting browser session only to the selected
+local persistent profile; it does not export cookie dumps, access tokens, or
+browser `storage_state` snapshots.
 
-Two supported modes preserve login across gateway restarts:
-
-1. `gpt-web setup` launches a dedicated persistent profile for a user to
-   authenticate in the normal browser UI.
-2. `--cdp-url http://127.0.0.1:9222` attaches to a user-started Chromium/Brave
-   profile.  The CDP endpoint is restricted to loopback because it grants full
-   browser access.  On shutdown the tool drops its Playwright connection and
-   does not close the user's browser or its default context.
+`--cdp-url http://127.0.0.1:9222` instead attaches to a user-started
+Chromium/Brave profile. The CDP endpoint is restricted to loopback because it
+grants full browser access. On shutdown the tool drops its Playwright connection
+and does not close the user's browser or its default context.
 
 Codex's device/browser OAuth flow likewise cannot be converted into a ChatGPT
 Web cookie: it is authorization for Codex services, not a transferable
@@ -59,4 +58,4 @@ Supported gateway behavior remains limited to the documented V1 mapping:
 
 It deliberately does not claim compatibility for direct upstream protocol
 replay, account rotation, cookie/token import/export, uploads, voice, image
-generation, Deep Research, GPTs, or CAPTCHA/security-challenge automation.
+generation, Deep Research, GPTs, or CAPTCHA/security-challenge solving.

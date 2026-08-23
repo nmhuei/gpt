@@ -68,3 +68,68 @@ def test_explicit_session_rejects_divergent_history():
         assert "diverge" in str(exc)
     else:
         raise AssertionError("divergent history must be rejected")
+
+
+def test_conversation_store_persists_only_when_explicitly_enabled(tmp_path):
+    state_path = tmp_path / "gateway-state.json"
+    first = [{"role": "user", "content": "persist me"}]
+    store = ConversationStore(state_path=state_path)
+    record, _, _ = store.resolve(first, "chatgpt-web", [])
+    store.commit(
+        record,
+        first,
+        {"role": "assistant", "content": "saved"},
+        {"choices": [{"message": {"role": "assistant", "content": "saved"}}]},
+        "chatgpt-web",
+        [],
+        "web-1",
+    )
+    assert state_path.exists()
+    assert state_path.stat().st_mode & 0o777 == 0o600
+
+    restored = ConversationStore(state_path=state_path)
+    assert restored.get(record.session_id) is not None
+    same, tail, cached = restored.resolve(first, "chatgpt-web", [], record.session_id)
+    assert same.conversation_id == "web-1"
+    assert tail == []
+    assert cached
+
+
+def test_conversation_store_discards_expired_persisted_records(tmp_path):
+    state_path = tmp_path / "expired.json"
+    state_path.write_text(
+        '{"version":1,"records":[{"session_id":"wgs_old","saved_at":0}]}',
+        encoding="utf-8",
+    )
+    store = ConversationStore(state_path=state_path, ttl_seconds=1)
+    assert len(store) == 0
+
+
+def test_pending_commit_unknown_state_survives_store_restart(tmp_path):
+    state_path = tmp_path / "pending.json"
+    messages = [{"role": "user", "content": "uncertain marker"}]
+    store = ConversationStore(state_path=state_path)
+    record, _, _ = store.resolve(messages, "chatgpt-web", [])
+    record.conversation_id = "conv_pending"
+    fingerprint = store.mark_pending(
+        record,
+        messages=messages,
+        model="chatgpt-web",
+        tools=[],
+        tool_choice="auto",
+        prompt="<WEBGPT_MESSAGE role=\"user\">uncertain marker</WEBGPT_MESSAGE>",
+    )
+
+    restored = ConversationStore(state_path=state_path)
+    loaded = restored.get(record.session_id)
+    assert loaded is not None
+    assert loaded.conversation_id == "conv_pending"
+    assert loaded.pending_request_fingerprint == fingerprint
+    assert loaded.pending_prompt is not None
+    assert restored.pending_matches(
+        loaded,
+        messages,
+        "chatgpt-web",
+        [],
+        "auto",
+    )

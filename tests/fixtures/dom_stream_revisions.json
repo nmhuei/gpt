@@ -1,0 +1,6 @@
+[
+  {"text": "Hel", "delta": "Hel", "revision": false},
+  {"text": "Hello world", "delta": "lo world", "revision": false},
+  {"text": "Hello **world**", "delta": "", "revision": true},
+  {"text": "Hello **world**!", "delta": "!", "revision": false}
+]

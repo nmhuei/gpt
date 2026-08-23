@@ -1,0 +1,12 @@
+{
+  "client": "claude-code",
+  "version": "2.1.233",
+  "endpoint": "/v1/messages",
+  "captured_from": [
+    "/home/light/Downloads/webgpt/captures/claude-simple-20260817-070015/requests.jsonl",
+    "/home/light/Downloads/webgpt/captures/claude-20260817-065940/requests.jsonl"
+  ],
+  "headers_persisted": false,
+  "tool_loop_requests": 2,
+  "simple_requests": 1
+}
