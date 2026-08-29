@@ -8,10 +8,11 @@ import os
 import re
 import time
 import uuid
+from collections import OrderedDict
 from collections.abc import Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import replace
-from typing import Any
+from typing import Any, cast
 
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -25,15 +26,22 @@ from gpt.api.openai_types import (
     format_openai_usage_chunk,
 )
 from gpt.api.protocol_adapters import (
+    StreamUsageEstimator,
+    anthropic_usage,
     estimate_anthropic_input_tokens,
+    estimate_text_chars_to_tokens,
+    estimate_tokens_from_chars,
     parse_anthropic_request,
     parse_responses_request,
+    rendered_request_prompt,
     response_to_anthropic,
     response_to_responses,
 )
 from gpt.assistantturn import AssistantTurnBuilder
+from gpt.auth.accounts import AccountStore, resolve_default_account
 from gpt.completionruntime import CompletionRuntime
 from gpt.conversations import ConversationRecord, ConversationStore
+from gpt.gateway.runtime import ModelRefusalError
 from gpt.model_registry import ModelRegistry
 from gpt.requests import (
     ChatCompletionRequest,
@@ -58,14 +66,59 @@ from gpt.state import (
 )
 from gpt.toolstream import ToolStreamSieve
 from gpt.tracing import RuntimeTraceBus
+from gpt.transport.account_health import AccountHealthTracker
+from gpt.transport.breaker import RateLimitBreaker, global_rate_limit_breaker
 from gpt.transport.browser import BrowserManager
 from gpt.transport.factory import ChatGPTWorkerFactory, WorkerQueueTimeout
+from gpt.transport.failover import FailoverRetryRequired, maybe_failover
 from gpt.transport.hybrid import HybridWorkerFactory
-from gpt.transport.session import ChatGPTWebSession
+from gpt.transport.multi_account import MultiAccountWorkerFactory
+from gpt.transport.session import ChatGPTWebSession, _is_browser_crash
 from gpt.transport.token_manager import local_mock_mode_enabled
+from gpt.transport.usage_poller import (
+    POLL_SECONDS_ENV,
+    PoolPressureBoard,
+    UsagePoller,
+    create_account_pollers,
+)
 from gpt.types import TurnResult
 
 logger = logging.getLogger("gpt.webchat.api")
+
+DEFAULT_RESPONSE_SESSION_CAP = 512
+_HEALTH_CHECK_ENV = "WEBGPT_HEALTH_CHECK_ENABLED"
+_DEFAULT_HEALTH_CHECK_INTERVAL_SECONDS = 300.0
+_TRUTHY = {"1", "true", "yes", "on"}
+# POOL-PER-ACCT-BREAKER (row S): ``global`` keeps the process-wide singleton
+# breaker (historical behaviour); ``auto`` gives every account of a multi-
+# account pool its own RateLimitBreaker so one exhausted account cools down
+# alone instead of parking the whole pool for 90-600s. A single-account pool
+# gains nothing from its own breaker and stays on the shared singleton.
+_BREAKER_SCOPE_ENV = "WEBGPT_BREAKER_SCOPE"
+_BREAKER_SCOPE_VALUES = ("global", "auto")
+
+
+def _breaker_scope_per_account(account_count: int) -> bool:
+    """Resolve ``WEBGPT_BREAKER_SCOPE`` for a pool of ``account_count`` accounts.
+
+    Returns True only when per-account breakers must be wired: scope ``auto``
+    AND at least two accounts in the pool. Unknown values fall back to
+    ``global`` with a warning so a typo can never silently disable the
+    emergency brake.
+    """
+    raw = os.environ.get(_BREAKER_SCOPE_ENV, "").strip().lower()
+    if raw and raw not in _BREAKER_SCOPE_VALUES:
+        logger.warning(
+            "breaker_scope_invalid_value value=%r expected one of: %s",
+            os.environ.get(_BREAKER_SCOPE_ENV),
+            "|".join(_BREAKER_SCOPE_VALUES),
+        )
+    scope = raw if raw in _BREAKER_SCOPE_VALUES else "global"
+    return scope == "auto" and account_count >= 2
+
+
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in _TRUTHY
 
 
 def _error(message: str, status: int, error_type: str, code: str | None = None) -> JSONResponse:
@@ -163,6 +216,8 @@ class _RequestTraceMiddleware:
             parse_ms = 0
             tool_count = 0
             correction_count = 0
+            repeat_aborts = 0
+            runtime_correction_count: int | None = None
             turn_id: str | None = None
             for event in events:
                 if session_id is None or event.session_id != session_id:
@@ -174,12 +229,64 @@ class _RequestTraceMiddleware:
                     value = event.metadata.get("turn_id")
                     if isinstance(value, str):
                         turn_id = value
+                    # CORRECTION-TELEMETRY-PARITY: the terminal runtime events
+                    # carry the authoritative spend -- an anti-repeat abort
+                    # rolls its own pre-check increment back BEFORE raising, so
+                    # raw tool_correction events overcount by exactly the
+                    # number of aborted attempts.  Prefer runtime metadata;
+                    # keep event counting only as the fallback below.
+                    spent = event.metadata.get("correction_count")
+                    if isinstance(spent, int):
+                        runtime_correction_count = spent
                 elif event.component == "assistantturn" and event.kind == "parsed":
                     parse_ms += int(event.metadata.get("parse_ms") or 0)
                 elif event.component == "completionruntime" and event.kind == "tool_correction":
                     correction_count += 1
+                elif (
+                    event.component == "completionruntime"
+                    and event.kind == "persistent_correction_repeat"
+                ):
+                    repeat_aborts += 1
+                elif (
+                    event.component == "completionruntime"
+                    and event.kind == "submit_failed_before_commit_unknown"
+                ):
+                    # TURN-ID-FAILURE-TRACE: a failed turn never reaches
+                    # submit_completed, so its terminal turn id arrives on the
+                    # failure event instead (fallback chain: submit_completed
+                    # -> failure events).
+                    value = event.metadata.get("turn_id")
+                    if isinstance(value, str) and turn_id is None:
+                        turn_id = value
+                    spent = event.metadata.get("correction_count")
+                    if isinstance(spent, int):
+                        runtime_correction_count = spent
                 elif event.component == "promptcompat" and event.kind == "prompt_built":
                     tool_count = max(tool_count, int(event.metadata.get("tool_count") or 0))
+            if turn_id is None and session_id is None:
+                # Error responses carry no x-webgpt-session-id header, so the
+                # session-filtered loop above skips every runtime event and
+                # failure traces would still report turn_id=None.  Attribute
+                # best-effort from in-window failure events instead.
+                for event in events:
+                    if (
+                        event.component == "completionruntime"
+                        and event.kind == "submit_failed_before_commit_unknown"
+                    ):
+                        value = event.metadata.get("turn_id")
+                        if isinstance(value, str) and turn_id is None:
+                            turn_id = value
+                        spent = event.metadata.get("correction_count")
+                        if isinstance(spent, int):
+                            runtime_correction_count = spent
+                        if turn_id is not None and runtime_correction_count is not None:
+                            break
+            if runtime_correction_count is not None:
+                correction_count = runtime_correction_count
+            else:
+                # No terminal metadata (e.g. commit_unknown): subtract aborted
+                # attempts from the raw count so telemetry stays net of them.
+                correction_count = max(0, correction_count - repeat_aborts)
             record = self.server.conversations.get(session_id) if session_id else None
             conversation_id = record.conversation_id if record else None
             self.server.trace.emit(
@@ -210,7 +317,22 @@ class _RequestTraceMiddleware:
             nonlocal status_code, session_id
             if message.get("type") == "http.response.start":
                 status_code = int(message.get("status", 500))
-                for raw_name, raw_value in message.get("headers", []):
+                headers = message.setdefault("headers", [])
+                present = {name.lower() for name, _value in headers}
+                # HEADER-PARITY: echo the internal trace uuid and publish
+                # advisory rate-limit headers derived from the breaker state
+                # (per-account aggregate when a pool is wired, else the global
+                # singleton) so clients keep their api.anthropic.com
+                # observability.
+                if b"request-id" not in present:
+                    headers.append((b"request-id", request_id.encode("latin-1")))
+                for name, value in _advisory_ratelimit_headers(
+                    getattr(self.server, "pool_rate_limit_breakers", None)
+                ).items():
+                    key = name.encode("latin-1")
+                    if key not in present:
+                        headers.append((key, value.encode("latin-1")))
+                for raw_name, raw_value in headers:
                     if raw_name.lower() == b"x-webgpt-session-id":
                         session_id = raw_value.decode("latin-1")
                         break
@@ -229,6 +351,109 @@ def _sse_event(event: str, payload: dict[str, Any]) -> str:
     return f"event: {event}\ndata: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
 
+# JSON-DELTA-CHUNK: tool_use arguments stream in bounded ``partial_json``
+# pieces so clients observe incremental progress instead of one giant burst.
+_JSON_DELTA_CHUNK_CHARS = 512
+
+
+# LATE-FAIL-SURFACE: error types the Anthropic wire contract defines for
+# ``event: error`` payloads. Anything else collapses to ``api_error`` so every
+# SDK build can parse the frame instead of choking on a custom type.
+_ANTHROPIC_STREAM_ERROR_TYPES = frozenset(
+    {
+        "api_error",
+        "overloaded_error",
+        "rate_limit_error",
+        "authentication_error",
+        "permission_error",
+        "not_found_error",
+        "invalid_request_error",
+        "request_too_large",
+    }
+)
+
+
+# OVERLOADED-529: message fragments that mark a RateLimited as backend
+# capacity exhaustion (HTTP 529 ``overloaded_error``) rather than a
+# per-client quota limit. A raise site that knows better may also flag the
+# exception instance directly with ``overloaded = True``.
+_RATELIMIT_OVERLOAD_MARKERS = (
+    "overloaded",
+    "over capacity",
+    "high demand",
+    "server is busy",
+)
+
+
+def _is_overloaded_rate_limit(exc: Exception) -> bool:
+    """True only for RateLimited carrying an explicit backend-overload signal."""
+    if not isinstance(exc, RateLimited):
+        return False
+    if getattr(exc, "overloaded", False) is True:
+        return True
+    message = str(exc).casefold()
+    return any(marker in message for marker in _RATELIMIT_OVERLOAD_MARKERS)
+
+
+# HEADER-PARITY: advisory request-limit ceiling advertised to clients. The
+# gateway has no hard per-key quota; the number only anchors the ratio math
+# SDKs perform against ``requests-remaining``.
+_ADVISORY_RATELIMIT_REQUESTS_LIMIT = 100
+
+
+def _advisory_ratelimit_headers(
+    breakers: Mapping[str, RateLimitBreaker] | None = None,
+) -> dict[str, str]:
+    """Advisory ``anthropic-ratelimit-*`` derived from breaker state.
+
+    HEADER-PARITY: the real upstream quota is unknowable from behind the web
+    transport, so these are static except where the RateLimitBreaker knows
+    better -- while a cooldown window is open (or a half-open probe is out)
+    remaining requests read as exhausted so clients back off in sync with the
+    backend instead of hammering it.
+
+    POOL-PER-ACCT-BREAKER: with per-account breakers wired (scope=auto pool),
+    the aggregate advertises the weakest closed account -- ``min`` of the
+    remaining values across breakers that are still closed -- and reads 0 only
+    once EVERY account's window is open. The reset hint carries the longest
+    open window so clients wait out exactly the account blocking the pool.
+    Without per-account breakers the global singleton decides, unchanged.
+    """
+    limit = _ADVISORY_RATELIMIT_REQUESTS_LIMIT
+    if breakers:
+        try:
+            snapshots = [breaker.snapshot() for breaker in breakers.values()]
+        except Exception:  # pragma: no cover - header advice must never break I/O
+            snapshots = []
+        if snapshots:
+            closed_remaining = [
+                limit for snapshot in snapshots if snapshot.state == "closed"
+            ]
+            remaining = min(closed_remaining) if closed_remaining else 0
+            longest_open = max(
+                (snapshot.remaining_seconds for snapshot in snapshots), default=0.0
+            )
+            remaining_seconds = (
+                int(longest_open + 0.999) if not closed_remaining else 0
+            )
+            return {
+                "anthropic-ratelimit-requests-limit": str(limit),
+                "anthropic-ratelimit-requests-remaining": str(remaining),
+                "anthropic-ratelimit-requests-reset": f"{remaining_seconds}s",
+            }
+    try:
+        snapshot = global_rate_limit_breaker().snapshot()
+    except Exception:  # pragma: no cover - header advice must never break I/O
+        snapshot = None
+    state = snapshot.state if snapshot is not None else "closed"
+    remaining_seconds = int(snapshot.remaining_seconds + 0.999) if snapshot else 0
+    return {
+        "anthropic-ratelimit-requests-limit": str(limit),
+        "anthropic-ratelimit-requests-remaining": str(limit) if state == "closed" else "0",
+        "anthropic-ratelimit-requests-reset": f"{remaining_seconds}s",
+    }
+
+
 def _anthropic_error(response: JSONResponse) -> JSONResponse:
     """Translate the shared local error taxonomy into Anthropic's envelope."""
     payload = json.loads(bytes(response.body))
@@ -238,7 +463,16 @@ def _anthropic_error(response: JSONResponse) -> JSONResponse:
         401: (401, "authentication_error"),
         403: (401, "authentication_error"),
         404: (404, "not_found_error"),
+        409: (409, "invalid_request_error"),
         429: (429, "rate_limit_error"),
+        500: (500, "api_error"),
+        502: (502, "api_error"),
+        # Retryable infrastructure failures must keep their retryable status
+        # code for SDK clients (Claude Code) instead of collapsing into 500.
+        503: (503, "api_error"),
+        504: (504, "timeout_error"),
+        # OVERLOADED-529: Anthropic's dedicated capacity-exhausted status.
+        529: (529, "overloaded_error"),
     }
     status, err_type = status_by_error.get(response.status_code, (500, "api_error"))
     retryable = error.get("retryable") is True
@@ -262,6 +496,78 @@ def _anthropic_exception_error(server: Any, exc: Exception) -> JSONResponse:
     return _anthropic_error(mapped)
 
 
+def _anthropic_refusal_response(
+    exc: Exception,
+    *,
+    model: str | None = None,
+    prompt_text: str | None = None,
+) -> JSONResponse:
+    """STOP-REASON-REFUSAL (parity-delta-audit 2026-08-26 row M / G5).
+
+    A definitive model refusal is a *completed* turn on the real Anthropic
+    wire: HTTP 200 with ``stop_reason:"refusal"`` plus an honest explanation
+    text block.  Returning 502 made Claude Code read a deliberate decline as
+    an infrastructure fault (step-fail + blind retry that only burns more
+    quota).  This helper is invoked ONLY for ``ModelRefusalError`` --
+    infrastructure failures keep their retryable 429/503/504/529 statuses.
+    """
+    text = f"[webgpt-gateway:model_refusal] {exc}".strip()
+    input_tokens = (
+        estimate_tokens_from_chars(len(prompt_text)) if prompt_text is not None else 0
+    )
+    payload = {
+        "id": f"msg_{uuid.uuid4().hex[:16]}",
+        "type": "message",
+        "role": "assistant",
+        "model": model or "chatgpt-web",
+        "content": [{"type": "text", "text": text}],
+        "stop_reason": "refusal",
+        "stop_sequence": None,
+        "usage": anthropic_usage(
+            input_tokens, estimate_text_chars_to_tokens(len(text))
+        ),
+    }
+    return JSONResponse(payload, status_code=200)
+
+
+def _messages_prompt_text(messages: list[dict[str, Any]]) -> str:
+    """Concatenated message text feeding the chars/4 usage estimate."""
+    return "\n".join(str(message.get("content") or "") for message in messages)
+
+
+def _request_prompt_text(request: ChatCompletionRequest) -> str:
+    """Rendered turn prompt feeding the chars/4 usage estimate.
+
+    USAGE-CONTRACT-ALIGN: returns the SAME ``render_messages(initial=True)``
+    text that ``/v1/messages/count_tokens`` counts (see
+    ``rendered_request_prompt``), so count_tokens and ``usage.input_tokens``
+    agree for identical payloads instead of one being scaffold-inclusive and
+    the other raw message content only.
+    """
+    return rendered_request_prompt(request)
+
+
+def _anthropic_payload_usage(
+    payload: dict[str, Any], prompt_text: str | None = None
+) -> dict[str, Any]:
+    """Estimated usage derived from a finalized Anthropic envelope.
+
+    Used on stream paths that never observe incremental deltas (replayed or
+    cached payloads): output tokens are estimated from the finished content
+    blocks (text plus serialized tool arguments), input from ``prompt_text``
+    when the caller knows it.
+    """
+    estimator = StreamUsageEstimator(prompt_text or "")
+    for block in payload.get("content") or []:
+        if not isinstance(block, dict):
+            continue
+        if block.get("type") == "text":
+            estimator.add_delta(str(block.get("text") or ""))
+        elif block.get("type") == "tool_use":
+            estimator.add_delta(json.dumps(block.get("input", {}), ensure_ascii=False))
+    return estimator.snapshot()
+
+
 
 class WebChatAPIServer:
     """OpenAI-compatible, conversation-aware facade over ChatGPT Web."""
@@ -271,6 +577,7 @@ class WebChatAPIServer:
         headless: bool = True,
         persistent: bool = False,
         profile_dir: str | None = None,
+        account_profiles: Mapping[str, str] | None = None,
         executable_path: str | None = None,
         cdp_url: str | None = None,
         transport: str = "browser",
@@ -284,13 +591,16 @@ class WebChatAPIServer:
         trace_path: str | None = None,
         prompt_debug_dir: str | None = None,
         prewarm: bool = False,
-        generation_timeout_seconds: float = 120.0,
+        generation_timeout_seconds: float = float(
+            os.environ.get("WEBGPT_GENERATION_TIMEOUT", "600.0")
+        ),
         require_anonymous: bool = False,
         mock_backend: bool = False,
     ):
         self.headless = headless
         self.persistent = persistent
         self.profile_dir = profile_dir
+        self.account_profiles = dict(account_profiles or {})
         self.executable_path = executable_path
         self.cdp_url = cdp_url
         # In explicitly local dev/test mode, keep every request inside the
@@ -302,35 +612,118 @@ class WebChatAPIServer:
         self.transport = transport
         self._session: ChatGPTWebSession | None = None
         self._session_lock = asyncio.Lock()
-        self._conversation_locks: dict[str, asyncio.Lock] = {}
-        self._worker_factory: HybridWorkerFactory | ChatGPTWorkerFactory | None = None
+        # LATE-FAIL-SURFACE: count of mid-stream failures masked behind the
+        # clean end_turn close because content had already reached the client
+        # (R4 keeps that close non-retryable). Observability for how often a
+        # truncated turn is presented as complete.
+        self.late_failure_masked = 0
+        # session_id -> [lock, waiter_count]; entries are dropped once the last
+        # request for that conversation finishes so long-running servers do not
+        # accumulate one lock per conversation ever seen.
+        self._conversation_locks: dict[str, list] = {}
+        self._worker_factory: HybridWorkerFactory | ChatGPTWorkerFactory | MultiAccountWorkerFactory | None = None
+        self._account_health_tracker: AccountHealthTracker | None = None
+        self._health_loop_task: asyncio.Task | None = None
+        self._health_loop_stop: asyncio.Event | None = None
+        # USAGE-POLLER-WIRE: constructed only when WEBGPT_USAGE_POLL_SECONDS
+        # is enabled; stays None (zero overhead) on the default OFF path.
+        self._usage_poller: UsagePoller | None = None
+        # POOL-POLLER-PERACCT wire-up: one poller per pool account plus the
+        # shared pressure board when scope=auto resolved to a real pool;
+        # both stay empty/None (singleton path governs) otherwise.
+        self._account_usage_pollers: dict[str, UsagePoller] = {}
+        self.pool_pressure_board: PoolPressureBoard | None = None
+        # POOL-PER-ACCT-BREAKER: per-account breakers when scope resolves to a
+        # real pool; empty means the global singleton governs (default).
+        self.pool_rate_limit_breakers: dict[str, RateLimitBreaker] = {}
         if not self.mock_backend:
-            shared_browser = BrowserManager(
-                headless=headless,
-                persistent=persistent,
-                profile_dir=profile_dir,
-                executable_path=executable_path,
-                cdp_url=cdp_url,
-            )
             factory_class = HybridWorkerFactory if transport == "hybrid" else ChatGPTWorkerFactory
-            self._worker_factory = factory_class(
-                shared_browser,
-                max_workers=max_workers,
-                warm_workers=min(warm_workers, max_workers),
-                queue_timeout=queue_timeout,
-            )
+            if self.account_profiles:
+                if cdp_url and len(self.account_profiles) > 1:
+                    raise ValueError("A single --cdp-url cannot back multiple account profiles.")
+                per_account_breakers: dict[str, RateLimitBreaker] | None = None
+                if _breaker_scope_per_account(len(self.account_profiles)):
+                    per_account_breakers = {
+                        name: RateLimitBreaker.from_env()
+                        for name in self.account_profiles
+                    }
+                account_factories: dict[str, Any] = {}
+                for account_name, account_profile in self.account_profiles.items():
+                    browser = BrowserManager(
+                        headless=headless,
+                        persistent=True,
+                        profile_dir=account_profile,
+                        executable_path=executable_path,
+                        cdp_url=cdp_url if len(self.account_profiles) == 1 else None,
+                    )
+                    factory_kwargs: dict[str, Any] = {
+                        "max_workers": max_workers,
+                        "warm_workers": min(warm_workers, max_workers),
+                        "queue_timeout": queue_timeout,
+                    }
+                    if factory_class is HybridWorkerFactory:
+                        async def no_implicit_login() -> bool:
+                            return False
+
+                        factory_kwargs["auto_login"] = no_implicit_login
+                        factory_kwargs["allow_local_mock"] = False
+                    if per_account_breakers is not None:
+                        factory_kwargs["rate_limit_breaker"] = per_account_breakers[
+                            account_name
+                        ]
+                    account_factories[account_name] = factory_class(browser, **factory_kwargs)
+                if _env_flag(_HEALTH_CHECK_ENV):
+                    self._account_health_tracker = AccountHealthTracker()
+                default_account_name: str | None = None
+                try:
+                    default_account_name = resolve_default_account(AccountStore())
+                except Exception:
+                    logger.warning(
+                        "default_account_resolution_failed", exc_info=True
+                    )
+                self._worker_factory = MultiAccountWorkerFactory(
+                    account_factories,
+                    health=self._account_health_tracker,
+                    default_name=default_account_name,
+                    breakers=per_account_breakers,
+                )
+                self.pool_rate_limit_breakers = dict(per_account_breakers or {})
+            else:
+                shared_browser = BrowserManager(
+                    headless=headless,
+                    persistent=persistent,
+                    profile_dir=profile_dir,
+                    executable_path=executable_path,
+                    cdp_url=cdp_url,
+                )
+                self._worker_factory = factory_class(
+                    shared_browser,
+                    max_workers=max_workers,
+                    warm_workers=min(warm_workers, max_workers),
+                    queue_timeout=queue_timeout,
+                )
         self.conversations = ConversationStore(
             state_path=conversation_store_path,
             ttl_seconds=conversation_ttl_seconds,
         )
         self._active_gateway_session_id: str | None = None
-        self._response_sessions: dict[str, str] = {}
+        self._response_session_cap = self._resolve_response_session_cap()
+        # response_id -> gateway session_id, bounded LRU so a long-lived
+        # process cannot grow this map without limit.
+        self._response_sessions: OrderedDict[str, str] = OrderedDict()
         self.force_anthropic_initial_tool = force_anthropic_initial_tool
         self.model_registry = ModelRegistry(model_aliases)
         self.prewarm = prewarm
         self.require_anonymous = require_anonymous
         if self.require_anonymous and not self.mock_backend and max_workers != 1:
             raise ValueError("free_anonymous gateway mode requires max_workers=1")
+        # Live SSE stream lifetime bounds (BUG-A): a stream must always end with
+        # an explicit terminator instead of pinging forever when the backend
+        # wedges.  Both are overridable for tests.
+        self.queue_timeout = float(queue_timeout)
+        self.generation_timeout_seconds = float(generation_timeout_seconds)
+        self.stream_idle_seconds = self._env_float("WEBGPT_STREAM_IDLE_SECONDS", 15.0)
+        self.stream_deadline_seconds = self._resolve_stream_deadline_seconds()
         self.trace = RuntimeTraceBus(output_path=trace_path)
         self.completion_runtime = CompletionRuntime(
             self.conversations,
@@ -373,12 +766,138 @@ class WebChatAPIServer:
                     ) from exc
             return self._session
 
-    def _conversation_lock(self, session_id: str) -> asyncio.Lock:
-        lock = self._conversation_locks.get(session_id)
-        if lock is None:
-            lock = asyncio.Lock()
-            self._conversation_locks[session_id] = lock
-        return lock
+    @asynccontextmanager
+    async def _conversation_lock(self, session_id: str):
+        """Serialize turns per conversation without leaking lock entries.
+
+        The waiter count is bumped synchronously with the dict lookup, so when
+        it drops back to zero no other request can still be holding or waiting
+        on this entry and it is safe to remove.
+        """
+        entry = self._conversation_locks.get(session_id)
+        if entry is None:
+            entry = [asyncio.Lock(), 0]
+            self._conversation_locks[session_id] = entry
+        entry[1] += 1
+        try:
+            async with entry[0]:
+                yield
+        finally:
+            entry[1] -= 1
+            if entry[1] <= 0:
+                self._conversation_locks.pop(session_id, None)
+
+    @staticmethod
+    def _resolve_response_session_cap() -> int:
+        raw = os.environ.get("WEBGPT_RESPONSE_SESSION_CAP", "").strip()
+        if not raw:
+            return DEFAULT_RESPONSE_SESSION_CAP
+        try:
+            cap = int(raw)
+        except ValueError:
+            return DEFAULT_RESPONSE_SESSION_CAP
+        return max(1, cap)
+
+    def _remember_response_session(self, response_id: str, session_id: str) -> None:
+        sessions = self._response_sessions
+        sessions[response_id] = session_id
+        sessions.move_to_end(response_id)
+        while len(sessions) > self._response_session_cap:
+            sessions.popitem(last=False)
+
+    def _lookup_response_session(self, response_id: str) -> str | None:
+        session_id = self._response_sessions.get(response_id)
+        if session_id is not None:
+            self._response_sessions.move_to_end(response_id)
+        return session_id
+
+    def start_account_health_loop(self) -> None:
+        """Start the background account-health poller when it was enabled.
+
+        No-op unless ``WEBGPT_HEALTH_CHECK_ENABLED`` turned the tracker on at
+        construction time; the loop is also skipped when a previous task is
+        still running. Called from the app lifespan so the event loop exists.
+        """
+        tracker = self._account_health_tracker
+        factory = self._worker_factory
+        if tracker is None or self._health_loop_task is not None:
+            return
+        if not isinstance(factory, MultiAccountWorkerFactory):
+            return
+
+        async def _loop() -> None:
+            from gpt.transport.account_health import periodic_health_loop
+
+            await periodic_health_loop(
+                tracker,
+                AccountStore(),
+                list(factory.factories),
+                self._health_check_interval(),
+                stop_event=self._health_loop_stop,
+            )
+
+        self._health_loop_stop = asyncio.Event()
+        self._health_loop_task = asyncio.create_task(
+            _loop(), name="webgpt-account-health-loop"
+        )
+
+    @staticmethod
+    def _health_check_interval() -> float:
+        raw = os.environ.get("WEBGPT_HEALTH_CHECK_INTERVAL", "").strip()
+        if not raw:
+            return _DEFAULT_HEALTH_CHECK_INTERVAL_SECONDS
+        try:
+            return max(1.0, float(raw))
+        except ValueError:
+            return _DEFAULT_HEALTH_CHECK_INTERVAL_SECONDS
+
+    @staticmethod
+    def _usage_poll_seconds() -> float:
+        """USAGE-POLLER-WIRE: parsed ``WEBGPT_USAGE_POLL_SECONDS`` (0 = off).
+
+        Garbled values fall back to OFF, matching the poller's own
+        ``_env_float`` default so the flag can never be turned on by accident.
+        """
+        raw = os.environ.get(POLL_SECONDS_ENV, "").strip()
+        if not raw:
+            return 0.0
+        try:
+            return float(raw)
+        except ValueError:
+            return 0.0
+
+    def start_usage_poller(self) -> None:
+        """Start the codex usage poller when its flag is on.
+
+        USAGE-POLLER-WIRE: with ``WEBGPT_USAGE_POLL_SECONDS`` unset/<= 0
+        (default) nothing is constructed at all — zero overhead on the OFF
+        path; called from the app lifespan so a running event loop exists.
+
+        POOL-POLLER-PERACCT wire-up: when ``WEBGPT_BREAKER_SCOPE=auto``
+        resolved to a real pool (``pool_rate_limit_breakers`` non-empty, i.e.
+        >= 2 accounts), one poller per account advises only that account's
+        breaker and publishes to the shared pressure board. Any other scope
+        (global, <2 accounts, no breakers) keeps the historical single
+        global-breaker poller byte-identical.
+        """
+        if self._usage_poller is not None or self._account_usage_pollers:
+            return
+        if self._usage_poll_seconds() <= 0:
+            return
+        if self.pool_rate_limit_breakers:
+            # create_account_pollers re-gates on the same env flag and on
+            # >=2 breakers: an empty result means "no pool" -> fall through.
+            account_pollers, board = create_account_pollers(
+                self.pool_rate_limit_breakers
+            )
+            if account_pollers:
+                for poller in account_pollers.values():
+                    poller.start()
+                self._account_usage_pollers = account_pollers
+                self.pool_pressure_board = board
+                return
+        self._usage_poller = UsagePoller(global_rate_limit_breaker())
+        self._usage_poller.start()
 
     async def discard_session(self, session: ChatGPTWebSession | None = None) -> None:
         async with self._session_lock:
@@ -390,8 +909,16 @@ class WebChatAPIServer:
                 self._session = None
 
 
+    def _worker_browsers_connected(self) -> bool:
+        factory = self._worker_factory
+        if factory is None:
+            return False
+        if isinstance(factory, MultiAccountWorkerFactory):
+            return factory.browsers_connected
+        return bool(factory.browser_manager.connected)
+
     @asynccontextmanager
-    async def _lease_session(self):
+    async def _lease_session(self, record: ConversationRecord | None = None):
         if self._worker_factory is None:
             session = await self.get_or_create_session()
             if self.require_anonymous:
@@ -420,11 +947,44 @@ class WebChatAPIServer:
                 await self.discard_session(session)
                 raise
             return
-        async with self._worker_factory.lease() as session:
-            yield session
+        if isinstance(self._worker_factory, MultiAccountWorkerFactory):
+            requested_account = record.account_name if record is not None else None
+            async with self._worker_factory.lease(requested_account) as session:
+                selected_account = getattr(session, "_webgpt_account_name", None)
+                if record is not None and record.account_name is None and selected_account:
+                    record.account_name = str(selected_account)
+                yield session
+            return
+        affinity_key = (
+            (record.conversation_id or record.session_id) if record is not None else None
+        )
+        try:
+            async with cast(Any, self._worker_factory).lease(affinity_key) as session:
+                yield session
+        except TypeError:
+            # Factory without affinity support keeps the legacy lease path.
+            async with cast(Any, self._worker_factory).lease() as session:
+                yield session
 
 
     async def close(self) -> None:
+        if self._health_loop_stop is not None:
+            self._health_loop_stop.set()
+        if self._health_loop_task is not None:
+            self._health_loop_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await self._health_loop_task
+            self._health_loop_task = None
+        # USAGE-POLLER-WIRE: cancel the advisory loop before sessions/factories
+        # die so no poll tick races the teardown; safe when never started.
+        if self._usage_poller is not None:
+            await self._usage_poller.stop()
+            self._usage_poller = None
+        # POOL-POLLER-PERACCT wire-up: cancel every per-account loop too.
+        for poller in list(self._account_usage_pollers.values()):
+            await poller.stop()
+        self._account_usage_pollers.clear()
+        self.pool_pressure_board = None
         if self._worker_factory is not None:
             await self._worker_factory.close()
             self._worker_factory = None
@@ -452,7 +1012,7 @@ class WebChatAPIServer:
             async with self._lease_session() as session:
                 if self.transport == "hybrid":
                     auth_status = "authenticated"
-                    browser_connected = self._worker_factory.browser_manager.connected
+                    browser_connected = self._worker_browsers_connected()
                 else:
                     auth_status = await session.ui_driver.auth_status()
                     browser_connected = session.browser_manager.connected
@@ -541,7 +1101,7 @@ class WebChatAPIServer:
             }
             payload["browser"] = (
                 "ready"
-                if self._worker_factory.browser_manager.connected
+                if self._worker_browsers_connected()
                 else "not_started"
             )
         return JSONResponse(payload)
@@ -569,7 +1129,7 @@ class WebChatAPIServer:
             return JSONResponse({"object": "list", "data": data})
         runtime_active = self._session is not None or bool(
             self._worker_factory is not None
-            and self._worker_factory.browser_manager.connected
+            and self._worker_browsers_connected()
         )
         if not runtime_active:
             return JSONResponse({"object": "list", "data": data})
@@ -740,19 +1300,36 @@ class WebChatAPIServer:
                 # Authoritative history proved that the pending turn is absent.
                 # Only now is a bounded resend safe.
                 self.conversations.clear_pending(record)
-            response, _ = await self._execute_turn(
-                record,
-                tail,
-                messages,
-                resolution.response_model,
-                resolution.ui_label,
-                tools,
-                normalized.tool_choice,
-                normalized.reasoning_effort,
-                normalized.protocol,
-                normalized.client,
-                stream_callback,
-            )
+            # Roadmap A3: a turn that provably never committed on ChatGPT Web
+            # may fail over to a fresh account/web session instead of surfacing
+            # the raw backend error. The reset is performed by maybe_failover
+            # and the client is asked to resend via a retryable error; no
+            # internal retry happens here because live-stream callbacks may
+            # already have forwarded partial deltas for the failed attempt.
+            failover_attempts = 0
+            try:
+                response, _ = await self._execute_turn(
+                    record,
+                    tail,
+                    messages,
+                    resolution.response_model,
+                    resolution.ui_label,
+                    tools,
+                    normalized.tool_choice,
+                    normalized.reasoning_effort,
+                    normalized.protocol,
+                    normalized.client,
+                    stream_callback,
+                )
+            except Exception as exc:
+                if await self._maybe_failover_record(
+                    record, exc, attempts=failover_attempts
+                ):
+                    raise FailoverRetryRequired(
+                        "Conversation failed over to a fresh ChatGPT web session; "
+                        "please resend this request to continue."
+                    ) from exc
+                raise
             return response, record
 
     @staticmethod
@@ -927,7 +1504,12 @@ class WebChatAPIServer:
                 for offset in range(0, len(content), 24):
                     await stream_callback(content[offset : offset + 24])
                     await asyncio.sleep(0)
-        response = format_openai_chat_response(content, calls, model=model)
+        response = format_openai_chat_response(
+            content,
+            calls,
+            model=model,
+            prompt_text=_messages_prompt_text(messages),
+        )
         self.conversations.commit(
             record,
             messages,
@@ -950,7 +1532,7 @@ class WebChatAPIServer:
                 adapted, request=replace(adapted.request, client=_client_name(request))
             )
             previous_session = (
-                self._response_sessions.get(adapted.previous_response_id)
+                self._lookup_response_session(adapted.previous_response_id)
                 if adapted.previous_response_id
                 else None
             )
@@ -960,7 +1542,7 @@ class WebChatAPIServer:
                 adapted.request, previous_session, append_to_session=previous_session is not None
             )
             response_id = f"resp_{uuid.uuid4().hex[:16]}"
-            self._response_sessions[response_id] = record.session_id
+            self._remember_response_session(response_id, record.session_id)
             payload = response_to_responses(response, response_id=response_id)
             if adapted.request.stream:
                 return StreamingResponse(
@@ -1042,6 +1624,26 @@ class WebChatAPIServer:
                 ),
             )
             return _anthropic_error(_error(str(exc), 400, "invalid_request_error"))
+        except ModelRefusalError as exc:
+            # STOP-REASON-REFUSAL: a definitive model refusal leaves the
+            # Anthropic boundary as a completed message (HTTP 200,
+            # stop_reason:"refusal"), never as a 502 infrastructure error.
+            logger.info(
+                "anthropic_gateway_request %s",
+                json.dumps(
+                    {
+                        "request_id": request_id,
+                        "duration_ms": int((time.monotonic() - started) * 1_000),
+                        "error_code": "model_refusal",
+                    },
+                    separators=(",", ":"),
+                ),
+            )
+            return _anthropic_refusal_response(
+                exc,
+                model=adapted.request.requested_model,
+                prompt_text=_request_prompt_text(adapted.request),
+            )
         except Exception as exc:
             mapped = self._map_exception(exc)
             logger.info(
@@ -1101,7 +1703,14 @@ class WebChatAPIServer:
             response, record = await self.complete_normalized(
                 adapted.request, stream_callback=stream_callback
             )
-        return response_to_anthropic(response), record
+        # PARITY-P0-1: thread the client prompt into the chars/4 estimate so
+        # non-stream Anthropic responses carry non-zero usage.
+        return (
+            response_to_anthropic(
+                response, prompt_text=_request_prompt_text(adapted.request)
+            ),
+            record,
+        )
 
 
     def _force_initial_anthropic_tool(
@@ -1117,6 +1726,8 @@ class WebChatAPIServer:
         )
         if read_name is None:
             return None
+        # USAGE-CONTRACT-ALIGN: render once for every estimate below.
+        prompt_text = _request_prompt_text(request)
         record, _tail, cached = self.conversations.resolve(
             request.messages,
             request.requested_model,
@@ -1125,7 +1736,12 @@ class WebChatAPIServer:
             request.tool_choice,
         )
         if cached and record.last_response is not None:
-            return response_to_anthropic(record.last_response), record
+            return (
+                response_to_anthropic(
+                    record.last_response, prompt_text=prompt_text
+                ),
+                record,
+            )
         call_id = f"call_{uuid.uuid4().hex[:12]}"
         tool_call = {
             "id": call_id,
@@ -1139,6 +1755,7 @@ class WebChatAPIServer:
             None,
             [tool_call],
             model=request.requested_model,
+            prompt_text=prompt_text,
         )
         self.conversations.commit(
             record,
@@ -1156,7 +1773,10 @@ class WebChatAPIServer:
         # instead of being treated as an unrestorable conversation.
         self._active_gateway_session_id = record.session_id
         self.completion_runtime._active_gateway_session_id = record.session_id
-        return response_to_anthropic(response), record
+        return (
+            response_to_anthropic(response, prompt_text=prompt_text),
+            record,
+        )
 
     def _record_for_pending_tool_results(
         self, messages: list[dict[str, Any]]
@@ -1222,6 +1842,12 @@ class WebChatAPIServer:
         work, and a cancelled client must not retain a worker lease.
         """
         message_id = f"msg_{uuid.uuid4().hex[:16]}"
+        # PARITY-P0-1: incremental chars/4 usage estimate -- input from the
+        # client prompt up front, output accumulated across streamed deltas.
+        # USAGE-CONTRACT-ALIGN: render once and reuse for the finalized-
+        # payload fallback below instead of rendering twice per turn.
+        prompt_text = _request_prompt_text(adapted.request)
+        estimator = StreamUsageEstimator(prompt_text)
         base = {
             "id": message_id,
             "type": "message",
@@ -1230,26 +1856,75 @@ class WebChatAPIServer:
             "content": [],
             "stop_reason": None,
             "stop_sequence": None,
-            "usage": {"input_tokens": 0, "output_tokens": 0},
+            "usage": estimator.snapshot(),
         }
         deltas: asyncio.Queue[str] = asyncio.Queue()
-        sieve = (
-            ToolStreamSieve(
-                tools=adapted.request.tools,
-                tool_choice=adapted.request.tool_choice,
-            )
-            if adapted.request.tools
-            else None
+        # Every tool-protocol emit opener (soft <cmd>/<json>, legacy sentinel,
+        # DSML and XML markup): once one appears, nothing more may stream.
+        emit_openers = (
+            "<cmd>",
+            "<json>",
+            "<WEBGPT_TOOL_CALL>",
+            "<|DSML|tool_calls>",
+            "<tool_calls>",
         )
+        max_opener_len = max(len(tag) for tag in emit_openers)
+        stream_buffer = ""
+        stream_mode = "undecided"
 
         async def on_delta(text: str) -> None:
-            # Tool calls are embedded in the browser's text stream.  Keep a
-            # possible sentinel block private until its final strict parse,
-            # but forward ordinary prose as soon as it is safe to do so.
-            result = sieve.feed(text) if sieve is not None else None
-            for delta in result.text_deltas if result is not None else (text,):
-                if delta:
-                    await deltas.put(delta)
+            # R5 BUG-A (live-cli-verify-round5-2026-08-24): the previous
+            # protocol-blind sieve leaked raw soft-protocol emit tags
+            # (<cmd>...</cmd>) as visible text deltas and then failed closed
+            # with "Late tool call cannot be safely streamed" at finalize, so
+            # a tool_use parsed on the feedback-delta turn never reached the
+            # client execution loop (T3c/T-D/T-D2, reproduced 3/3). This
+            # filter withholds everything from the first potential emit tag
+            # onward; the finalized payload replay below carries the
+            # authoritative tool_use block, and any prose tail held back here
+            # is re-emitted by the remainder reconciliation. Ordinary prose
+            # still streams progressively (conformance: safe text before
+            # completion; sentinels never leak into the text stream).
+            nonlocal stream_buffer, stream_mode
+            if stream_mode == "swallowed":
+                return
+            stream_buffer += text
+            if stream_mode == "undecided":
+                stripped = stream_buffer.lstrip()
+                if not stripped:
+                    return
+                if any(stripped.startswith(tag) for tag in emit_openers):
+                    stream_mode = "swallowed"
+                    return
+                if any(tag.startswith(stripped) for tag in emit_openers):
+                    return  # could still become an emit tag; keep buffering
+                stream_mode = "text"
+            # Text mode: forward proven-safe prose only. Hold back a trailing
+            # partial markup candidate so an emit tag split across deltas
+            # cannot leak, and swallow from a real emit tag onward.
+            cut = len(stream_buffer)
+            for tag in emit_openers:
+                pos = stream_buffer.find(tag)
+                if pos != -1:
+                    cut = min(cut, pos)
+                    stream_mode = "swallowed"
+                    break
+            if stream_mode != "swallowed":
+                last_lt = stream_buffer.rfind("<")
+                if last_lt != -1:
+                    suffix = stream_buffer[last_lt:]
+                    if (
+                        len(suffix) <= max_opener_len
+                        and ">" not in suffix
+                        and "{" not in suffix
+                        and not any(ch.isspace() for ch in suffix)
+                    ):
+                        cut = min(cut, last_lt)
+            safe = stream_buffer[:cut]
+            stream_buffer = stream_buffer[cut:]
+            if safe:
+                estimator.add_delta(safe)
+                await deltas.put(safe)
 
         task = asyncio.create_task(
             self._complete_anthropic(adapted, stream_callback=on_delta)
@@ -1257,21 +1932,36 @@ class WebChatAPIServer:
         delta_task: asyncio.Task[str] | None = None
         emitted: list[str] = []
         started_content = False
+        loop = asyncio.get_running_loop()
+        started_at = loop.time()
+        finished = False
         try:
             yield _sse_event("message_start", {"type": "message_start", "message": base})
-            while not task.done() or not deltas.empty():
+            while not finished and (not task.done() or not deltas.empty()):
                 if delta_task is None:
                     delta_task = asyncio.create_task(deltas.get())
-                waiting = {task}
+                waiting: set[asyncio.Task[Any]] = {task}
                 if delta_task is not None:
                     waiting.add(delta_task)
                 done, _pending = await asyncio.wait(
-                    waiting, timeout=15, return_when=asyncio.FIRST_COMPLETED
+                    waiting, timeout=self.stream_idle_seconds, return_when=asyncio.FIRST_COMPLETED
                 )
                 if not done:
                     if await request.is_disconnected():
                         return
-                    yield ": ping\n\n"
+                    elapsed = loop.time() - started_at
+                    if elapsed >= self.stream_deadline_seconds:
+                        # Never keep a client on an endless ping treadmill: fail
+                        # the turn through the no-retry stream close so the SDK
+                        # observes a clean terminator instead of pings forever.
+                        raise GenerationTimeout(
+                            "live stream exceeded "
+                            f"{self.stream_deadline_seconds:.0f}s without completing"
+                        )
+                    # PING-WIRE: emit the canonical Anthropic ``event: ping``
+                    # frame instead of an SSE comment -- same wire semantics,
+                    # but heartbeats survive proxies that strip comments.
+                    yield _sse_event("ping", {"type": "ping"})
                     continue
                 if delta_task is not None and delta_task in done:
                     delta = delta_task.result()
@@ -1296,34 +1986,23 @@ class WebChatAPIServer:
                         },
                     )
             payload, _record = await task
-            if sieve is not None:
-                final = sieve.finalize()
-                for delta in final.text_deltas:
-                    if not started_content:
-                        started_content = True
-                        yield _sse_event(
-                            "content_block_start",
-                            {
-                                "type": "content_block_start",
-                                "index": 0,
-                                "content_block": {"type": "text", "text": ""},
-                            },
-                        )
-                    emitted.append(delta)
-                    yield _sse_event(
-                        "content_block_delta",
-                        {
-                            "type": "content_block_delta",
-                            "index": 0,
-                            "delta": {"type": "text_delta", "text": delta},
-                        },
-                    )
             payload["id"] = message_id
             if started_content and payload["content"] and payload["content"][0]["type"] == "text":
+                # STREAM-CORRECT-DEDUP (2026-08-26, parity-delta-audit G1):
+                # per-attempt remainder reconciliation.  ``emitted`` holds ONLY
+                # first-attempt live deltas -- CompletionRuntime cancels delta
+                # forwarding at each attempt's terminal event, so a corrected /
+                # failed-over attempt is never streamed here.  Therefore:
+                #   * prefix match  -> append just the tail (delivered bytes
+                #     are NEVER replayed);
+                #   * mismatch      -> the full finalized text is its FIRST
+                #     delivery on this stream, not a replay of anything already
+                #     sent.  Do not "deduplicate" it away.
                 final_text = payload["content"][0]["text"]
                 streamed_text = "".join(emitted)
                 remainder = final_text[len(streamed_text) :] if final_text.startswith(streamed_text) else final_text
                 if remainder:
+                    estimator.add_delta(remainder)
                     yield _sse_event(
                         "content_block_delta",
                         {
@@ -1333,23 +2012,146 @@ class WebChatAPIServer:
                         },
                     )
                 yield _sse_event("content_block_stop", {"type": "content_block_stop", "index": 0})
+                # R5 BUG-A hardening: blocks that follow the streamed text
+                # (notably a parsed tool_use) must still reach the client --
+                # dropping them desyncs stop_reason="tool_use" from the actual
+                # content blocks and silently kills the client execution loop.
+                async for event in self._anthropic_block_events(payload, start_index=1):
+                    yield event
+                # PARITY-P0-1: charge blocks that never passed through
+                # on_delta (parsed tool_use arguments, held-back prose) so the
+                # accumulated output estimate covers everything delivered.
+                for extra in payload["content"][1:]:
+                    if not isinstance(extra, dict):
+                        continue
+                    if extra.get("type") == "tool_use":
+                        estimator.add_delta(
+                            json.dumps(extra.get("input", {}), ensure_ascii=False)
+                        )
+                    elif extra.get("type") == "text":
+                        estimator.add_delta(str(extra.get("text") or ""))
                 yield _sse_event(
                     "message_delta",
                     {
                         "type": "message_delta",
                         "delta": {"stop_reason": payload["stop_reason"], "stop_sequence": None},
-                        "usage": {"output_tokens": 0},
+                        "usage": estimator.snapshot(),
                     },
                 )
                 yield _sse_event("message_stop", {"type": "message_stop"})
             else:
-                async for event in self._anthropic_content_events(payload):
+                async for event in self._anthropic_content_events(
+                    payload, usage=_anthropic_payload_usage(payload, prompt_text)
+                ):
                     yield event
+            # The terminal event has been flushed. Return immediately so the
+            # response body closes cleanly: no ping/heartbeat may ever follow
+            # message_stop.
+            finished = True
         except asyncio.CancelledError:
             raise
+        except ModelRefusalError as exc:
+            # STOP-REASON-REFUSAL: close the already-open stream as a
+            # completed turn whose text block explains the refusal, ending
+            # with ``stop_reason:"refusal"``.  A completed turn is the one
+            # outcome no client retries (R4-DOUBLING), and the CLI learns
+            # this was a deliberate model decline instead of an outage.
+            refusal_text = f"[webgpt-gateway:model_refusal] {exc}".strip()
+            logger.info(
+                "anthropic_stream_model_refusal %s",
+                json.dumps(
+                    {"exception": type(exc).__name__, "message": str(exc)},
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ),
+            )
+            estimator.add_delta(refusal_text)
+            if not started_content:
+                yield _sse_event(
+                    "content_block_start",
+                    {
+                        "type": "content_block_start",
+                        "index": 0,
+                        "content_block": {"type": "text", "text": ""},
+                    },
+                )
+            yield _sse_event(
+                "content_block_delta",
+                {
+                    "type": "content_block_delta",
+                    "index": 0,
+                    "delta": {
+                        "type": "text_delta",
+                        "text": ("\n\n" + refusal_text if started_content else refusal_text),
+                    },
+                },
+            )
+            yield _sse_event(
+                "content_block_stop", {"type": "content_block_stop", "index": 0}
+            )
+            yield _sse_event(
+                "message_delta",
+                {
+                    "type": "message_delta",
+                    "delta": {"stop_reason": "refusal", "stop_sequence": None},
+                    "usage": estimator.snapshot(),
+                },
+            )
+            yield _sse_event("message_stop", {"type": "message_stop"})
+            return
         except Exception as exc:
             response = _anthropic_exception_error(self, exc)
-            yield _sse_event("error", json.loads(bytes(response.body)))
+            error_payload = json.loads(bytes(response.body))
+            logger.warning(
+                "anthropic_live_stream_error %s",
+                json.dumps(
+                    {
+                        "exception": type(exc).__name__,
+                        "error_type": error_payload["error"]["type"],
+                        "message": error_payload["error"]["message"],
+                    },
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ),
+            )
+            if not started_content:
+                # LATE-FAIL-SURFACE: nothing has been delivered yet, so
+                # surfacing the failure cannot lose or duplicate content --
+                # emit the standard Anthropic ``event: error`` envelope. The
+                # SDK may retry, but the replacement generation starts clean
+                # and the CLI learns the turn actually failed.
+                async for event in self._anthropic_stream_error_event(error_payload):
+                    yield event
+                return
+            # R4-DOUBLING: after message_start the HTTP status is fixed at 200,
+            # so an SSE ``error`` event (or an abrupt EOF) is the only failure
+            # signal left -- and the Anthropic SDK retries 5xx-class errors and
+            # connection errors while Claude Code's own loop re-POSTs on stream
+            # failures, each retry spawning a duplicate ChatGPT Web generation.
+            # Content already streamed makes a retry a partial-output
+            # duplicator, so keep closing with the regular terminator: a
+            # completed turn is the one outcome no client ever retries. The
+            # late_failure_masked counter measures how often this masks a
+            # truncated turn as complete. Errors that reach this handler have
+            # already exhausted the gateway's internal correction budget, so a
+            # client retry would only burn more quota.
+            self.late_failure_masked += 1
+            logger.warning(
+                "late_failure_masked %s",
+                json.dumps(
+                    {
+                        "exception": type(exc).__name__,
+                        "error_type": error_payload["error"]["type"],
+                        "message": error_payload["error"]["message"],
+                    },
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ),
+            )
+            async for event in self._anthropic_no_retry_close(
+                error_payload, started_content, estimator=estimator
+            ):
+                yield event
         finally:
             if delta_task is not None and not delta_task.done():
                 delta_task.cancel()
@@ -1361,15 +2163,126 @@ class WebChatAPIServer:
                     await task
 
     @staticmethod
-    async def _anthropic_stream(payload: dict[str, Any]):
+    async def _anthropic_no_retry_close(
+        error_payload: dict[str, Any],
+        started_content: bool,
+        estimator: StreamUsageEstimator | None = None,
+        prompt_text: str = "",
+    ):
+        """Terminate an already-open Anthropic stream without a retry signal.
+
+        The Anthropic SDK retries 408/409/429/5xx responses and connection
+        errors, and Claude Code's outer loop re-POSTs after stream failures;
+        both paths create a fresh generation on ChatGPT Web. Ending the stream
+        with the ordinary ``content_block_stop`` -> ``message_delta`` ->
+        ``message_stop`` terminator reads as a completed turn, which nothing
+        retries. The reason still reaches the CLI verbatim inside the message
+        text.
+
+        PARITY-P0-1: the reason text streamed out here is counted toward the
+        usage estimate before the terminal ``message_delta``, so even an
+        error-only turn reports a full Anthropic usage object (input from the
+        prompt estimate, output > 0) instead of a bare zeroed stub.
+        """
+        error = error_payload.get("error", {})
+        text = (
+            f"[webgpt-gateway:{error.get('type', 'api_error')}] "
+            f"{error.get('message', 'gateway error')}"
+        )
+        emitted_text = text if not started_content else f"\n\n{text}"
+        if estimator is None:
+            estimator = StreamUsageEstimator(prompt_text)
+        estimator.add_delta(emitted_text)
+        if not started_content:
+            yield _sse_event(
+                "content_block_start",
+                {
+                    "type": "content_block_start",
+                    "index": 0,
+                    "content_block": {"type": "text", "text": ""},
+                },
+            )
+        yield _sse_event(
+            "content_block_delta",
+            {
+                "type": "content_block_delta",
+                "index": 0,
+                "delta": {"type": "text_delta", "text": emitted_text},
+            },
+        )
+        yield _sse_event("content_block_stop", {"type": "content_block_stop", "index": 0})
+        yield _sse_event(
+            "message_delta",
+            {
+                "type": "message_delta",
+                "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                "usage": estimator.snapshot(),
+            },
+        )
+        yield _sse_event("message_stop", {"type": "message_stop"})
+
+    @staticmethod
+    async def _anthropic_stream_error_event(error_payload: dict[str, Any]):
+        """Emit one standard Anthropic ``event: error`` frame and stop.
+
+        LATE-FAIL-SURFACE: used when a live stream fails before any content
+        block was opened. Nothing was delivered, so an explicit error cannot
+        destroy client work the way masking a truncated turn does; the SDK
+        turns the frame into a raised exception and Claude Code surfaces the
+        real failure instead of treating a dead turn as complete. Types
+        outside the Anthropic contract collapse to ``api_error`` so every
+        SDK build can parse it.
+        """
+        error = error_payload.get("error", {})
+        err_type = str(error.get("type") or "api_error")
+        if err_type not in _ANTHROPIC_STREAM_ERROR_TYPES:
+            err_type = "api_error"
+        yield _sse_event(
+            "error",
+            {
+                "type": "error",
+                "error": {
+                    "type": err_type,
+                    "message": str(error.get("message") or "gateway error"),
+                },
+            },
+        )
+
+    @staticmethod
+    async def _anthropic_stream(
+        payload: dict[str, Any], usage: dict[str, Any] | None = None
+    ):
         base = {**payload, "content": []}
         yield _sse_event("message_start", {"type": "message_start", "message": base})
-        async for event in WebChatAPIServer._anthropic_content_events(payload):
+        async for event in WebChatAPIServer._anthropic_content_events(payload, usage=usage):
             yield event
 
     @staticmethod
-    async def _anthropic_content_events(payload: dict[str, Any]):
-        for index, block in enumerate(payload["content"]):
+    async def _anthropic_content_events(
+        payload: dict[str, Any], usage: dict[str, Any] | None = None
+    ):
+        async for event in WebChatAPIServer._anthropic_block_events(payload):
+            yield event
+        yield _sse_event(
+            "message_delta",
+            {
+                "type": "message_delta",
+                "delta": {"stop_reason": payload["stop_reason"], "stop_sequence": None},
+                # PARITY-P0-1: never emit a zero output estimate -- fall back
+                # to the finalized payload's own content when no incremental
+                # estimator was threaded through.
+                "usage": usage if usage is not None else _anthropic_payload_usage(payload),
+            },
+        )
+        yield _sse_event("message_stop", {"type": "message_stop"})
+
+    @staticmethod
+    async def _anthropic_block_events(
+        payload: dict[str, Any], start_index: int = 0
+    ):
+        for index, block in enumerate(payload["content"], start=0):
+            if index < start_index:
+                continue
             if block["type"] == "text":
                 yield _sse_event(
                     "content_block_start",
@@ -1403,32 +2316,30 @@ class WebChatAPIServer:
                         },
                     },
                 )
-                yield _sse_event(
-                    "content_block_delta",
-                    {
-                        "type": "content_block_delta",
-                        "index": index,
-                        "delta": {
-                            "type": "input_json_delta",
-                            "partial_json": json.dumps(block.get("input", {}), ensure_ascii=False),
+                # JSON-DELTA-CHUNK: split the serialized arguments into
+                # bounded pieces -- concatenated by the client they reproduce
+                # the exact same JSON as the previous single-frame burst.
+                partial_json = json.dumps(block.get("input", {}), ensure_ascii=False)
+                for offset in range(0, len(partial_json), _JSON_DELTA_CHUNK_CHARS):
+                    yield _sse_event(
+                        "content_block_delta",
+                        {
+                            "type": "content_block_delta",
+                            "index": index,
+                            "delta": {
+                                "type": "input_json_delta",
+                                "partial_json": partial_json[
+                                    offset : offset + _JSON_DELTA_CHUNK_CHARS
+                                ],
+                            },
                         },
-                    },
-                )
+                    )
             else:
                 yield _sse_event(
                     "content_block_start",
                     {"type": "content_block_start", "index": index, "content_block": block},
                 )
             yield _sse_event("content_block_stop", {"type": "content_block_stop", "index": index})
-        yield _sse_event(
-            "message_delta",
-            {
-                "type": "message_delta",
-                "delta": {"stop_reason": payload["stop_reason"], "stop_sequence": None},
-                "usage": {"output_tokens": 0},
-            },
-        )
-        yield _sse_event("message_stop", {"type": "message_stop"})
 
     async def _position_session(
         self,
@@ -1466,6 +2377,7 @@ class WebChatAPIServer:
             execution.turn.content,
             execution.turn.tool_calls or None,
             model=model,
+            prompt_text=_messages_prompt_text(messages),
         )
         self.conversations.commit(
             record,
@@ -1478,6 +2390,74 @@ class WebChatAPIServer:
             tool_choice,
         )
         return response
+
+    async def _maybe_failover_record(
+        self,
+        record: ConversationRecord,
+        exc: Exception,
+        *,
+        attempts: int = 0,
+    ) -> bool:
+        """Apply roadmap A3 failover when the failed turn cannot have committed.
+
+        Only meaningful on the multi-account path; the conversation binding is
+        reset (never migrated) so the next turn routes to a fresh account.
+        """
+        if not isinstance(self._worker_factory, MultiAccountWorkerFactory):
+            return False
+        previous_account = record.account_name
+        previous_conversation_id = record.conversation_id
+
+        def _emit(reason: str) -> None:
+            logger.info("conversation_failover %s", reason)
+            self.trace.emit(
+                "webchat",
+                "conversation_failover",
+                session_id=record.session_id,
+                metadata={
+                    "reason": reason,
+                    "previous_account_name": previous_account,
+                    "previous_conversation_id": previous_conversation_id,
+                    "error_type": type(exc).__name__,
+                },
+            )
+
+        reconciled_user_turn_present: bool | None = None
+        if isinstance(exc, CommitUnknown):
+            reconciled_user_turn_present = await self._reconcile_user_turn_present(record)
+        return maybe_failover(
+            record,
+            exc,
+            attempts=attempts,
+            reconciled_user_turn_present=reconciled_user_turn_present,
+            store=self.conversations,
+            emit=_emit,
+        )
+
+    async def _reconcile_user_turn_present(
+        self, record: ConversationRecord
+    ) -> bool | None:
+        """Ask authoritative web history whether the pending user turn landed.
+
+        Returns ``None`` (fail-closed verdict for failover purposes) whenever
+        reconciliation is impossible, errors out, or yields no answer.
+        """
+        prompt = record.pending_prompt
+        if not prompt:
+            return None
+        try:
+            async with self._lease_session(record) as session:
+                reconcile = getattr(session, "reconcile", None)
+                if reconcile is None:
+                    return None
+                reconciliation = await reconcile(prompt)
+        except Exception:
+            logger.warning("failover_reconcile_failed", exc_info=True)
+            return None
+        try:
+            return bool(reconciliation.user_turn_present)
+        except AttributeError:
+            return None
 
     async def _execute_turn(
         self,
@@ -1517,6 +2497,7 @@ class WebChatAPIServer:
             execution.turn.content,
             execution.turn.tool_calls or None,
             model=model,
+            prompt_text=_messages_prompt_text(messages),
         )
         self.conversations.commit(
             record,
@@ -1575,7 +2556,7 @@ class WebChatAPIServer:
                             yield chunk
                         return
                     self.conversations.clear_pending(record)
-                async with self._lease_session() as session:
+                async with self._lease_session(record) as session:
                     async for chunk in self._stream_turn_on_session(
                         session,
                         record,
@@ -1672,7 +2653,12 @@ class WebChatAPIServer:
             yield format_openai_chunk(
                 finish_reason="stop", model=model, completion_id=completion_id
             )
-        response = format_openai_chat_response(clean, calls or None, model=model)
+        response = format_openai_chat_response(
+            clean,
+            calls or None,
+            model=model,
+            prompt_text=_messages_prompt_text(messages),
+        )
         self.conversations.commit(
             record,
             messages,
@@ -1685,7 +2671,15 @@ class WebChatAPIServer:
         )
         self._active_gateway_session_id = record.session_id
         if include_usage:
-            yield format_openai_usage_chunk(model=model, completion_id=completion_id)
+            # OPENAI-USAGE-WIRE: final chunk carries the accumulated chars/4
+            # estimate over the submitted prompt and everything the client saw.
+            yield format_openai_usage_chunk(
+                model=model,
+                completion_id=completion_id,
+                prompt_text=_messages_prompt_text(messages),
+                completion_text="".join(emitted_text),
+                completion_tool_calls=calls,
+            )
         yield "data: [DONE]\n\n"
 
     @staticmethod
@@ -1725,7 +2719,24 @@ class WebChatAPIServer:
                 completion_id=completion_id,
             )
         if include_usage:
-            yield format_openai_usage_chunk(model=model, completion_id=completion_id)
+            # OPENAI-USAGE-WIRE: a committed response already carries the
+            # estimated usage from its original turn; otherwise fall back to
+            # estimating over the cached message (prompt unknown on replay).
+            stored = response.get("usage")
+            if isinstance(stored, dict) and stored.get("total_tokens"):
+                yield format_openai_usage_chunk(
+                    model=model,
+                    completion_id=completion_id,
+                    prompt_tokens=int(stored.get("prompt_tokens") or 0),
+                    completion_tokens=int(stored.get("completion_tokens") or 0),
+                )
+            else:
+                yield format_openai_usage_chunk(
+                    model=model,
+                    completion_id=completion_id,
+                    completion_text=message.get("content"),
+                    completion_tool_calls=message.get("tool_calls"),
+                )
         yield "data: [DONE]\n\n"
 
     @staticmethod
@@ -1793,7 +2804,36 @@ class WebChatAPIServer:
             raise ConversationConflict("Duplicate tool result in one request.")
 
     @staticmethod
+    def _env_float(name: str, default: float) -> float:
+        raw = os.environ.get(name, "").strip()
+        if not raw:
+            return default
+        try:
+            value = float(raw)
+        except ValueError:
+            return default
+        return value if value > 0 else default
+
+    def _resolve_stream_deadline_seconds(self) -> float:
+        """Total lifetime budget for one live SSE stream.
+
+        Claude Code treats an open, silent connection as a hang.  The default is
+        generous enough for the slowest legitimate turn (worker queue wait plus
+        browser generation plus slack) while guaranteeing the stream terminates
+        with an explicit SSE error event instead of pinging forever.
+        """
+        return self._env_float(
+            "WEBGPT_STREAM_DEADLINE_SECONDS",
+            self.queue_timeout + self.generation_timeout_seconds + 30.0,
+        )
+
+    @staticmethod
     def _map_exception(exc: Exception) -> JSONResponse:
+        if _is_overloaded_rate_limit(exc):
+            # OVERLOADED-529: capacity exhaustion gets Anthropic's dedicated
+            # status so clients back off exactly like they do against
+            # api.anthropic.com, instead of reading it as a personal quota.
+            return _error(str(exc), 529, "overloaded_error")
         mapping: list[tuple[type[Exception], int, str]] = [
             (AnonymousSessionUnavailable, 503, "anonymous_session_unavailable"),
             (AuthRequired, 503, "anonymous_session_unavailable"),
@@ -1815,6 +2855,11 @@ class WebChatAPIServer:
         for error_type, status, code in mapping:
             if isinstance(exc, error_type):
                 return _error(str(exc), status, code)
+        if _is_browser_crash(exc):
+            # A Playwright "Target crashed"-style failure is always retryable
+            # infrastructure loss, never a generic 500 (BUG-B).
+            logger.warning("browser_crash_classified_as_disconnected: %s", exc)
+            return _error(str(exc), 503, "browser_disconnected")
         logger.exception("unhandled_gateway_error", exc_info=exc)
         return _error("Internal gateway error", 500, "internal_error")
 
@@ -1868,6 +2913,9 @@ async def _lifespan(app: Starlette):
                 "prewarm_failed",
                 metadata={"error_type": type(exc).__name__},
             )
+    server.start_account_health_loop()
+    # USAGE-POLLER-WIRE: no-op (nothing constructed) while the flag is off.
+    server.start_usage_poller()
     try:
         yield
     finally:
@@ -1885,6 +2933,7 @@ def create_api_app(
     headless: bool = True,
     persistent: bool = False,
     profile_dir: str | None = None,
+    account_profiles: Mapping[str, str] | None = None,
     executable_path: str | None = None,
     cdp_url: str | None = None,
     transport: str = "browser",
@@ -1898,7 +2947,9 @@ def create_api_app(
     trace_path: str | None = None,
     prompt_debug_dir: str | None = None,
     prewarm: bool = False,
-    generation_timeout_seconds: float = 120.0,
+    generation_timeout_seconds: float = float(
+        os.environ.get("WEBGPT_GENERATION_TIMEOUT", "600.0")
+    ),
     require_anonymous: bool = False,
     mock_backend: bool = False,
 ) -> Starlette:
@@ -1906,6 +2957,7 @@ def create_api_app(
         headless=headless,
         persistent=persistent,
         profile_dir=profile_dir,
+        account_profiles=account_profiles,
         executable_path=executable_path,
         cdp_url=cdp_url,
         transport=transport,
