@@ -1404,8 +1404,8 @@ def main() -> None:
     api.add_argument(
         "--queue-timeout",
         type=float,
-        default=180.0,
-        help="Maximum seconds a request may wait for worker capacity.",
+        default=float(os.environ.get("WEBGPT_QUEUE_TIMEOUT", "600.0")),
+        help="Maximum seconds a request may wait for worker capacity (default 600s).",
     )
     api.add_argument(
         "--trace-file",
@@ -1426,8 +1426,8 @@ def main() -> None:
     api.add_argument(
         "--generation-timeout",
         type=float,
-        default=120.0,
-        help="Maximum seconds to wait for each ChatGPT Web generation before returning 504.",
+        default=float(os.environ.get("WEBGPT_GENERATION_TIMEOUT", "600.0")),
+        help="Maximum seconds to wait for each ChatGPT Web generation before returning 504 (default 600s).",
     )
     api.add_argument(
         "--allow-authenticated",
