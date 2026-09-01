@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from gpt.state import MalformedToolCall
 from gpt.toolcall import ToolTranspiler
+from gpt.utils.toolcall import resolve_tool_protocol
 
 FinishReason = Literal["stop", "tool_calls", "interrupted", "error"]
 
@@ -30,12 +31,22 @@ class AssistantTurnBuilder:
         tools: list[dict[str, Any]],
         tool_choice: Any,
         model: str | None = None,
+        protocol: str | None = None,
     ) -> AssistantTurn:
         allowed = set(ToolTranspiler.validate_tools(tools))
+        # MARKUP-ALLOW-PROSE (2026-08-25): under the soft stealth protocol web
+        # models routinely mix natural-language chatter with markup blocks
+        # (<tool_calls>/<cmd>) borrowed from other surfaces. Resolve the
+        # protocol with the same mechanism parse_tool_calls() uses and pass a
+        # matching allow_prose so the turn parses instead of dying; strict
+        # xml/json-fn certification modes keep the fail-closed prose rule.
+        allow_prose = resolve_tool_protocol(protocol) == "soft"
         content, calls = ToolTranspiler.parse_tool_calls(
             text,
             allowed_tools=allowed,
             tool_definitions=tools,
+            allow_prose=allow_prose,
+            protocol=protocol,
         )
         if tool_choice == "none" and calls:
             raise MalformedToolCall("Model emitted a tool call while tool_choice=none.")

@@ -1,0 +1,131 @@
+{
+  "id": "fixr8b-false-completion-fresh-guard",
+  "desc": "(ii) FIX-R8B/debug-r9 BUG A: FALSE_COMPLETION fires only while the conversation is still a fresh tool conversation; once a real tool call/result exists the same prose is a legitimate summary",
+  "module": "fixr8b",
+  "input": {
+    "op": "fresh_guard",
+    "env": {"WEBGPT_TOOL_PROTOCOL": "soft"},
+    "tool_choice": "auto",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Write",
+          "description": "Creates or overwrites a file in the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {"type": "string"},
+              "lines": {"type": "string"}
+            },
+            "required": ["file_path", "lines"]
+          }
+        }
+      }
+    ],
+    "scenarios": [
+      {
+        "label": "fresh+action-claim",
+        "reply_text": "Done! I've successfully created hello.txt with your content.",
+        "messages": [
+          {"role": "user", "content": "Use the Write tool to create hello.txt with the content HYBRID_FLIP_T2_OK."}
+        ],
+        "tail": [],
+        "want_reason": "FALSE_COMPLETION"
+      },
+      {
+        "label": "fresh+task-directed-prose",
+        "reply_text": "Understood - proceeding with the requested step next.",
+        "messages": [
+          {"role": "user", "content": "Use the Write tool to create hello.txt with the content HYBRID_FLIP_T2_OK."}
+        ],
+        "tail": [],
+        "want_reason": "FALSE_COMPLETION",
+        "detail_contains": ["task requires a controller tool"]
+      },
+      {
+        "label": "stale+action-claim",
+        "reply_text": "Done! I've successfully created hello.txt with your content.",
+        "messages": [
+          {"role": "user", "content": "Use the Write tool to create hello.txt with the content HYBRID_FLIP_T2_OK."},
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_r9guard1",
+                "type": "function",
+                "function": {
+                  "name": "Write",
+                  "arguments": "{\"file_path\": \"hello.txt\", \"lines\": \"HYBRID_FLIP_T2_OK\\n\"}"
+                }
+              }
+            ]
+          },
+          {"role": "tool", "tool_call_id": "call_r9guard1", "content": "File created"}
+        ],
+        "tail": [{"role": "tool", "tool_call_id": "call_r9guard1", "content": "File created"}],
+        "want_reason": null
+      },
+      {
+        "label": "stale+task-directed-prose",
+        "reply_text": "Understood - proceeding with the requested step next.",
+        "messages": [
+          {"role": "user", "content": "Use the Write tool to create hello.txt with the content HYBRID_FLIP_T2_OK."},
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_r9guard2",
+                "type": "function",
+                "function": {
+                  "name": "Write",
+                  "arguments": "{\"file_path\": \"hello.txt\", \"lines\": \"HYBRID_FLIP_T2_OK\\n\"}"
+                }
+              }
+            ]
+          },
+          {"role": "tool", "tool_call_id": "call_r9guard2", "content": "File created"}
+        ],
+        "tail": [{"role": "tool", "tool_call_id": "call_r9guard2", "content": "File created"}],
+        "want_reason": null
+      },
+      {
+        "label": "metronome-noop-commits+claim",
+        "desc_extra": "codex12 #1 (2026-08-26): no-op <cmd>true</cmd>-style commits do NOT retire the guard -- only real work does; otherwise the armed-noop skip in the correction loop is dead code",
+        "reply_text": "Done! I've successfully created hello.txt with your content.",
+        "messages": [
+          {"role": "user", "content": "Use the Bash tool to run the verification step."},
+          {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [
+              {
+                "id": "call_r9noop1",
+                "type": "function",
+                "function": {"name": "Bash", "arguments": "{\"command\": \"true\"}"}
+              }
+            ]
+          },
+          {"role": "tool", "tool_call_id": "call_r9noop1", "content": ""}
+        ],
+        "tail": [],
+        "want_reason": "FALSE_COMPLETION"
+      }
+    ]
+  },
+  "expect": {}
+}

@@ -3,8 +3,8 @@ from __future__ import annotations
 import asyncio
 import json
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from gpt.orchestrator.session_runner import ClaudeCodeSessionRunner
 from gpt.orchestrator.types import ChallengeStatus, ChallengeTask
@@ -105,7 +105,7 @@ class MasterAgentOrchestrator:
     async def run_all(self) -> list[ChallengeTask]:
         start_time = time.monotonic()
         self.logger("=" * 80)
-        self.logger(f"👑 KHỞI CHẠY MASTER AGENT ORCHESTRATOR")
+        self.logger("👑 KHỞI CHẠY MASTER AGENT ORCHESTRATOR")
         self.logger(f"📊 Tổng số bài thi phát hiện : {len(self.tasks)}")
         self.logger(f"⚡ Số luồng xử lý song song   : {self.concurrency} workers")
         self.logger(f"🔄 Số lượt tự sửa tối đa     : {self.max_attempts} attempts / bài")

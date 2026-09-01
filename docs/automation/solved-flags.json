@@ -1,0 +1,658 @@
+{
+  "solved": {
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Half_Baked": {
+      "flag": "brunner{d0ugh_butt3r_sug4r_c1nn4mon_cr34m_c4r4m3l}",
+      "solved_at": "2026-09-01T06:31:35"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/Rubik's_Cube": {
+      "flag": "brunner{F2_U2_B'_R2_B'_L_D2_R_F2_U_B2_D_R2_B2_D'_B2_U_F2_U_B}",
+      "solved_at": "2026-09-01T06:31:35"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/π-crypt_0.57": {
+      "flag": "brunner{NB!:_Re-using_the_same_key_without_salting-and-hashing_risks_security_of_all_use-instances,_if_one_instance_leaks_info!}",
+      "solved_at": "2026-09-01T06:31:35"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/CleanDesk": {
+      "flag": "brunner{4llowB4ckup_t00k_th3_k3y_t00}",
+      "solved_at": "2026-09-01T06:35:11"
+    },
+    "/home/light/Workspace/CTF/.migration_backup_20260830_080722/PTIT_CTF_2026/Forensics/QR": {
+      "flag": "PTITCTF{h0w_c4n_y0u_d0_d47}",
+      "solved_at": "2026-09-01T06:35:35"
+    },
+    "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/You_Have_Not_Seen_My_Colors": {
+      "flag": "zdk{m4S7er_OF_C0l0rs_4nD_C7f}",
+      "solved_at": "2026-09-01T06:36:05"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/QR_Queries": {
+      "flag": "TDHT{89e1922e-6377-61a5-d788-ae7b53e10964}",
+      "solved_at": "2026-09-01T06:38:00"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Magic_or_not": {
+      "flag": "brunner{ctf2026}",
+      "solved_at": "2026-09-01T06:45:15"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/CAN_you_read_this": {
+      "flag": "brunner{hidden_in_plain_light}",
+      "solved_at": "2026-09-01T06:48:51"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/OnePass": {
+      "flag": "brunner{pr3f1x_m4tch1ng_1s_n0t_v4l1d4t10n}",
+      "solved_at": "2026-09-01T06:49:16"
+    },
+    "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/siren": {
+      "flag": "zdk{4_feW_8ltS_PeR_5LGNA7UR3_sLNkS_The_KEy}",
+      "solved_at": "2026-09-01T06:52:39"
+    },
+    "/home/light/Workspace/CTF/2026_haruulzangi_CTF/crypto/Gerege": {
+      "flag": "HZ{nKSnVnPs_b1nd_th3_c0mm1tm3nt_wEczLfWE}",
+      "solved_at": "2026-09-01T07:11:50"
+    },
+    "/home/light/Workspace/CTF/2026_haruulzangi_CTF/crypto/Passkey_Nightmare": {
+      "flag": "HZ{hFVdIOuu_p4ssk3y_n1ghtm4r3_PQ69rd_J}",
+      "solved_at": "2026-09-01T08:08:10"
+    },
+    "/home/light/Workspace/CTF/Z0d1ak_CTF/misc/genie": {
+      "flag": "zdk{7Hree_WOrD5_NiNE_eCHo3S_ON3_oPeN_Seal}",
+      "solved_at": "2026-09-01T08:28:04"
+    },
+    "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/cyclotomic-echo": {
+      "flag": "zdk{cyc10T0mic_eCho_on3_BA5IS_biNdS_3verY_TeAM_ARcHIvE}",
+      "solved_at": "2026-09-01T08:38:05"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Secret_Storage": {
+      "flag": "brunner{but_th3_A1_s41d_1t_w45_f1n3???}",
+      "solved_at": "2026-09-01T08:48:08"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/TotalReward": {
+      "flag": "brunner{th3_3nt1tl3m3nt_ch3ck_r0d3_4l0ng_1n_th3_4pp}",
+      "solved_at": "2026-09-01T09:19:32",
+      "writeup": "/home/light/GitHub/gpt/scratch/ctf-runs/totalreward/REPORT.md"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/CakeSearch": {
+      "flag": "brunner{cl13nt_s1d3_r0l3s_4r3_h4lf_b4k3d}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/Unknown_Artist": {
+      "flag": "PENDING_ONLINE_LOOKUP",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/The_North_Star_Metric": {
+      "flag": "brunner{lyngvig_fyr,sand,ejler_haubirk}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Business_Trip": {
+      "flag": "brunner{<mountain-name>}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Invoice": {
+      "flag": "brunner{1_w0nt_p4y_th3m_4_d1me}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Legacy_Cipher": {
+      "flag": "brunner{caesar_cipher_is_easy}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Going_Paperless": {
+      "flag": "Brunner{ascii_greenwashing}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Functional_Budget/extracted/misc_functional-budget": {
+      "flag": "brunner{REDACTED}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Git_gud/extracted/misc_git-gud": {
+      "flag": "brunner{REDACTED}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/.migration_backup_20260830_080722/COMPFEST_18/Cryptography/hello": {
+      "flag": "COMPFEST{c0ngr4tzzz_h3ngk3rrrr_g3n3r4l1Zed_w13n3R_4ttacK_458d412622e808ac}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/sekai/web_migurimental/web_migurimental": {
+      "flag": "SEKAI{dummy_flag}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/sekai/crypto_needle-in-a-multivariate-sekai/crypto_needle-in-a-multivariate-sekai": {
+      "flag": "SEKAI{dummy_flag}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/sekai/crypto_iihash/crypto_iihash": {
+      "flag": "SEKAI{dummy_flag}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/sekai/pwn_ppp/pwn_ppp": {
+      "flag": "SEKAI{REDACTED}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/sekai/pwn_3in1/pwn_3in1": {
+      "flag": "SEKAI{dummy_flag}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/GPN_CTF/web/pharry/pharry": {
+      "flag": ",a_a\n           {/ ''\\_\n           {\\ ,_oo)\n           {/  (_^_____________________\n .=.      {/ \\___)))*)----------;=====;`\n(.=.`\\   {/   /=;  ~~           |||::::\n    \\ `\\{/(   \\/\\               |||::::\n     \\  `. `\\  ) )              |||||||\n jgs  \\    // /_/_              |||||||\n       '==''---))))             |||||||",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/knitted-flag": {
+      "flag": "GPNCTF{con6RatulaT10n5_you_hAVe_unDer5tOoD_kNItOUt_and_UnrAV3LEd_TH3_7AB13c1OTHS}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Cryptography/hello": {
+      "flag": "COMPFEST{c0ngr4tzzz_h3ngk3rrrr_g3n3r4l1Zed_w13n3R_4ttacK_f91f71b7c1b857d2}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Cryptography/The_67th_Line": {
+      "flag": "COMPFEST18{5e9e8bf77207eca9c6906e80a57aa0e426f18ab8825a7b0f656cfa5d888a81c9_aefbd0dc566889bb}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Forensics/save_the_water": {
+      "flag": "COMPFEST18{b0r05_41r_vv0y_j4n64n_p3cu7_p3cu7_41_mu1u_dfmabfbfdadf}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Blockchain/Phantom_Ledger": {
+      "flag": "COMPFEST18{ph4nt0m_l3dg3r_cr0ss_funct10n_r33ntr4ncy_w1th_ecdsa_m4ll3ab1l1ty}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Binary_Exploitation/未来日記/challenge/extracted": {
+      "flag": "COMPFEST18{FAKE_FLAG}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/COMPFEST_18/Binary_Exploitation/未来日記/script/public_extract": {
+      "flag": "COMPFEST18{FAKE_FLAG}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Tiger_Bạc": {
+      "flag": "PTITCTF{luonginfosec}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for": {
+      "flag": "PTITCTF{1_574nd5_f0r_1n736r17y_4nd_547effb76e47_h45h1n6_h31p_3n5ur3_7h15_pr0p3rtY}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/temp_run/extracted_flag": {
+      "flag": "PTITCTF{y0Ur_3ff0r7_15_h16hlY_4ppr3c1473D}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/challenge/extracted/flag_unzipped": {
+      "flag": "PTITCTF{y0Ur_3ff0r7_15_h16hlY_4ppr3c1473D}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/silent-cat": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/one-pickle": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/void2": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/collatz": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/glass": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/format": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/my-first-unpickler": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/jailCTF/fire": {
+      "flag": "jail{flag_will_be_here_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/ASIS_CTF_2026/Pwnable/QFilter/challenge/QFilter": {
+      "flag": "ASIS{^test-flag^}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/ASIS_CTF_2026/Crypto/Headache": {
+      "flag": "ASIS{c0uPleD_n0nL1n3Ar_Dynam!c5_R3c0vEry_v1A_p0l3s_&_l34st_squ4r3s!!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/ASIS_CTF_2026/Crypto/Fence": {
+      "flag": "ASIS{qu4ntum_c0h3r3nc3_1n_0v3r5tr3tch3d_h4rm0n1c_f13ld5!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/no_hack_no_ctf/67/chal": {
+      "flag": "NHNC{F4k3_f14g_f0r_t3s7_676767~~}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/maths/brainteasers/adrien-s-signs": {
+      "flag": "crypto{p4tterns_1n_re5idu3s}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/maths/brainteasers/successive-powers": {
+      "flag": "crypto{919,209}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/maths/brainteasers/no-way-back-home": {
+      "flag": "crypto{1nv3rt1bl3_k3y_3xch4ng3_pr0t0c0l}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2025/do-you-have-good-eyes-breizh-ctf": {
+      "flag": "BZHCTF{trop_de_structure_tue_la_structure_79c145775373a9b8}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2025/authentification-1-breizh-ctf": {
+      "flag": "BZHCTF{ne_jamais_re-utiliser_le_nonce_e1d6ce70d3d1018c}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2025/authentification-2-breizh-ctf": {
+      "flag": "BZHCTF{encore_et_toujours_de_la_faute_du_stagiaire_350cd55e8bf628ea}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/key-recovery-dctf": {
+      "flag": "dctf{M4k1ng_Sb0x3s_1s_t00_h4rd}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/ed25519-magic-icc-athens": {
+      "flag": "ICC{RFC8032_dispel_th3_m4gic}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/unbalanced-icc-athens": {
+      "flag": "ICC{unb4lanc3d_pr1m3s_0nly_m4k3_th1ngs_w0rs3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/pekobot-ais3-pre-exam": {
+      "flag": "AIS3{a_very_bad_ecc_implementation}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/c0ll1d3r-firebird-internal-ctf": {
+      "flag": "firebird{wh3n_1n_d0ub7_u5e_latt111c3_r3duc71110n_4lg0r111thm}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/maybe-someday-googlectf": {
+      "flag": "CTF{p4dd1n9_or4cl3_w1th_h0mom0rph1c_pr0p3r7y_c0m6in3d_in7o_a_w31rd_m47h_puzz1e}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/dark-arts-codegate-ctf": {
+      "flag": "CODEGATE{I_told_you_building_secure_PRFs_is_hard_:(}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/rsa-permutation-wacon": {
+      "flag": "WACon{shuffle_all_the_hexes_but_still_Heninger_Shacham}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/maybe-someday-maybe-someday-ctf": {
+      "flag": "CTF{p4dd1n9_or4cl3_w1th_h0mom0rph1c_pr0p3r7y_c0m6in3d_in7o_a_w31rd_m47h_puzz1e}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/failproof-revenge-sekaictf": {
+      "flag": "SEKAI{b00l3n5_4r3_my5t3r10u5_1n_th31r_0wn_ch33ky_w4y5}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/diffecient-sekaictf": {
+      "flag": "SEKAI{56f066a1b13fd350ac4a4889efe22cb1825651843e9d0ccae0f87844d1d65190}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/authenticator-firebird-internal-ctf": {
+      "flag": "firebird{y0u_d0n7_n33d_t0_pr3c0mpu73_3very7h1n9_4nyw4y}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2022/failproof-sekaictf": {
+      "flag": "SEKAI{w3ll_1_gu355_y0u_c4n_4lw4y5_4sk_f0r_m0r3_3qu4t10n5_wh3n_n0_0n3s_l00k1ng}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/unevaluated-tetctf": {
+      "flag": "TetCTF{h0m0m0rph1sm_1s_0ur_fr13nd-mobi:*100*231199111007#}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/twist-and-shout-zh3r0-ctf-v2": {
+      "flag": "zh3r0{7h3_fu7ur3_m1gh7_b3_c4p71v471ng_bu7_n0w_y0u_kn0w_h0w_t0_l00k_a7_7h3_p457}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/sign-in-please-again-hkcert-ctf": {
+      "flag": "hkcert21{1t_d03sn7_h31p_by_4dd1n9_p3pp3r5}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/spongebob-squarepants-battle-for-bikini-bottom-rehydrated-htb-cyber-apocalypse": {
+      "flag": "CHTB{b1tw1s3_backd00rs_d0n't_forg3t_to_w4sh_the1r_h4nds}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/key-backup-service-1-hkcert-ctf": {
+      "flag": "hkcert21{y0u_d0nt_n33d_e_m3ss4g3s_f0r_br0adc4s7_4t7ack_wh3n_m_i5_sm41l}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/sratslla-sea-hkcert-ctf": {
+      "flag": "hkcert21{a3s_str1v3s_f0r_4_b3t73r_w0r1d_4nd_c_4ll_s74r_d0e5_t00}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/tenet-the-plagarism-hkcert-ctf": {
+      "flag": "hkcert21{m1tm_l00ked_gr34t_bu7_n0t_th1s_t1m3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/cipher-mode-picker-hkcert-ctf": {
+      "flag": "hkcert21{w3_sh0u1d_n0t_g1v3_much_fr3ed0m_t0_us3r5_wh3n_1t_c0m3s_t0_cryp70gr4phy}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/import-numpy-as-mt-zh3r0-ctf-v2": {
+      "flag": "zh3r0{wh0_th0ugh7_7h3_m3r53nn3_7w1573r_w45_5o_pr3d1c74bl3?c3rt41nly_n0t_m47454n0}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/real-mersenne-zh3r0-ctf-v2": {
+      "flag": "zh3r0{r34l_m3n_d34l_w17h_m3r53nn3_w17h_r34l_v4lu3s}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/a-joke-cipher-hkcert-ctf": {
+      "flag": "hkcert21{th1s_i5_wh4t_w3_c4ll3d_sn4k3o1l_crypt0sy5t3m}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/1337crypt-v2-downunderctf": {
+      "flag": "DUCTF{mantissa_in_crypto??_n0_th4nks!!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/oofbleck-firebird-internal-ctf": {
+      "flag": "firebird{unf0rtun4t3ly_1t_i5_s0_h4rd_t0_g3t_cryp70gr4phy_d0n3_r19h7}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/1n_jection-zh3r0-ctf-v2": {
+      "flag": "zh3r0{wh0_th0ugh7_b1j3c710n5_fr0m_n^k_t0_n_c0uld_b3_s00000_c0000000l!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2021/chaos-zh3r0-ctf-v2": {
+      "flag": "zh3r0{something_chaotic_may_look_random_enough_but_may_be_not_sufficiently_secure}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2020/calm-down-hkcert-ctf": {
+      "flag": "hkcert20{c4lm_d0wn_4nd_s0lv3_th3_ch4llen9e}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2020/1337crypt-downunderctf": {
+      "flag": "DUCTF{wh0_N33ds_pr3cIsi0n_wh3n_y0u_h4v3_c0pp3rsmiths_M3thod}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2020/sign-in-please-hkcert-ctf": {
+      "flag": "hkcert20{d0_y0u_feel_s3cur3_wh3n_s19nin9_in?}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2020/2020-tetctf": {
+      "flag": "TetCTF{2020_n0t_4_pr3d1ct4bl3_y34r}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/broken-oracle-hacktm-ctf": {
+      "flag": "HackTM{h4v3_y0u_r34lly_f0und_4ll_7h3_bu65...?}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/twist-and-shout-ecsc-2023-norway": {
+      "flag": "ECSC{7w1st_&&_sh0ut!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/what-a-curve-breizh-ctf": {
+      "flag": "BZHCTF{53cc0n_m4d3_m3_ch4n63_7h15_1_h0p3_y0u_3nj0y3d_17}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/kaitenzushi-hacktm-ctf": {
+      "flag": "HackTM{r07473_pr353rv35_50m37h1n6}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/irish-flan-ecsc-2023-norway": {
+      "flag": "ECSC{3qu1v4l3nt_k3y_rec0very_988b09742b}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/sus-imaginaryctf": {
+      "flag": "ictf{idk_if_it_solvable_if_q_is_2+p+p^2_instead}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/leet-universe-imaginaryctf-daily": {
+      "flag": "ictf{the_answer_to_the_1337th_universe_is_15682...36957}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/d-phi-enc-hacktm-ctf": {
+      "flag": "HackTM{Have you warmed up? If not, I suggest you consider the case where e=65537, although I don't know if it's solvable. Why did I say that? Because I have to make this flag much longer to avoid solving it just by calculating the cubic root of enc_flag.}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2023/unrandom-dsa-hacktm-ctf": {
+      "flag": "HackTM{Y0u_4r3_4n_M7_4nd_D54_m4573r!!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/quo-vadis-ecsc-2024-italy": {
+      "flag": "ECSC{1s0m0rph1sms_w1th_0ur_0ld_fr13nd_Evariste_8beb83d57fb48ea1}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/or-proof-cryptohack": {
+      "flag": "crypto{sigma_protocols_compose!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/smithing-contest-ecsc-2024-italy": {
+      "flag": "ECSC{d035_7h15_d357r0y35_ASA?!_b288a0c3f5d069fc}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/hyper512-hitcon-ctf": {
+      "flag": "hitcon{larger_states_is_still_no_match_of_fast_correlation_attacks!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/greatest-common-multiple-codegate-ctf": {
+      "flag": "CODEGATE{Is_it_normal_if_some_data_is_obtainable_just_with_tag?...F_2^128's_super_property}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/rsatogether-ecsc-2024-italy": {
+      "flag": "ECSC{eprint_p4p3r5_c4n_b3_r3al1y_s0m3thin6_4t_tim3s_e732fc09c4a0cf80}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/hamiltonicity-2-cryptohack": {
+      "flag": "crypto{ambiguous_hashing_encoding_ruins_RO_reduction}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/eclcg-hitcon-ctf": {
+      "flag": "hitcon{it_is_all_LLL_all_the_way_down?_always_have_been_:)}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/hamiltonicity-cryptohack": {
+      "flag": "crypto{not_hashing_entire_statement_is_bad}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/ticket-maestro-cryptohack": {
+      "flag": "crypto{m4ll34b1l1ty_fl4w_0r_r3r4nd0m1s4t10n_f34tur3?}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive/ctf-archive-2024/one-round-crypto-ecsc-2024-italy": {
+      "flag": "ECSC{d035_7h15_d357r0y35_ASA?!_c25976c15c535a3d}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/maths/modular-inverting": {
+      "flag": "crypto{9}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/maths/modular-arithmetic-1": {
+      "flag": "crypto{4}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/maths/greatest-common-divisor": {
+      "flag": "crypto{1512}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/maths/modular-arithmetic-2": {
+      "flag": "crypto{1}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/maths/extended-gcd": {
+      "flag": "crypto{-8404}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/formats/certainly-not": {
+      "flag": "crypto{22825373692019530804306212864609512775374171823993708516509897631547513634635856375624003737068034549047677999310941837454378829351398302382629658264078775456838626207507725494030600516872852306191255492926495965536379271875310457319107936020730050476235278671528265817571433919561175665096171189758406136453987966255236963782666066962654678464950075923060327358691356632908606498231755963567382339010985222623205586923466405809217426670333410014429905146941652293366212903733630083016398810887356019977409467374742266276267137547021576874204809506045914964491063393800499167416471949021995447722415959979785959569497}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/formats/ssh-keys": {
+      "flag": "crypto{3931406272922523448436194599820093016241472658151801552845094518579507815990600459669259603645261532927611152984942840889898756532060894857045175300145765800633499005451738872081381267004069865557395638550041114206143085403607234109293286336393552756893984605214352988705258638979454736514997314223669075900783806715398880310695945945147755132919037973889075191785977797861557228678159538882153544717797100401096435062359474129755625453831882490603560134477043235433202708948615234536984715872113343812760102812323180391544496030163653046931414723851374554873036582282389904838597668286543337426581680817796038711228401443244655162199302352017964997866677317161014083116730535875521286631858102768961098851209400973899393964931605067856005410998631842673030901078008408649613538143799959803685041566964514489809211962984534322348394428010908984318940411698961150731204316670646676976361958828528229837610795843145048243492909}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/formats/privacy-enhanced-mail": {
+      "flag": "crypto{15682700288056331364787171045819973654991149949197959929860861228180021707316851924456205543665565810892674190059831330231436970914474774562714945620519144389785158908994181951348846017432506464163564960993784254153395406799101314760033445065193429592512349952020982932218524462341002102063435489318813316464511621736943938440710470694912336237680219746204595128959161800595216366237538296447335375818871952520026993102148328897083547184286493241191505953601668858941129790966909236941127851370202421135897091086763569884760099112291072056970636380417349019579768748054760104838790424708988260443926906673795975104689}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/xor/you-either-know-xor-you-don-t": {
+      "flag": "crypto{1f_y0u_Kn0w_En0uGH_y0u_Kn0w_1t_4ll}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/xor/xor-starter": {
+      "flag": "crypto{aloha}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/xor/xor-properties": {
+      "flag": "crypto{x0r_i5_ass0c1at1v3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/xor/favourite-byte": {
+      "flag": "crypto{0x10_15_my_f4v0ur173_by7e}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/encoding/base64": {
+      "flag": "crypto/Base+64+Encoding+is+Web+Safe/",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/encoding/bytes-and-big-integers": {
+      "flag": "crypto{3nc0d1n6_4ll_7h3_w4y_d0wn}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/encoding/ascii": {
+      "flag": "crypto{ASCII_pr1nt4bl3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/encoding/hex": {
+      "flag": "crypto{You_will_be_working_with_hex_strings_a_lot}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general/encoding/encoding-challenge": {
+      "flag": "crypto{3nc0d3_d3c0d3_3nc0d3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/introduction/challenges/great-snakes": {
+      "flag": "crypto{z3n_0f_pyth0n}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/introduction/challenges/finding-flags": {
+      "flag": "crypto{y0ur_f1rst_fl4g}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/introduction/challenges/network-attacks": {
+      "flag": "crypto{sh0pp1ng_f0r_fl4g5}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-intro/honest-verifier-zero-knowledge": {
+      "flag": "crypto{so_honest_very_zero_knowledge}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-intro/proofs-of-knowledge": {
+      "flag": "crypto{sigma_protocol_complete!}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-intro/too-honest": {
+      "flag": "crypto{2_hon3st_to_b3_tru3}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-intro/special-soundness": {
+      "flag": "crypto{specially_sound_sigmas}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-intro/zkp-introduction": {
+      "flag": "crypto{1985}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-challenges/let-s-prove-it": {
+      "flag": "crypto{HNP_1s_a_b3aut1ful_Pr0blem_no?}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-challenges/let-s-prove-it-again": {
+      "flag": "crypto{CRT_1s_m4gic_for_cryptanalysis}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-challenges/couples": {
+      "flag": "crypto{don_t_let_useless_param_and_edge_cases_in_your_code}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/Whispers_From_The_Crypt": {
+      "flag": "TDHT{wh1tesp4ce_hides_m0re_than_y0u_th1nk}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/255^3": {
+      "flag": "TDHT{c0l0urs_h1de_secr3ts}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/Recycle_Bits": {
+      "flag": "TDHT{d92ivhxJmLuiUHhS}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/Alt_Archaeology": {
+      "flag": "TDHT{73c7ee40170f72dc803fe4ee}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/Please_Read_the_Rules": {
+      "flag": "TDHT{PAO-EPSAP-AOPDVF-FS-PIO-DI-AD-PTU-TP}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Login_Bypass": {
+      "flag": "TDHT{b17604b3dbcf79db2bd09921}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/MISC/NBT_Needle": {
+      "flag": "TDHT{yHp5EbnVbGrfiJsBPHtM9Ovh}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/bdsec/crack_me_vault": {
+      "flag": "BDSEC{c0nTr0L_fl0w_1s_4_l13_bUt_bYt3c0d3_d03s_n0t}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/bdsec/cold_start": {
+      "flag": "BDSEC{th3_k3y_w4s_s0m3wh3r3_1n_16_m1ll10n}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/l3akCTF/web/catvault": {
+      "flag": "L3AK{this_challenge_is_impossible_i_put_it_here_as_a_test_to_waste_your_time_if_youre_using_an_llm}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/l3akCTF/web/catvault_2": {
+      "flag": "L3AK{this_challenge_is_impossible_i_put_it_here_as_a_test_to_waste_your_time_if_youre_using_an_llm}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/l3akCTF/web/zebda/zebda": {
+      "flag": "L3AK{local_placeholder_flag}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/l3akCTF/crypto/crypto_1+1=3/crypto_1+1=3": {
+      "flag": "L3AK{this_will_be_different_on_remote}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/mtaCTF/rev/rezero": {
+      "flag": "FLAG_FOR_DUMPING_TEST",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/mtaCTF/pwn/Mind the Gap": {
+      "flag": "MTA{dummy_local_flag_mind_the_gap_12345}",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/mtaCTF/threat intelll/REZero": {
+      "flag": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+      "solved_at": "2026-09-01T15:08:02"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Slis": {
+      "flag": "brunner{Pease_porridge_sHOrT_:)}",
+      "solved_at": "2026-09-01T18:38:24",
+      "writeup": "/home/light/Downloads/ctf-workspace/workspaces/slis/WRITEUP.md"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Shredded_recipe": {
+      "flag": "brunner{i_really_love_solving_equations_with_lattices}",
+      "solved_at": "2026-09-01T19:14:16",
+      "writeup": "/home/light/Downloads/ctf-workspace/workspaces/shredded-recipe/WRITEUP.md"
+    },
+    "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Brunner_Radio": {
+      "flag": "brunner{Brunsviger_is_in_the_air_<3}",
+      "solved_at": "2026-09-01T19:21:44",
+      "writeup": "/home/light/Downloads/ctf-workspace/workspaces/brunner-radio/WRITEUP.md"
+    },
+    "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/MISC/A_Jarring_Amount_of_Cracking": {
+      "flag": "TDHT{g8pV38UUuG2J4lMKqe30AzKQ}",
+      "solved_at": "2026-09-01T19:40:16",
+      "writeup": "/home/light/Downloads/ctf-workspace/workspaces/a-jarring-amount-of-cracking/WRITEUP.md"
+    }
+  },
+  "updated_at": "2026-09-01T19:40:16"
+}

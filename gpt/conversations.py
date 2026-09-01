@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import copy
 import hashlib
 import json
 import os
+import threading
 import time
 import uuid
+from collections import OrderedDict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,6 +21,11 @@ try:  # POSIX advisory lock; local persistence remains best-effort elsewhere.
     import fcntl
 except ImportError:  # pragma: no cover - Windows fallback
     fcntl = None  # type: ignore[assignment]
+
+
+def _sync_persist_forced() -> bool:
+    """True when WEBGPT_SYNC_PERSIST=1 forces the legacy in-loop persist."""
+    return os.environ.get("WEBGPT_SYNC_PERSIST", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def request_fingerprint(
@@ -44,10 +53,72 @@ def tool_signature(tools: list[dict[str, Any]]) -> str:
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
+# Bounded memo for the canonical-messages + request-fingerprint pair.  Keyed by
+# (message count, content hash of the raw messages, model, tool signature,
+# tool-choice repr) so any change in inputs misses the cache.  Cache hits return
+# a deep copy of the canonical list, making this bit-for-bit equivalent to
+# recomputing while skipping re-canonicalization of unchanged histories.
+# The LRU bound is env-tunable (WEBGPT_CANONICAL_MEMO_MAX): each entry holds a
+# full canonical transcript copy, so 256 entries can pin tens of MB on long
+# claude-code histories; operators of small-RAM hosts can lower the cap.
+DEFAULT_CANONICAL_MEMO_MAX = 256
+
+
+def _resolve_canonical_memo_max() -> int:
+    """Resolve ``WEBGPT_CANONICAL_MEMO_MAX``; invalid values keep default."""
+    raw = os.environ.get("WEBGPT_CANONICAL_MEMO_MAX", "").strip()
+    if not raw:
+        return DEFAULT_CANONICAL_MEMO_MAX
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_CANONICAL_MEMO_MAX
+    return value if value >= 1 else DEFAULT_CANONICAL_MEMO_MAX
+
+
+_CANONICAL_MEMO_MAX = _resolve_canonical_memo_max()
+_canonical_memo: OrderedDict[tuple[Any, ...], tuple[list[dict[str, Any]], str]] = OrderedDict()
+
+
+def _canonical_with_fingerprint(
+    messages: list[dict[str, Any]],
+    model: str,
+    tools: list[dict[str, Any]],
+    signature: str,
+    tool_choice: Any = "auto",
+) -> tuple[list[dict[str, Any]], str]:
+    """Return (canonical_messages, fingerprint), memoized per input content."""
+    try:
+        raw = json.dumps(messages, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    except (TypeError, ValueError):
+        # Unserializable payload: fall back to the plain computation.
+        canonical = canonical_messages(messages)
+        return canonical, request_fingerprint(canonical, model, tools, tool_choice)
+    key = (
+        len(messages),
+        hashlib.sha1(raw.encode()).hexdigest(),
+        model,
+        signature,
+        repr(tool_choice),
+    )
+    hit = _canonical_memo.get(key)
+    if hit is not None:
+        canonical, fingerprint = hit
+        _canonical_memo.move_to_end(key)
+        return copy.deepcopy(canonical), fingerprint
+    canonical = canonical_messages(messages)
+    fingerprint = request_fingerprint(canonical, model, tools, tool_choice)
+    if len(_canonical_memo) >= _CANONICAL_MEMO_MAX:
+        _canonical_memo.popitem(last=False)
+    _canonical_memo[key] = (canonical, fingerprint)
+    return canonical, fingerprint
+
+
 @dataclass
 class ConversationRecord:
     session_id: str = field(default_factory=lambda: f"wgs_{uuid.uuid4().hex[:16]}")
     conversation_id: str | None = None
+    account_name: str | None = None
     model: str = "chatgpt-web"
     tool_signature: str = ""
     messages: list[dict[str, Any]] = field(default_factory=list)
@@ -75,6 +146,10 @@ class ConversationStore:
         self.ttl_seconds = ttl_seconds
         self.state_path = Path(state_path).expanduser() if state_path else None
         self._records: dict[str, ConversationRecord] = {}
+        # Background-flush coordination (see _request_persist / _drain_dirty).
+        self._persist_lock = threading.Lock()
+        self._dirty = False
+        self._flush_active = False
         self._load()
 
     def resolve(
@@ -85,9 +160,10 @@ class ConversationStore:
         explicit_id: str | None = None,
         tool_choice: Any = "auto",
     ) -> tuple[ConversationRecord, list[dict[str, Any]], bool]:
-        canonical = canonical_messages(messages)
-        fingerprint = request_fingerprint(canonical, model, tools, tool_choice)
         signature = tool_signature(tools)
+        canonical, fingerprint = _canonical_with_fingerprint(
+            messages, model, tools, signature, tool_choice
+        )
         if explicit_id:
             record = self._records.get(explicit_id)
             if record is None:
@@ -102,6 +178,9 @@ class ConversationStore:
                 )
             return record, canonical[len(record.messages) :], False
 
+        # TTL-based eviction: drop records whose last_used is older than the
+        # configured TTL even when no new record needs to be created.
+        self._evict_expired()
         candidates = [
             record
             for record in self._records.values()
@@ -125,7 +204,7 @@ class ConversationStore:
             tools=canonical_messages(tools),
         )
         self._records[record.session_id] = record
-        self._persist()
+        self._request_persist()
         return record, canonical, False
 
     def commit(
@@ -139,11 +218,11 @@ class ConversationStore:
         conversation_id: str | None,
         tool_choice: Any = "auto",
     ) -> None:
-        canonical = canonical_messages(request_messages)
-        record.messages = canonical + canonical_messages([assistant_message])
-        record.last_request_fingerprint = request_fingerprint(
-            canonical, model, tools, tool_choice
+        canonical, fingerprint = _canonical_with_fingerprint(
+            request_messages, model, tools, tool_signature(tools), tool_choice
         )
+        record.messages = canonical + canonical_messages([assistant_message])
+        record.last_request_fingerprint = fingerprint
         record.last_response = response
         record.conversation_id = conversation_id or record.conversation_id
         record.tools = canonical_messages(tools)
@@ -159,7 +238,8 @@ class ConversationStore:
         record.pending_prompt = None
         record.pending_submitted_at = None
         record.last_used = time.time()
-        self._persist()
+        self._evict_expired()
+        self._request_persist()
 
     def mark_pending(
         self,
@@ -171,13 +251,18 @@ class ConversationStore:
         tool_choice: Any,
         prompt: str,
     ) -> str:
-        fingerprint = request_fingerprint(
-            canonical_messages(messages), model, tools, tool_choice
-        )
+        fingerprint = _canonical_with_fingerprint(
+            messages, model, tools, tool_signature(tools), tool_choice
+        )[1]
         record.pending_request_fingerprint = fingerprint
         record.pending_prompt = prompt
         record.pending_submitted_at = time.time()
         record.last_used = time.time()
+        # Durability-first: the two-phase crash-recovery design requires the
+        # pending marker to be ON DISK before the request is submitted to the
+        # web backend, otherwise a crash in flight would lose the
+        # duplicate-submission guard.  This is the only mutation that keeps a
+        # synchronous write (once per turn, unlike the hot commit path).
         self._persist()
         return fingerprint
 
@@ -186,7 +271,7 @@ class ConversationStore:
         record.pending_prompt = None
         record.pending_submitted_at = None
         record.last_used = time.time()
-        self._persist()
+        self._request_persist()
 
     def pending_matches(
         self,
@@ -198,9 +283,9 @@ class ConversationStore:
     ) -> bool:
         if record.pending_request_fingerprint is None:
             return False
-        fingerprint = request_fingerprint(
-            canonical_messages(messages), model, tools, tool_choice
-        )
+        fingerprint = _canonical_with_fingerprint(
+            messages, model, tools, tool_signature(tools), tool_choice
+        )[1]
         return fingerprint == record.pending_request_fingerprint
 
     def get(self, session_id: str) -> ConversationRecord | None:
@@ -218,7 +303,21 @@ class ConversationStore:
             return
         oldest = min(self._records.values(), key=lambda item: item.last_used)
         del self._records[oldest.session_id]
-        self._persist()
+        self._request_persist()
+
+    def _evict_expired(self) -> int:
+        """Drop records whose last_used exceeded the TTL; returns the count."""
+        now = time.time()
+        expired = [
+            session_id
+            for session_id, record in self._records.items()
+            if record.last_used is not None and now - record.last_used > self.ttl_seconds
+        ]
+        for session_id in expired:
+            del self._records[session_id]
+        if expired:
+            self._request_persist()
+        return len(expired)
 
     def _load(self) -> None:
         if self.state_path is None or not self.state_path.is_file():
@@ -258,11 +357,83 @@ class ConversationStore:
             self._records = {}
 
     def _persist(self) -> None:
+        """Synchronous durable write; caller blocks until the state file is replaced."""
         if self.state_path is None:
             return
+        with self._persist_lock:
+            self._write_state_locked()
+
+    def close(self) -> None:
+        """Shutdown hook: flush everything synchronously before process exit.
+
+        Background flushes are daemon threads that would die with the process,
+        so callers must invoke this (or ``persist_async``) on the shutdown path
+        to guarantee the latest dirty state reaches disk.
+        """
+        self._dirty = False
+        self._persist()
+
+    def _request_persist(self) -> None:
+        """Mark the store dirty and persist without blocking a running loop.
+
+        Default behavior inside an asyncio loop: set ``_dirty`` and spawn a
+        coalescing background flush if none is in flight (a single daemon
+        worker drains the flag in a loop, so bursts of mutations produce at
+        most one write each time the worker re-checks).  With no running loop
+        (sync callers/tests) or with ``WEBGPT_SYNC_PERSIST=1`` the legacy
+        synchronous write is kept.
+
+        Data-safety note: the store is fail-open best-effort cache.  If the
+        process dies between a mutation and its background flush, at most one
+        flush interval of state is lost — except for ``mark_pending``, which
+        always writes synchronously to preserve the two-phase crash-recovery
+        guarantee.
+        """
+        if self.state_path is None:
+            return
+        if _sync_persist_forced():
+            self._persist()
+            return
         try:
-            self.state_path.parent.mkdir(parents=True, exist_ok=True)
-            os.chmod(self.state_path.parent, 0o700)
+            asyncio.get_running_loop()
+        except RuntimeError:
+            # No event loop: keep the legacy direct write so sync callers and
+            # existing tests observe persisted state immediately.
+            self._persist()
+            return
+        with self._persist_lock:
+            self._dirty = True
+            if self._flush_active:
+                return  # In-flight worker will pick up the dirty flag.
+            self._flush_active = True
+        threading.Thread(
+            target=self._drain_dirty, name="webgpt-store-flush", daemon=True
+        ).start()
+
+    def _drain_dirty(self) -> None:
+        """Worker body: write while dirty, then release the flush slot.
+
+        Runs off the event-loop thread.  The dirty check-and-clear happens
+        under ``_persist_lock`` together with the slot release, so a mutation
+        landing between the last write and worker exit either sees the active
+        slot (and relies on this loop) or respawns a fresh worker.
+        """
+        while True:
+            with self._persist_lock:
+                if not self._dirty:
+                    self._flush_active = False
+                    return
+                self._dirty = False
+                self._write_state_locked()
+
+    def _write_state_locked(self) -> None:
+        """Serialize records to disk atomically. Caller must hold _persist_lock."""
+        state_path = self.state_path
+        if state_path is None:
+            return
+        try:
+            state_path.parent.mkdir(parents=True, exist_ok=True)
+            os.chmod(state_path.parent, 0o700)
             with self._write_lock():
                 payload = {
                     "version": 1,
@@ -270,6 +441,7 @@ class ConversationStore:
                         {
                             "session_id": record.session_id,
                             "conversation_id": record.conversation_id,
+                            "account_name": record.account_name,
                             "model": record.model,
                             "tool_signature": record.tool_signature,
                             "tools": record.tools,
@@ -280,25 +452,39 @@ class ConversationStore:
                             "pending_request_fingerprint": record.pending_request_fingerprint,
                             "pending_prompt": record.pending_prompt,
                             "pending_submitted_at": record.pending_submitted_at,
+                            "web_bootstrapped": record.web_bootstrapped,
                             "last_used": record.last_used,
                             "saved_at": time.time(),
                         }
                         for record in self._records.values()
                     ],
                 }
-                temporary = self.state_path.with_suffix(
-                    f"{self.state_path.suffix}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
+                temporary = state_path.with_suffix(
+                    f"{state_path.suffix}.{os.getpid()}.{uuid.uuid4().hex}.tmp"
                 )
                 temporary.write_text(
                     json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
                     encoding="utf-8",
                 )
                 os.chmod(temporary, 0o600)
-                temporary.replace(self.state_path)
-            os.chmod(self.state_path, 0o600)
+                temporary.replace(state_path)
+            os.chmod(state_path, 0o600)
         except OSError:
             # Persistence is opt-in and must never break an active chat turn.
             return
+
+    async def persist_async(self) -> None:
+        """Async persistence path for callers inside a running event loop.
+
+        Wraps the synchronous ``_persist`` in ``asyncio.to_thread`` so the event
+        loop is not blocked by disk I/O. ``WEBGPT_SYNC_PERSIST=1`` forces the
+        old in-loop synchronous behavior (also used for shutdown paths, where a
+        thread would race process exit).
+        """
+        if self.state_path is None or _sync_persist_forced():
+            self._persist()
+            return
+        await asyncio.to_thread(self._persist)
 
     @contextmanager
     def _write_lock(self):

@@ -1,0 +1,24 @@
+{
+  "id": "codex-sse-stream-order",
+  "desc": "(c) created → output_text.delta ×3 → completed parses to ordered concatenated text, turn_id comes from response.id, on_delta fires once per delta in arrival order, metadata events add no text",
+  "module": "codex_sse",
+  "input": {
+    "op": "stream",
+    "conversation_id": null,
+    "model_label": "gpt-5.2",
+    "chunks": [
+      "event: response.created\ndata: {\"type\": \"response.created\", \"response\": {\"id\": \"resp_9f8e7d6c\"}}\n\n",
+      "event: response.output_text.delta\ndata: {\"type\": \"response.output_text.delta\", \"delta\": \"Alpha \"}\n\n",
+      "event: response.output_text.delta\ndata: {\"type\": \"response.output_text.delta\", \"delta\": \"beta \"}\n\nevent: response.output_item.added\ndata: {\"type\": \"response.output_item.added\"}\n\n",
+      "event: response.output_text.delta\ndata: {\"type\": \"response.output_text.delta\", \"delta\": \"gamma!\"}\n\n",
+      "event: response.completed\ndata: {\"type\": \"response.completed\", \"response\": {\"id\": \"resp_9f8e7d6c\"}}\n\n"
+    ]
+  },
+  "expect": {
+    "text": "Alpha beta gamma!",
+    "turn_id": "resp_9f8e7d6c",
+    "status": "completed",
+    "deltas": ["Alpha ", "beta ", "gamma!"],
+    "callback_turn_ids_all": "resp_9f8e7d6c"
+  }
+}

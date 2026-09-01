@@ -1444,7 +1444,10 @@ class CompletionRuntime:
         generation_timeout_seconds: float = float(
             os.environ.get("WEBGPT_GENERATION_TIMEOUT", "600.0")
         ),
+        tuning: Any | None = None,
     ) -> None:
+        if tuning is not None:
+            self.tuning = tuning
         self.conversations = conversations
         self.lease_session = lease_session
         self.trace = trace or RuntimeTraceBus()

@@ -1,0 +1,41 @@
+{
+  "id": "multi-tool-cap-env-three",
+  "desc": "(iii) P1-3 bounded multi-tool under WEBGPT_MAX_TOOL_CALLS_PER_TURN=3: exactly 3 invokes are accepted (accepted_calls_out filled), 5 invokes fire MULTI_TOOL whose detail teaches the batching budget ('at most 3')",
+  "module": "correction_budget",
+  "input": {
+    "op": "classify",
+    "env": {"WEBGPT_MAX_TOOL_CALLS_PER_TURN": "3", "WEBGPT_TOOL_PROTOCOL": "soft"},
+    "tool_choice": "auto",
+    "tail": [],
+    "messages": [
+      {"role": "user", "content": "Set up the workspace: inspect it, then write notes."}
+    ],
+    "under_cap_text": "<cmd>pwd</cmd>\n<cmd>ls -la</cmd>\n<cmd>cat README.md</cmd>",
+    "over_cap_text": "<cmd>pwd</cmd>\n<cmd>ls -la</cmd>\n<cmd>cat README.md</cmd>\n<cmd>whoami</cmd>\n<cmd>uname -a</cmd>",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "limit_resolved": 3,
+    "under_cap_issue": null,
+    "under_cap_accepted_calls": 3,
+    "over_cap_reason": "MULTI_TOOL",
+    "over_cap_detail_contains": [
+      "at most 3 are allowed per turn",
+      "you may batch up to 3 tool calls per turn"
+    ],
+    "over_cap_accepted_calls": 5
+  }
+}

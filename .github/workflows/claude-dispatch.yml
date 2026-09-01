@@ -1,0 +1,51 @@
+# Remote dispatch — Claude agent triggered from anywhere via GitHub.
+#
+# Yêu cầu để hoạt động (làm 1 lần):
+#   1. Push repo lên GitHub (origin đã trỏ github.com/nmhuei/gpt).
+#   2. Settings → Secrets and variables → Actions → thêm secret ANTHROPIC_API_KEY.
+#   3. Bắn task từ máy bất kỳ:
+#      gh api repos/nmhuei/gpt/dispatches -f event_type=claude-task \
+#        -f 'client_payload[prompt]=Tóm tắt các thay đổi tuần này'
+#
+# LƯU Ý QUAN TRỌNG: runner GitHub KHÔNG với tới gateway local 127.0.0.1:18000
+# (ChatGPT-web backend). Agent chạy bằng API Anthropic thật qua ANTHROPIC_API_KEY.
+# Nếu muốn remote agent dùng gateway local thì cần self-hosted runner trên máy này.
+
+name: claude-dispatch
+
+on:
+  repository_dispatch:
+    types: [claude-task]
+
+permissions:
+  contents: write
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run dispatched task
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT="${{ github.event.client_payload.prompt }}"
+          test -n "$PROMPT" || { echo "client_payload.prompt trống"; exit 1; }
+          claude -p "$PROMPT" --allowedTools "Read,Grep,Glob,Bash(git *),Bash(npm test*)" \
+            --max-turns 25 2>&1 | tee /tmp/dispatch-output.txt
+
+      - name: Upload transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dispatch-output-${{ github.event.client_payload.tag || github.run_id }}
+          path: /tmp/dispatch-output.txt

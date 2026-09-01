@@ -1,0 +1,34 @@
+{
+  "id": "bugfix",
+  "version": 1,
+  "title": "Fix punctuation bug in wordstat.count_words/word_freq",
+  "language": "en",
+  "baseline": {
+    "pytest_expect": "fail",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "wordstat",
+  "required_files": [
+    "wordstat/counter.py",
+    "wordstat/stats.py",
+    "tests/test_counter.py"
+  ],
+  "min_visible_tests_passed": 5,
+  "min_grader_tests_passed": 12,
+  "structural_checks": [],
+  "mutations": [
+    {
+      "id": "edge_strip_only",
+      "kind": "bugfix:edge_strip",
+      "attr": "count_words",
+      "desc": "naive fix that only strips edge punctuation per whitespace token (still wrong for hyphens/inner punctuation) must be caught by the test suite"
+    },
+    {
+      "id": "unique_tokens_only",
+      "kind": "bugfix:unique_count",
+      "attr": "count_words",
+      "desc": "counting unique tokens instead of all tokens must be caught"
+    }
+  ],
+  "prompt": "The project in this workspace is a tiny text-stats library `wordstat`. BUG: `wordstat.counter.count_words` uses `str.split()`, but the documented contract says a word is a maximal run of ASCII alphanumerics [A-Za-z0-9]; every other character (punctuation, apostrophes, symbols) is a separator. So '... wait -- what?!' must count 2 words (wait, what), 'state-of-the-art' must count 4, and pure noise counts 0. `wordstat.stats.word_freq` inherits the same bug via edge-stripping. TASK: fix `wordstat/counter.py` and `wordstat/stats.py` so ALL tests pass, including `tests/test_counter.py` which currently fails. Rules: do NOT rename files/packages/functions; do NOT edit or delete tests; keep the public API (`count_words`, `word_freq`) behavior-compatible with the docstrings. Verify with `.venv/bin/python -m pytest` (or plain `python -m pytest`) inside the workspace."
+}

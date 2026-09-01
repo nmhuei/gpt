@@ -1,11 +1,25 @@
+import base64
+import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from starlette.testclient import TestClient
 
 from gpt.api.protocol_adapters import parse_anthropic_request, parse_responses_request
+from gpt.api.requests import RequestValidationError
 from gpt.api.server import create_api_app
 from gpt.state import RateLimited
 from gpt.types import TurnResult
+
+
+def _b64(payload: bytes) -> str:
+    return base64.b64encode(payload).decode()
+
+
+def _anthropic_image(media_type: str, payload: bytes) -> dict:
+    return {
+        "type": "image",
+        "source": {"type": "base64", "media_type": media_type, "data": _b64(payload)},
+    }
 
 
 def _fake_session(text: str = "hello") -> MagicMock:
@@ -424,3 +438,527 @@ def test_anthropic_full_history_ignores_already_committed_tool_results(monkeypat
     assert third.status_code == 200, third.text
     assert third.json()["content"] == [{"type": "text", "text": "all files read"}]
     assert session.send.await_count == 3
+
+
+def test_anthropic_tool_result_is_error_renders_into_prompt():
+    from gpt.utils.promptcompat import render_messages
+
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": "call_err",
+                            "content": "boom",
+                            "is_error": True,
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {"role": "tool", "tool_call_id": "call_err", "content": "boom", "is_error": True}
+    ]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert '"is_error": true' in rendered
+
+
+def test_anthropic_tool_result_without_is_error_stays_clean():
+    from gpt.utils.promptcompat import render_messages
+
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "tool_result", "tool_use_id": "call_ok", "content": "42"}
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {"role": "tool", "tool_call_id": "call_ok", "content": "42"}
+    ]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert '"is_error": true' not in rendered
+    assert "is_error" not in rendered
+
+
+# ---------------------------------------------------------------------------
+# ANTHROPIC-INGRESS-IMAGE (2026-08-26): /v1/messages image blocks must reach
+# the render layer as the shared P1-2A placeholder instead of being stripped
+# at ingress.  Text-only payloads stay byte-identical.
+# ---------------------------------------------------------------------------
+
+
+def test_anthropic_image_block_becomes_placeholder_marker():
+    from gpt.utils.promptcompat import render_messages
+
+    # b64(b"x"*4096) -> len 5464 chars -> ~4098 bytes -> ceil 5KB.
+    marker = "[image omitted: image/png ~5KB — image upload not supported yet]"
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "what is this?"},
+                        _anthropic_image("image/png", b"x" * 4096),
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {"role": "user", "content": f"what is this?\n{marker}"}
+    ]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert "[image omitted: image/png ~5KB" in rendered
+
+
+def test_anthropic_image_upload_flag_emits_transport_marker(monkeypatch):
+    monkeypatch.setenv("WEBGPT_IMAGE_UPLOAD_WEB", "1")
+    payload = b"png-bytes"
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "inspect"},
+                        _anthropic_image("image/png", payload),
+                    ],
+                }
+            ],
+        }
+    )
+    marker = (
+        '<WEBGPT_IMAGE_DATA mime="image/png">'
+        + _b64(payload)
+        + '</WEBGPT_IMAGE_DATA>'
+    )
+    assert adapted.request.messages == [
+        {"role": "user", "content": f"inspect\n{marker}"}
+    ]
+
+
+def test_anthropic_image_upload_flag_keeps_remote_url_as_placeholder(monkeypatch):
+    monkeypatch.setenv("WEBGPT_IMAGE_UPLOAD_WEB", "1")
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": "https://example.com/x.png"},
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {"role": "user", "content": "[image omitted: unknown — image upload not supported yet]"}
+    ]
+
+
+def test_anthropic_text_only_blocks_render_unchanged():
+    """No images -> output byte-identical to the pre-change _text_blocks path."""
+    from gpt.utils.promptcompat import render_messages
+
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [{"type": "text", "text": "a"}, {"type": "text", "text": "b"}],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [{"role": "user", "content": "a\nb"}]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert rendered == render_messages(
+        [{"role": "user", "content": "a\nb"}], initial=False, tools=[], tool_choice="auto"
+    )
+
+
+def test_anthropic_image_kill_switch_restores_silent_drop(monkeypatch):
+    monkeypatch.setenv("WEBGPT_IMAGE_PLACEHOLDER", "0")
+    with_text = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "what is this?"},
+                        _anthropic_image("image/png", b"x" * 4096),
+                    ],
+                }
+            ],
+        }
+    )
+    assert with_text.request.messages == [{"role": "user", "content": "what is this?"}]
+
+    from gpt.api.requests import RequestValidationError
+
+    try:
+        parse_anthropic_request(
+            {
+                "model": "chatgpt-web",
+                "messages": [
+                    {"role": "user", "content": [_anthropic_image("image/png", b"x")]}
+                ],
+            }
+        )
+    except RequestValidationError:
+        pass  # pre-change behavior: image-only message had no supported content
+    else:
+        raise AssertionError("image-only request must fail like before kill switch")
+
+
+def test_anthropic_tool_result_image_block_becomes_marker():
+    # b64(b"y"*2048) -> len 2732 chars -> ~2049 bytes -> ceil 3KB.
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": "call_shot",
+                            "content": [
+                                {"type": "text", "text": "shot"},
+                                _anthropic_image("image/jpeg", b"y" * 2048),
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {
+            "role": "tool",
+            "tool_call_id": "call_shot",
+            "content": "shot\n[image omitted: image/jpeg ~3KB — image upload not supported yet]",
+        }
+    ]
+
+
+def test_anthropic_url_source_image_marker_without_fetch():
+    from gpt.utils.promptcompat import render_messages
+
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {"type": "url", "url": "https://example.com/cat.png"},
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {"role": "user", "content": "[image omitted: unknown — image upload not supported yet]"}
+    ]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert "[image omitted:" in rendered
+    # Metadata-only marker: the remote image is never fetched.
+    assert "example.com" not in rendered
+
+
+def test_anthropic_multiple_images_keep_block_order():
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "one"},
+                        _anthropic_image("image/png", b"x" * 1024),  # ~2KB
+                        {"type": "text", "text": "two"},
+                        _anthropic_image("image/jpeg", b"z" * 512),  # ~1KB
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {
+            "role": "user",
+            "content": (
+                "one\n"
+                "[image omitted: image/png ~2KB — image upload not supported yet]\n"
+                "two\n"
+                "[image omitted: image/jpeg ~1KB — image upload not supported yet]"
+            ),
+        }
+    ]
+
+
+# ---------------------------------------------------------------------------
+# ANTHROPIC-FIELDS-EXPLICIT (2026-08-26): request-level fields the real
+# Anthropic API handles explicitly must not vanish silently here.
+# ---------------------------------------------------------------------------
+
+
+def _anthropic_document(title: str | None = None) -> dict:
+    block: dict = {
+        "type": "document",
+        "source": {
+            "type": "base64",
+            "media_type": "application/pdf",
+            "data": _b64(b"%PDF-1.4 not really a pdf"),
+        },
+    }
+    if title is not None:
+        block["title"] = title
+    return block
+
+
+def test_anthropic_stop_sequences_non_empty_rejected_with_envelope():
+    app = create_api_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/messages",
+            json={
+                "model": "chatgpt-web",
+                "max_tokens": 32,
+                "messages": [{"role": "user", "content": "hello"}],
+                "stop_sequences": ["STOP", "DONE"],
+            },
+        )
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["type"] == "error"
+    assert payload["error"]["type"] == "invalid_request_error"
+    message = payload["error"]["message"]
+    assert "stop_sequences" in message
+    assert "not supported" in message
+
+
+def test_anthropic_stop_sequences_parser_rejects_but_empty_array_passes():
+    with_rejection = {"model": "chatgpt-web", "messages": [{"role": "user", "content": "hi"}]}
+    try:
+        parse_anthropic_request({**with_rejection, "stop_sequences": ["STOP"]})
+    except RequestValidationError as exc:
+        assert "stop_sequences" in str(exc)
+        assert "not supported" in str(exc)
+    else:
+        raise AssertionError("non-empty stop_sequences must be rejected explicitly")
+
+    accepted = parse_anthropic_request({**with_rejection, "stop_sequences": []})
+    assert accepted.request.messages == [{"role": "user", "content": "hi"}]
+
+
+def test_anthropic_thinking_enabled_rejected_with_envelope():
+    app = create_api_app()
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/messages",
+            json={
+                "model": "chatgpt-web",
+                "max_tokens": 32,
+                "messages": [{"role": "user", "content": "hello"}],
+                "thinking": {"type": "enabled", "budget_tokens": 2048},
+            },
+        )
+
+    assert response.status_code == 400
+    payload = response.json()
+    assert payload["type"] == "error"
+    assert payload["error"]["type"] == "invalid_request_error"
+    message = payload["error"]["message"]
+    assert "thinking" in message
+    assert "not supported" in message
+
+
+def test_anthropic_thinking_disabled_and_absent_accepted():
+    base = {"model": "chatgpt-web", "messages": [{"role": "user", "content": "hi"}]}
+    disabled = parse_anthropic_request(
+        {**base, "thinking": {"type": "disabled"}}
+    )
+    assert disabled.request.messages == [{"role": "user", "content": "hi"}]
+    absent = parse_anthropic_request(base)
+    assert absent.request.messages == [{"role": "user", "content": "hi"}]
+
+
+def test_anthropic_thinking_adaptive_accepted_like_current_client(caplog):
+    """Current Claude Code ships thinking.type='adaptive' on every request.
+
+    Rejecting it would break the production client, so it stays accepted and
+    only logged (explicit, not silent, but never a 400).
+    """
+    with caplog.at_level(logging.DEBUG, logger="gpt.api.protocol_adapters"):
+        adapted = parse_anthropic_request(
+            {
+                "model": "chatgpt-web",
+                "messages": [{"role": "user", "content": "hi"}],
+                "thinking": {"type": "adaptive", "display": "omitted"},
+            }
+        )
+    assert adapted.request.messages == [{"role": "user", "content": "hi"}]
+    assert "accepted-and-ignored" in caplog.text
+    assert "adaptive" in caplog.text
+
+
+def test_anthropic_metadata_accept_and_ignore_logged(caplog):
+    base = {"model": "chatgpt-web", "messages": [{"role": "user", "content": "hi"}]}
+    with caplog.at_level(logging.DEBUG, logger="gpt.api.protocol_adapters"):
+        adapted = parse_anthropic_request(
+            {**base, "metadata": {"user_id": "user_abc", "request_id": "req_1"}}
+        )
+    assert adapted.request.messages == [{"role": "user", "content": "hi"}]
+    assert "accepted-and-ignored" in caplog.text
+    assert "user_id" in caplog.text
+
+    # Non-dict metadata must also be tolerated (logged, never raised).
+    tolerated = parse_anthropic_request({**base, "metadata": "weird"})
+    assert tolerated.request.messages == [{"role": "user", "content": "hi"}]
+
+
+def test_anthropic_document_block_becomes_placeholder_marker():
+    from gpt.utils.promptcompat import render_messages
+
+    adapted = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "summarize this"},
+                        _anthropic_document("Spec"),
+                    ],
+                }
+            ],
+        }
+    )
+    assert adapted.request.messages == [
+        {
+            "role": "user",
+            "content": "summarize this\n[document omitted: Spec, application/pdf]",
+        }
+    ]
+    rendered = render_messages(
+        adapted.request.messages, initial=False, tools=[], tool_choice="auto"
+    )
+    assert "[document omitted: Spec, application/pdf]" in rendered
+
+    # Mime only (no title) and unknown (no media_type) variants.
+    mime_only = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [{"role": "user", "content": [_anthropic_document()]}],
+        }
+    )
+    assert mime_only.request.messages == [
+        {"role": "user", "content": "[document omitted: application/pdf]"}
+    ]
+
+    untitled_url = {
+        "type": "document",
+        "source": {"type": "url", "url": "https://example.com/doc.pdf"},
+    }
+    unknown = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [{"role": "user", "content": [untitled_url]}],
+        }
+    )
+    assert unknown.request.messages == [
+        {"role": "user", "content": "[document omitted: unknown]"}
+    ]
+
+    # tool_result block arrays get the same treatment.
+    tool_result = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": "call_doc",
+                            "content": [_anthropic_document("Report")],
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert tool_result.request.messages == [
+        {
+            "role": "tool",
+            "tool_call_id": "call_doc",
+            "content": "[document omitted: Report, application/pdf]",
+        }
+    ]
+
+
+def test_anthropic_document_kill_switch_drops_silently(monkeypatch):
+    monkeypatch.setenv("WEBGPT_IMAGE_PLACEHOLDER", "0")
+    mixed = parse_anthropic_request(
+        {
+            "model": "chatgpt-web",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": "summarize this"},
+                        _anthropic_document("Spec"),
+                    ],
+                }
+            ],
+        }
+    )
+    assert mixed.request.messages == [{"role": "user", "content": "summarize this"}]
+
+    try:
+        parse_anthropic_request(
+            {
+                "model": "chatgpt-web",
+                "messages": [{"role": "user", "content": [_anthropic_document()]}],
+            }
+        )
+    except RequestValidationError:
+        pass  # document-only message had no supported content before the marker
+    else:
+        raise AssertionError("document-only request must fail like before kill switch")

@@ -26,3 +26,4 @@ async def test_dom_probe_finds_elements():
     assert "composer" in recon["elements"]
     assert recon["elements"]["composer"]["tag"] == "div"
     assert recon["cloudflare_challenge"] is False
+    assert recon["auth_status"] == "anonymous_free"

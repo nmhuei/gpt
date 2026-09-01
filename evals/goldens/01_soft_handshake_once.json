@@ -1,0 +1,33 @@
+{
+  "id": "soft-handshake-once",
+  "desc": "(a) soft protocol injects no controller block; the one-time handshake appears exactly once on the first turn",
+  "module": "promptcompat",
+  "input": {
+    "initial": true,
+    "tool_protocol": "soft",
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "messages": [
+      {"role": "system", "content": "You are a terse CTF solver."},
+      {"role": "user", "content": "Find the flag hidden in this workspace."}
+    ]
+  },
+  "expect": {
+    "not_contains": ["WEBGPT SESSION BOOTSTRAP", "WEBGPT CONTROLLER TOOL PROTOCOL"],
+    "handshake_sentinel": "<cmd>the exact shell command</cmd>",
+    "handshake_count_before_append": 0,
+    "handshake_count_after_append": 1
+  }
+}

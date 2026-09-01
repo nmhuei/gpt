@@ -1,0 +1,25 @@
+{
+  "id": "budget-trim-keeps-last-user",
+  "desc": "(g) budget trim drops old history oldest-first while pinning system, first objective and the final user turn",
+  "module": "promptcompat",
+  "input": {
+    "initial": false,
+    "tool_protocol": "xml",
+    "tools": [],
+    "budget_chars": 2500,
+    "filler_pairs": 5,
+    "filler_user_chars": 480,
+    "filler_assistant_chars": 480,
+    "messages": [
+      {"role": "system", "content": "SYS_ANCHOR persistent instructions"},
+      {"role": "user", "content": "FIRST_OBJECTIVE_ANCHOR original task statement"},
+      {"role": "user", "content": "LAST_USER_PRESERVE_MARKER final instruction"}
+    ]
+  },
+  "expect": {
+    "max_chars": 2500,
+    "idempotent": true,
+    "contains": ["SYS_ANCHOR", "FIRST_OBJECTIVE_ANCHOR", "LAST_USER_PRESERVE_MARKER"],
+    "not_contains": ["FILLER_U1"]
+  }
+}

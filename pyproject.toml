@@ -15,6 +15,8 @@ dependencies = [
     "pyotp>=2.9.0",
     "starlette>=0.30.0",
     "uvicorn>=0.25.0",
+    "httpx>=0.27.0",
+    "tomli>=2.0.0; python_version < '3.11'",
 ]
 
 [tool.setuptools.packages.find]
@@ -22,12 +24,31 @@ include = ["gpt*", "pcap_analyzer*"]
 
 
 [project.scripts]
-gpt = "gpt.debug:main"
+# Unified direct-agent CLI. Legacy surfaces remain explicit compatibility
+# entrypoints instead of owning the common `gpt` command.
+gpt = "gpt.cli.main:main"
 gpt-web = "gpt.debug:main"
+gpt-direct = "gpt.direct_agent:main"
+gpt-claude = "gpt.cli.compat:claude_main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "anyio>=4.0", "ruff>=0.6", "mypy>=1.10", "openai>=1.0"]
 
+[tool.ruff]
+extend-exclude = [
+    "benchmarks/practical/tasks/*/fixture",
+    "benchmarks/practical/selfcheck",
+    "benchmarks/practical/grader_suites",
+]
+
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "RUF"]
 ignore = ["E501", "SIM105"]
+
+[tool.mypy]
+explicit_package_bases = true
+exclude = ["benchmarks/practical/(?:tasks/.*/fixture|tasks/.*/(?:pristine|solved|mutations)|selfcheck|grader_suites)/", "acceptance/fixtures/", "scratch/"]
+
+[[tool.mypy.overrides]]
+module = ["cloakbrowser", "cloakbrowser.*"]
+ignore_missing_imports = true

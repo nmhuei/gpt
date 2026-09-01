@@ -1,0 +1,4323 @@
+{
+  "generated_at": "2026-08-24T13:59:10",
+  "root": "/home/light/Workspace/CTF",
+  "stats": {
+    "challenge_dirs_scanned": 499,
+    "accepted": 173,
+    "rejected": 326,
+    "rejected_by_reason": {
+      "not_solvable(no local attachments, no remote url)": 166,
+      "needs_human_review": 4,
+      "already_solved(flag.txt)": 28,
+      "unclear_statement(empty description & README)": 128
+    },
+    "used_filtered_out": 0,
+    "candidates_final": 173,
+    "probes_performed": 10
+  },
+  "candidates": [
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Invoice",
+      "name": "Invoice",
+      "category": "onboarding",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_invoice.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Beginner **Author:** OddNorseman We got a new invoice, and the email said we missed the payment deadline!! I just can't seem to open it and the extension seems different - can you help",
+      "est_difficulty_guess": "easy",
+      "points": 35,
+      "solves_count": 302,
+      "used_at": "2026-08-24T21:50:57"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Decompile",
+      "name": "Decompile?",
+      "category": "onboarding",
+      "has_local_files": true,
+      "attachments": [
+        "rev_decompile.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Beginner **Author:** Quack Congratulations on passing the preliminary interviews! Before we can get you fully settled, you will have to pass through our mandatory onboarding vault to e",
+      "est_difficulty_guess": "easy",
+      "points": 40,
+      "solves_count": 366,
+      "used_at": "2026-08-24T22:04:30"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/HRBot",
+      "name": "HRBot",
+      "category": "onboarding",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_hrbot.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Beginner **Author:** olexmeister BrunnerCorp is proud to announce the new automated HR system: **HRBot**. It will be used for every HR case from now on, we are sure you will love the f",
+      "est_difficulty_guess": "easy",
+      "points": 40,
+      "solves_count": 251,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Slis",
+      "name": "Slis",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_slis.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy-Medium **Author:** Bond Brunnerne likes food 😋 and: Some like it sHOrT 🍲 So we'll keep it short ☺️",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 382,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Brunner_Radio",
+      "name": "Brunner Radio",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_brunner-radio.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Bond To readily be able to share our delicious news with brunsviger-fans even in situations when there is no internet connection available 🚫 we at Brunnerne Inc. are",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 341,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/Company_Discount",
+      "name": "Company Discount",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_company-discount.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** OddNorseman I got this email about a new company discount! Seems like an amazing perk - check it out yourself! --- **Note:** This challenge might trigger your antiviru",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 332,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/Go_Go_Decompile",
+      "name": "Go Go Decompile",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_go-go-decompile.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** Quack Uh oh, I've been crunching numbers all month in `Go Go BudgetMaster`, but the cleaning crew accidentally threw out my license key Post-it. Now management's breat",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 317,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/Brunner_Mifflin_(User)",
+      "name": "Brunner Mifflin (User)",
+      "category": "boot2root",
+      "has_local_files": true,
+      "attachments": [
+        "boot2root_brunner-mifflin-user.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** Emil8250 You have found the Brunner Mifflin HR system, and your curious nature makes you wonder if you can view all the monsters?",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 287,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/π-crypt_0.57",
+      "name": "π-crypt 0.57",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_pi-crypt-0-57.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** Bond In Brunnerne Inc. we are constantly working to improve our product portfolio and reach still new standards - increasing the benefit to and thereby the enjoyment f",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 283,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/KPWhy",
+      "name": "KPWhy",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_kpwhy.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy-Medium **Author:** rvsmvs Here at BrunnerCorp, we value performance almost as much as we value employee satisfaction. That's why we've rolled out *KPIman*, our new tracker that as",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 281,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Activating_Neurons",
+      "name": "Activating Neurons",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_activating-neurons.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** MiKi My colleague in IT made a Neural Network to remember the most important ingredients in Brunsviger, but he made the network completely passive and linear. Can you ",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 278,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/Fair_Gambling",
+      "name": "Fair Gambling",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_fair-gambling.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** HLVM Earn a bigger yearly employee bonus at Brunnerne Inc new \"fair luck initiative\" 🎰",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 276,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/Free_Play",
+      "name": "Free Play",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_free-play.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy-Medium **Author:** Quack IT flagged a workstation during an asset audit and found that someone from Procurement had installed some game from 2009 on his corporate laptop. Apparent",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 269,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/Unknown_Artist",
+      "name": "Unknown Artist",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_unknown-artist.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** Ha1fdan An unknown artist at Brunnerne has been creating some music. The artist has been using a secret platform to hide a flag. Can you find it?",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 254,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Magic_or_not",
+      "name": "Magic or not",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_magic-or-not.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** H4N5 As an intern at **Brunner Corporation**, I developed a **cutting-edge** image obfuscation algorithm, designed to hide sensitive image data. I'm confident it's sec",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 253,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/Roadmap",
+      "name": "Roadmap",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_roadmap.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Quack In Brunnerne Inc.™ , every request now flows through our new **Edge Roadmap Router**. Only stakeholders who follow the approved roadmap reach the internal dash",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 253,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Shredded_recipe",
+      "name": "Shredded recipe",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_shredded-recipe.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** Vincent Brunnerne Inc. just released their new revolutionary and innovating cake: The *citronkvartmåne* - a new, never before seen cost-saving take on the classic *cit",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 250,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/CleanDesk",
+      "name": "CleanDesk",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "mobile_cleandesk.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy-Medium **Author:** KyootyBella A colleague left Brunnerne A/S on a Friday, and the handover was shorter than anyone would have liked. IT imaged her phone before wiping it, which i",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 247,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/Rubik's_Cube",
+      "name": "Rubik's Cube",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_rubiks-cube.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Vincent Our coworker just got a new Rubik's Cube and it is driving everyone in the office crazy. But more importantly, it is decreasing their productivity and thereb",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 232,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Half_Baked",
+      "name": "Half Baked",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_half-baked.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** MiKi My colleague Rectify in IT refuses to share his secret brunsviger recipe and has hidden it in a neural network to protect it. Can you help combine the obfuscated ",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 229,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Hidden_embeddings",
+      "name": "Hidden embeddings",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_hidden-embeddings.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** MiKi Our competitors have been baking a new AI model, and I overheard that they've hidden an important 35-character trade secret inside. Unfortunately, they've obfus",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 201,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Pwn/Brunner_Stocks",
+      "name": "Brunner Stocks",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_brunner-stocks.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy-Medium **Author:** Vincent Brunnerne Inc. just released their state of the art automated stock trading algorithm. Just answer this simple survey on your investment preferences and",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 194,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/OneVoice",
+      "name": "OneVoice",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "mobile_onevoice.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** KyootyBella Following a few difficult quarters, Brunnerne A/S has implemented the app `OneVoice` across the organization to ensure a consistent approach to external ",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 190,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/The_Missing_Recipe",
+      "name": "The Missing Recipe",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_the-missing-recipe.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** H4N5 *Brunner Corporation's research department has discovered that some inappropriate Brunner images and a confidential internal recipe have disappeared from the ne",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 187,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/TriKDF_Enterprise",
+      "name": "TriKDF Enterprise",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_trikdf-enterprise.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Nissen BrunnerConsult just launched their latest encryption standard nobody asked for: **TriKDF™ Enterprise**. By combining triangle-driven state alignment, rotation",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 179,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/Reorg",
+      "name": "Reorg",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_reorg.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** Quack Following the success of our Edge Roadmap Router, Brunnerne Inc.™ has flattened the org chart. Twice. Requests are no longer routed by department but the departm",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 179,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/Lockdown-mode",
+      "name": "Lockdown-mode",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_lockdown-mode.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** Anakin Brunnerne Inc.™ has recently completed a major modernization initiative by replacing several aging industrial control systems with the new Brunnerne Modular Aut",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 165,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/Trivago",
+      "name": "Trivago",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_trivago.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** Quack Business travel has scaled beautifully this quarter, so much that it has outscaled me! I've been onboarded into so many cities that I woke up with zero situation",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 164,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/The_North_Star_Metric",
+      "name": "The North Star Metric",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_the-north-star-metric.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Easy **Author:** The Mikkel & Nissen My manager says Brunnerne Inc. needs a North Star Metric (NSM) to serve as a guiding light for the company. After some extensive field research, I ",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 148,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Pwn/Locked_Out",
+      "name": "Locked Out",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_locked-out.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Togby & Nissen After Brunnerne Inc. refused to raise our wages, us bakers on the factory floor went on a huge strike. Management responded with a lockout - and appar",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 143,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/OnePass",
+      "name": "OnePass",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "mobile_onepass.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** KyootyBella Brunnerne A/S completed its single sign-on rollout in Q2, on time and within scope. One account, one button, every internal tool - including the board port",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 130,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/TotalReward",
+      "name": "TotalReward",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "mobile_totalreward.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** KyootyBella Brunnerne A/S ties employee benefits to seniority. HR simply prints a code on your employee card, and the `TotalReward` app reads it to determine your bene",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 127,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Mobile/CakeSearch",
+      "name": "CakeSearch",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "mobile_cakesearch.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium-Hard **Author:** KyootyBella Brunnerne Inc. has made their own job post board, which shows all available job postings for you to apply to! Or at least some of them...",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 122,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/CAN_you_read_this",
+      "name": "CAN you read this",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_can-you-read-this.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** HLVM We extracted a CAN bus recording from the Brunnerne Inc.™ company car. The driver is suspected of sharing company secrets through the car, somehow. Find the secre",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 104,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Functional_Budget",
+      "name": "Functional Budget",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_functional-budget.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Vincent After out last budget audit, we realised we are using way too many functions. To maximize our profit at Brunnerne Inc., we decided to only use one function f",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 102,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Pwn/Pure_Notes",
+      "name": "Pure Notes",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_pure-notes.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium-Hard **Author:** Vincent My boss said that our current note taking solution isn't productive and functional. So I made this purely functional note taking app.",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 100,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Git_gud",
+      "name": "Git gud",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_git-gud.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium-Hard **Author:** Zopazz Brunnerne Inc. (NASDAQ: BRNR), the global leader in synergistic developer enablement solutions, today announced the launch of Git gud™, a first-of-its-ki",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 98,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Crypto/Secret_Storage",
+      "name": "Secret Storage",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_secret-storage.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** OddNorseman BrunnerCorp needed a new secret vault for their various needs, but license fees are too expensive nowadays! Thankfully, the intern had a ChatGPT Plus subsc",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 92,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/Bink_Ink_(User)",
+      "name": "Bink Ink (User)",
+      "category": "boot2root",
+      "has_local_files": true,
+      "attachments": [
+        "boot2root_bink-ink-user.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Zopazz Brunnerne Inc. is proud to release Bink Ink, a next-generation, hardware-accelerated L7 traffic mediation and content-distribution orchestration appliance bui",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 82,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Pwn/Mindbreaker",
+      "name": "Mindbreaker",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_mindbreaker.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Very Hard **Author:** Anakin **INTERNAL MEMO: Automation & Robotics Division** Back when Brunnerne Inc.™ was still a home bakery, someone automated the cake-decorating line with a LEGO",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 68,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Reversing/BrunnerCorp_Pre-Employment_Aptitude_Test",
+      "name": "BrunnerCorp Pre-Employment Aptitude Test",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_aptitude-test.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Very Hard **Author:** OddNorseman At BrunnerCorp, we test that all prospective candidates have the core competencies required before submitting an application. One such competency is t",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 68,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/WordPressed_to_root",
+      "name": "WordPressed to root",
+      "category": "boot2root",
+      "has_local_files": true,
+      "attachments": [
+        "boot2root_wordpressed-to-root.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** HLVM Internal developer documentation hosted with WordPress, (almost) fully up to date, what could go wrong?",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 66,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Alternative_channel",
+      "name": "Alternative channel",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_alternative-channel.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium **Author:** Ask the frog *Our regular SSTV transmission channel is being mishandled. Among the weird signals, someone has been slipping in something they shouldn't. Find out wha",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 60,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/BrunRouter",
+      "name": "BrunRouter",
+      "category": "boot2root",
+      "has_local_files": true,
+      "attachments": [
+        "boot2root_brunrouter.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Very Hard **Author:** Zopazz & Olexmeister Brunnerne Inc. are proud to announce BrunRouter, a state-of-the-art router for all of your needs! What features does it have? That's a very g",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 54,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/siren",
+      "name": "siren",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_siren.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The Siren will sing any sailor's words back to him, sealed in her own hand. There is only one phrase she will never voice: the phrase that lifts the tide gate over her hoard. Give her enough verses an",
+      "est_difficulty_guess": "easy",
+      "points": 114,
+      "solves_count": 189,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Pwn/Guessing_game",
+      "name": "Guessing game",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_guessing-game.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Hard **Author:** Vincent My company is hosting a contest to win a new laptop. I just beat the game but they won't pay out. I really need this laptop. I think they thought it would be i",
+      "est_difficulty_guess": "easy",
+      "points": 125,
+      "solves_count": 44,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/pwn/Salvage_Protocol",
+      "name": "Salvage Protocol",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_salvage-protocol.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "something something protocol",
+      "est_difficulty_guess": "easy",
+      "points": 128,
+      "solves_count": 102,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/Technical_Debt",
+      "name": "Technical Debt",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_technical-debt.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Very Hard **Author:** OddNorseman So.... I inherited this weird thing when I started. We use it for all internal news so please remember to check it daily. Although the guy who made it",
+      "est_difficulty_guess": "easy",
+      "points": 130,
+      "solves_count": 64,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/pwn/rapture",
+      "name": "rapture",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_rapture.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Rapture Deep Station is holding at 2000 fathoms. Take the station's master key with you.",
+      "est_difficulty_guess": "easy",
+      "points": 135,
+      "solves_count": 84,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/You_Have_Not_Seen_My_Colors",
+      "name": "You Have Not Seen My Colors",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_you-have-not-seen-my-colors.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Elian gave you this challenge. Find meaning in the noise, then prove what you decoded to the private endpoint. The answer is lowercase with words joined by underscores.",
+      "est_difficulty_guess": "easy",
+      "points": 138,
+      "solves_count": 78,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/Uncharted_Tides",
+      "name": "Uncharted Tides",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_uncharted-tides.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "A glimpse from the hill, a story hidden in stone. Where faith meets the forgotten path, a name waits to be found. Flag format: zdk{name_of_the_building-locality}",
+      "est_difficulty_guess": "easy",
+      "points": 143,
+      "solves_count": 70,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/misc/genie",
+      "name": "genie",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_genie.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "do something with the bottle of the genie",
+      "est_difficulty_guess": "easy",
+      "points": 144,
+      "solves_count": 68,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/pwn/House_XIII",
+      "name": "House XIII",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_house-xiii.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "House XIII is back online. Complete your assignment and return with its authorization material.",
+      "est_difficulty_guess": "easy",
+      "points": 147,
+      "solves_count": 65,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/Alt_Archaeology",
+      "name": "Alt Archaeology",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "TDHT{73c7ee40170f72dc803fe4ee}"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Get to digging! ![TDHT{73c7ee40170f72dc803fe4ee}](https://talldwarfhosting.com/assets/games/minecraft_logo.webp)",
+      "est_difficulty_guess": "easy",
+      "points": 150,
+      "solves_count": 14,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/OSINT/Oldtimer_Osint",
+      "name": "Oldtimer Osint",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "oldtimer-osint.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "A nice starter mix of Cryptography and OSINT to get you warmed up. File SHA1: `78feb890a1caf98cdeb0b60e8b77d6697ddd1222`",
+      "est_difficulty_guess": "easy",
+      "points": 150,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/cyclotomic-echo",
+      "name": "cyclotomic-echo",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_cyclotomic-echo.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Some keys disappear. Their geometry does not.",
+      "est_difficulty_guess": "easy",
+      "points": 172,
+      "solves_count": 43,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/The_Birthplace",
+      "name": "The Birthplace",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_the-birthplace.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Medium (maybe Hard for non-Danish speakers) **Author:** Ask the frog Every onboarding presentation at Brunnerne Inc.™ includes the same grainy old photo: a small house that management ",
+      "est_difficulty_guess": "easy",
+      "points": 186,
+      "solves_count": 36,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/crypto/Gerege",
+      "name": "Gerege",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_gerege.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The old empire hung a gerege from a rider's belt and every gate let them pass. UB-CENTRAL kept the idea: a bearer proves, in zero knowledge, that their tablet carries the Khan's authority - the tablet",
+      "est_difficulty_guess": "easy",
+      "points": 191,
+      "solves_count": 74,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/crypto/Gerege",
+      "name": "Gerege",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_gerege.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The old empire hung a gerege from a rider's belt and every gate let them pass. UB-CENTRAL kept the idea: a bearer proves, in zero knowledge, that their tablet carries the Khan's authority - the tablet",
+      "est_difficulty_guess": "easy",
+      "points": 191,
+      "solves_count": 74,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Return_to_Sender",
+      "name": "Return to Sender",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "return-to-sender.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Nothing was requested, yet something is missing.",
+      "est_difficulty_guess": "easy",
+      "points": 197,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/QR_Queries",
+      "name": "QR Queries",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "qr-138875.gif",
+        "qr-24fb7b.gif",
+        "qr-44ea6a.gif",
+        "qr-c22297.gif",
+        "qr-da3121.gif"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The flag is jumbled between these QR codes, can you revert it to something readable? Flag SHA1: `97d2a5b4980d70bbbf16877c4b1039cb02d955a6` File SHA1's: - qr-24fb7b.gif: `d1c0ed1f934d643d316c0fd9e186c2",
+      "est_difficulty_guess": "medium",
+      "points": 200,
+      "solves_count": 11,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/I_can't_hear_you",
+      "name": "I can't hear you",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "i_cant_hear_you.wav"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "File SHA1: `4ab670ab1e135fbc6b3e0a6028814e5f654b71bd`",
+      "est_difficulty_guess": "medium",
+      "points": 200,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/255^3",
+      "name": "255^3",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "2553.png"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "255^3ful vision File SHA1: `462f7046a25f065d634b995d89a0548c8ca2e575`",
+      "est_difficulty_guess": "medium",
+      "points": 200,
+      "solves_count": 1,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/acoustic",
+      "name": "acoustic",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "forensics_acoustic.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Your intelligence bureau has given you a tip on a deep sea conversation and you have recieved a sound signal deep underwater. Find out what is your counterpart is upto.",
+      "est_difficulty_guess": "medium",
+      "points": 205,
+      "solves_count": 29,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/pwn/paperweight",
+      "name": "paperweight",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_paperweight.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "> Every record sent to the Pelagic Archive sinks into cold storage. > > Its new chart plotter is rated for any pressure. Send a logbook below > crush depth and recover what the tide brings back.",
+      "est_difficulty_guess": "medium",
+      "points": 212,
+      "solves_count": 27,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/pwn/Formality",
+      "name": "Formality",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_formality.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every request draws a fresh clearance token from the counterpart. Nobody ever taught the desk to actually look at what it's handing out. > [!CONNECTION] > https://formality-gqii6mu2.challenge.2026.har",
+      "est_difficulty_guess": "medium",
+      "points": 218,
+      "solves_count": 58,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/pwn/Formality",
+      "name": "Formality",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_formality.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every request draws a fresh clearance token from the counterpart. Nobody ever taught the desk to actually look at what it's handing out. > [!CONNECTION] > https://formality-gqii6mu2.challenge.2026.har",
+      "est_difficulty_guess": "medium",
+      "points": 218,
+      "solves_count": 58,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/misc/Sur_Kharvaa",
+      "name": "Sur Kharvaa",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_sur-kharvaa.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Sûr kharvaa - archery. Loose one arrow of Python at the target: POST its raw bytes to `/shoot`, and it runs in a throwaway sandbox. The target is not hidden - read it at `/target.py`. Striking the tar",
+      "est_difficulty_guess": "medium",
+      "points": 233,
+      "solves_count": 52,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/misc/Sur_Kharvaa",
+      "name": "Sur Kharvaa",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_sur-kharvaa.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Sûr kharvaa - archery. Loose one arrow of Python at the target: POST its raw bytes to `/shoot`, and it runs in a throwaway sandbox. The target is not hidden - read it at `/target.py`. Striking the tar",
+      "est_difficulty_guess": "medium",
+      "points": 233,
+      "solves_count": 52,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/Sporty_Eater",
+      "name": "Sporty Eater",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_sporty-eater.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "I forgot which restaurant this is. I took this photograph on 22 May 2026, a few days after I came here for a very famous match. The restaurant has also won several Times Food & Nightlife awards. Find ",
+      "est_difficulty_guess": "medium",
+      "points": 245,
+      "solves_count": 20,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/Recycle_Bits",
+      "name": "Recycle Bits",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "recycled-bits.img"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Oops, *I deleted the flag...* File SHA1: `67f21a14069172deb011e06535e7b563020cd3d3`",
+      "est_difficulty_guess": "medium",
+      "points": 250,
+      "solves_count": 8,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/pwn/Cabinet",
+      "name": "Cabinet",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_cabinet.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The Commons makes your human half prove it at a public kiosk: play the terminal's little platformer, and it signs off that a person was here. The game is the whole authentication. Teach the cabinet to",
+      "est_difficulty_guess": "medium",
+      "points": 254,
+      "solves_count": 45,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/pwn/Cabinet",
+      "name": "Cabinet",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_cabinet.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The Commons makes your human half prove it at a public kiosk: play the terminal's little platformer, and it signs off that a person was here. The game is the whole authentication. Teach the cabinet to",
+      "est_difficulty_guess": "medium",
+      "points": 254,
+      "solves_count": 45,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/crypto/Passkey_Nightmare",
+      "name": "Passkey Nightmare",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_passkey-nightmare.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Mattermark added passkeys to protect its flag. It only accepts direct attestation from authenticators signed by a private certification authority, so creating your own credential should be impossible.",
+      "est_difficulty_guess": "medium",
+      "points": 258,
+      "solves_count": 44,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/crypto/Passkey_Nightmare",
+      "name": "Passkey Nightmare",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_passkey-nightmare.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Mattermark added passkeys to protect its flag. It only accepts direct attestation from authenticators signed by a private certification authority, so creating your own credential should be impossible.",
+      "est_difficulty_guess": "medium",
+      "points": 258,
+      "solves_count": 44,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/misc/Control_Plane",
+      "name": "Control Plane",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "blockchain-control-plane.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "A settlement gateway accepts compact envelopes produced by several independent implementations. The deployed kernel was independently audited from its wire-format specification. Recover the vault fund",
+      "est_difficulty_guess": "medium",
+      "points": 258,
+      "solves_count": 18,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Bit_Garden",
+      "name": "Bit Garden",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "bit-garden.exe"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The smallest rooms remember ***the loudest guests.***",
+      "est_difficulty_guess": "medium",
+      "points": 277,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/rev/Trace",
+      "name": "Trace",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_trace.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every stage of this binary unlocks only from the exact path already run, and watching too hard disturbs the trail. Reverse it, recover the key, and submit it to the service for your flag. > [!CONNECTI",
+      "est_difficulty_guess": "medium",
+      "points": 288,
+      "solves_count": 37,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/rev/Trace",
+      "name": "Trace",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "rev_trace.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every stage of this binary unlocks only from the exact path already run, and watching too hard disturbs the trail. Reverse it, recover the key, and submit it to the service for your flag. > [!CONNECTI",
+      "est_difficulty_guess": "medium",
+      "points": 288,
+      "solves_count": 37,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Forensics/Silent_Downlink",
+      "name": "Silent Downlink",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "transmission.wav"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "We logged an unscheduled downlink on a frequency that's supposed to be dead air. Whatever satellite this came from isn't supposed to be transmitting anymore - and it's still sending pictures. Goal: re",
+      "est_difficulty_guess": "medium",
+      "points": 300,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/FORENSICS/Whispers_From_The_Crypt",
+      "name": "Whispers From The Crypt",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "report.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Can you remove the crypt so we stop hearing these whispers? File SHA1's: - notes.txt: `bbb108275899cbe9bea83f8b4c2ce97a1e7b503d` - report.txt: `dfd1ac21189ba9d47fbd559aeb3bcb602b3983f5`",
+      "est_difficulty_guess": "medium",
+      "points": 388,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Reverse/METAL_GOT_SOLID_FLAGS_THE_PHANTOM_CALL",
+      "name": "METAL GOT SOLID FLAGS: THE PHANTOM CALL",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "mgsf-dist-to-paritcipant.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Venom Snake trusted Miller with everything - the cipher, the encryptor, the decryptor, all of it. Recovering the flag should be as simple as running decryption and reading what comes out. But Miller's",
+      "est_difficulty_guess": "hard",
+      "points": 400,
+      "solves_count": 65,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/OSINT/Okay_Satnav,_Take_Me_Where",
+      "name": "Okay Satnav, Take Me Where?",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "okay_satnav_take_me_where_1.png",
+        "okay_satnav_take_me_where_2.png"
+      ],
+      "remote_url": "https://maps.google.com",
+      "remote_urls": [
+        "https://maps.google.com"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "Can you locate the name of the company in the building highlighted in the second screenshot? Formatted to the flag: \"TallDwarf Hosting\" would convert to \"TDHT{talldwarf_hosting}\". File SHA1's - okay_s",
+      "est_difficulty_guess": "hard",
+      "points": 400,
+      "solves_count": 1,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Phant0m_C4llb4ck",
+      "name": "Phant0m C4llb4ck",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "phantom-callback.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Something called back, but it never left a number",
+      "est_difficulty_guess": "hard",
+      "points": 500,
+      "solves_count": 1,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/Random_Click_#1",
+      "name": "Random Click #1",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "part 1.jpeg"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "my phone cam is very bad :/ flag format: zdk{name_of_street}",
+      "est_difficulty_guess": "hard",
+      "points": 500,
+      "solves_count": 1,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/pwn/Tenure",
+      "name": "Tenure",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_tenure.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every ledger entry needs a human signature and a counterpart signature. Nobody ever taught the desk what to do once an entry is retired. > [!CONNECTION] > https://tenure-k3uliqof.challenge.2026.haruul",
+      "est_difficulty_guess": "hard",
+      "points": 507,
+      "solves_count": 15,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/pwn/Tenure",
+      "name": "Tenure",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_tenure.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every ledger entry needs a human signature and a counterpart signature. Nobody ever taught the desk what to do once an entry is retired. > [!CONNECTION] > https://tenure-k3uliqof.challenge.2026.haruul",
+      "est_difficulty_guess": "hard",
+      "points": 507,
+      "solves_count": 15,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Pwn/Blessed_are_the_Heap_Makers",
+      "name": "Blessed are the Heap Makers",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "dist-to-participants-drive"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Blessed are the heap-makers, for they will be called children of mitigations. Blessed are the pwners, for they will be called children of exploitation. https://drive.google.com/file/d/141n7CoJUQ4WW-Gt",
+      "est_difficulty_guess": "hard",
+      "points": 619,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/pwn/Payphone",
+      "name": "Payphone",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_payphone.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Make a call and listen closely. Run `/flag` to get the flag. Payphone places the call, so you need somewhere for it to call: a publicly reachable TCP listener of your own. Payphone holds the key to th",
+      "est_difficulty_guess": "hard",
+      "points": 656,
+      "solves_count": 9,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/pwn/Payphone",
+      "name": "Payphone",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_payphone.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Make a call and listen closely. Run `/flag` to get the flag. Payphone places the call, so you need somewhere for it to call: a publicly reachable TCP listener of your own. Payphone holds the key to th",
+      "est_difficulty_guess": "hard",
+      "points": 656,
+      "solves_count": 9,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/pwn/Made_In_Mongolia",
+      "name": "Made In Mongolia",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_made-in-mongolia.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "SFEX is a programming language made in Mongolia. This is its playground, made for the world: write a story, press run, and see what the interpreter says back. Run `/flag` binary to get the flag. > [!C",
+      "est_difficulty_guess": "hard",
+      "points": 726,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/pwn/Made_In_Mongolia",
+      "name": "Made In Mongolia",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "pwn_made-in-mongolia.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "SFEX is a programming language made in Mongolia. This is its playground, made for the world: write a story, press run, and see what the interpreter says back. Run `/flag` binary to get the flag. > [!C",
+      "est_difficulty_guess": "hard",
+      "points": 726,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Pwn/Our_Time's_passed,_John",
+      "name": "Our Time's passed, John",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "our-times-passed-john-dist-to-participant.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "I got a plan John. This is a good one. We can't always pwn nature, John. We can't pwn calloc. We can't pwn safe linking without a heap leak. We can't pwn nothing. My whole life, all I ever did was pwn",
+      "est_difficulty_guess": "hard",
+      "points": 796,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/OSINT/New_product_-_Brun-water",
+      "name": "New product - Brun-water",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "osint_new-product-brun-water.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Difficulty:** Very Hard **Author:** The Mikkel Corporate has decided that our next flagship product will be Brun-water™. Marketing says it's \"synergistically hydrating\" which is apparently important",
+      "est_difficulty_guess": "hard",
+      "points": 834,
+      "solves_count": 9,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Pwn/TurboCalc",
+      "name": "TurboCalc",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "turbocalc.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "I always use a calculator when working with heapnotes. Hope this calculator helps you get your next flag!!! dist: https://drive.google.com/file/d/1p5PjXalFXfGnVVPdQjZW9xS0Je2Nm7BN/view?usp=sharing nc ",
+      "est_difficulty_guess": "hard",
+      "points": 835,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/misc/Naadam",
+      "name": "Naadam",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_naadam.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "A handheld that exists nowhere else boots one cartridge and answers only in pixels. The flag is inside the machine. > [!CONNECTION] > https://naadam-joxirocp.challenge.2026.haruulzangi.mn",
+      "est_difficulty_guess": "hard",
+      "points": 857,
+      "solves_count": 4,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/misc/Naadam",
+      "name": "Naadam",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "misc_naadam.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "A handheld that exists nowhere else boots one cartridge and answers only in pixels. The flag is inside the machine. > [!CONNECTION] > https://naadam-joxirocp.challenge.2026.haruulzangi.mn",
+      "est_difficulty_guess": "hard",
+      "points": 857,
+      "solves_count": 4,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/crypto/Vivarium",
+      "name": "Vivarium",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_vivarium.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The Commons keeps its Python snakes in a vivarium. Each one is sealed in an enclosure, safely separated from the vault where their food is stored. Or so the keepers thought. One particularly sneaky sn",
+      "est_difficulty_guess": "hard",
+      "points": 906,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/web/My_Avatar",
+      "name": "My Avatar",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_my-avatar.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Your avatar says a lot about you. MyAvatar says it only accepts AVIF images, decodes every upload, stamps its watermark, and stores the result in your private collection. Make the image say something ",
+      "est_difficulty_guess": "hard",
+      "points": 906,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/crypto/Vivarium",
+      "name": "Vivarium",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "crypto_vivarium.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The Commons keeps its Python snakes in a vivarium. Each one is sealed in an enclosure, safely separated from the vault where their food is stored. Or so the keepers thought. One particularly sneaky sn",
+      "est_difficulty_guess": "hard",
+      "points": 906,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/web/My_Avatar",
+      "name": "My Avatar",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_my-avatar.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Your avatar says a lot about you. MyAvatar says it only accepts AVIF images, decodes every upload, stamps its watermark, and stores the result in your private collection. Make the image say something ",
+      "est_difficulty_guess": "hard",
+      "points": 906,
+      "solves_count": 3,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/web/Likeness",
+      "name": "Likeness",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_likeness.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every citizen in the Commons registers a handle before they can act. A short list of names is reserved for the Archive's own keepers, and the directory won't let anyone claim one outright. The Archive",
+      "est_difficulty_guess": "hard",
+      "points": 957,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/web/Likeness",
+      "name": "Likeness",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "web_likeness.tar.gz"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every citizen in the Commons registers a handle before they can act. A short list of names is reserved for the Archive's own keepers, and the directory won't let anyone claim one outright. The Archive",
+      "est_difficulty_guess": "hard",
+      "points": 957,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Braided_Reality",
+      "name": "Braided Reality",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "braided_reality"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Something is wrong with reality. Find out what.",
+      "est_difficulty_guess": "hard",
+      "points": 1000,
+      "solves_count": 0,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Neon_Casuality",
+      "name": "Neon Casuality",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "neon-causality.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Every answer leaves an echo; only one returns.",
+      "est_difficulty_guess": "hard",
+      "points": 1000,
+      "solves_count": 0,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_4/challenge",
+      "name": "challenge",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "api_status.json",
+        "health.json"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Misc` | | **Points** | `650` | | **Solves** | 1 | NeuroServe protects its AI inference gateway with a secret API token. The authentication endpoi",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/food_poison2",
+      "name": "food_poison2",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "run_log.txt",
+        "run_log_ps.txt",
+        "run_log_ps2.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Rust CLI for storing restaurant entries in an MDBX database using [libmdbx-rs](https://github.com/vorot93/libmdbx-rs). ```bash cargo run -- add \"Sushi Place\" \"Open late\" ``` Use `--db-path` to change ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Ghidra/vscode/ghidra_debug/data",
+      "name": "data",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "README.txt",
+        "sleighArgs.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The \"data\" directory is intended to hold data files that will be used by this module and will not end up in the .jar file, but will be present in the zip or tar file. Typically, data files are placed ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Ghidra/vscode/ghidra_debug/ghidra_scripts",
+      "name": "ghidra_scripts",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "README.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Java source directory to hold module-specific Ghidra scripts.",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Ghidra/vscode/ghidra_debug/lib",
+      "name": "lib",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "README.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "The \"lib\" directory is intended to hold Jar files which this module is dependent upon. Jar files may be placed in this directory manually, or automatically by maven via the dependencies block of this ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/SOFAR_-_Vault/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "SOFAR - Vault.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Crypto` | | **Points** | `500` | | **Solves** | 1 | | **Tags** | `StaticAttachment` | anhdh vừa rồi đã đạt top 7 trên BXH Việt Nam về tựa game Fa",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Signaling/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Signaling.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Crypto` | | **Points** | `100` | | **Solves** | 39 | | **Tags** | `StaticAttachment` | How roblox expects us to talk to eachother | File / Resour",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Stranger_Papers/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "cd4jFJwL"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Crypto` | | **Points** | `247` | | **Solves** | 6 | | **Tags** | `StaticAttachment` | [PHÒNG THÍ NGHIỆM HAWKINS - TỐI MẬT] Ngày 6 tháng 11, năm 1",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Bug_bounty/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "PewkARTJ"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `100` | | **Solves** | 51 | | **Tags** | `DynamicContainer` | Bản lĩnh dám đứng trước bản mod mới của tao mà hack đượ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/QR/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Forensics - QR.7z"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `100` | | **Solves** | 90 | | **Tags** | `StaticAttachment` | Có sao nói vậy, ai tinh ý sẽ nhận ra | File / Resource ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Suspicious/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "KfhBHITZ"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `100` | | **Solves** | 39 | | **Tags** | `DynamicContainer` | ``` Có bàn chân lặng lẽ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Sơn_Tùng_M-TP/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "aLB1GTIY"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `100` | | **Solves** | 53 | | **Tags** | `StaticAttachment` | Hãy trao cho anh flag | File / Resource | Source | Stat",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/anhcd/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Forensics - anhcd.7z"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `100` | | **Solves** | 45 | | **Tags** | `StaticAttachment` | Quan trọng hay không không quan trọng, quan trọng là có",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/🐧/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "5dwnkCDC"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Forensics` | | **Points** | `102` | | **Solves** | 27 | | **Tags** | `DynamicContainer` | Các em cứ thử luộc một con malware lên không cần chặt, ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/AI2Own/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "dumped_binary",
+        "text_section.bin"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `124` | | **Solves** | 15 | | **Tags** | `DynamicContainer` | No file, no attachment, just do it yourself *No file attachme",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/Operation_Midnight_Drop/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "operation.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `100` | | **Solves** | 46 | | **Tags** | `DynamicContainer` | Một lỗ hổng zero-day đang được các hacker khai thác ngoài thự",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/The_Wellness_Ring_Bypass/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "The Wellness Ring Bypass-20260814T081410Z-1-001.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `100` | | **Solves** | 33 | | **Tags** | `DynamicContainer` | Để chuẩn bị cho cuộc thi Pwn2Own Ireland 2026, nhh và vietnq ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/baby-heap-V2/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "heap_basic_V2.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `100` | | **Solves** | 35 | | **Tags** | `DynamicContainer` | Bạn có tất cả mọi thứ nhưng lại không có được flag | File / R",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/baby-heap-V2-revenge/challenge",
+      "name": "challenge",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "baby-heap-V2-patch.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `103` | | **Solves** | 25 | | **Tags** | `DynamicContainer` | vietnq said nobody gonna solve this by the intended solution ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/seccomp-V3/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "seccomp_V3.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Pwn` | | **Points** | `110` | | **Solves** | 19 | | **Tags** | `DynamicContainer` | Cùng học seccomp nhé! | File / Resource | Source | Status | L",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/GhostVM/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "GhostVM.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Reverse` | | **Points** | `100` | | **Solves** | 56 | | **Tags** | `StaticAttachment` | Một bộ phim kinh dị bị thất lạc vừa được tìm thấy trong k",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/MMO/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "0577OtgBVTaT"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Reverse` | | **Points** | `100` | | **Solves** | 56 | | **Tags** | `StaticAttachment` | Một người bạn làm trong lĩnh vực MMO, gian lận hắn ta có ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Pablo_Escobar/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "dist.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Reverse` | | **Points** | `198` | | **Solves** | 8 | | **Tags** | `StaticAttachment` | ``` Ông trùm buôn ma túy ở Bắc Ninh cung cấp cho đồng bọn ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/PhoneFarm/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "PhoneFarm.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Reverse` | | **Points** | `100` | | **Solves** | 79 | | **Tags** | `StaticAttachment` | Gần đây công an Đột kích \"trang trại\" 2.000 điện thoại ở ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Winux/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Winux.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Reverse` | | **Points** | `100` | | **Solves** | 55 | | **Tags** | `StaticAttachment` | Vào một ngày đẹp trời, Linux không cho các con dân sử dụn",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Palworld_Mod/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "palworld_mod_src_for_player.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Web` | | **Points** | `101` | | **Solves** | 30 | | **Tags** | `DynamicContainer` | g3ren9 rất thích chơi Palworld, mặc dù đã phá đảo bản Beta Ac",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Độ_Mixi/challenge",
+      "name": "challenge",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Web - Độ Mixi.7z"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "| Property | Value | | :--- | :--- | | **Category** | `Web` | | **Points** | `100` | | **Solves** | 115 | | **Tags** | `DynamicContainer` | ``` Alo em có phải Vũ không?",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/UIUCTF/koth/phantasmoon",
+      "name": "phantasmoon",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "Dockerfile",
+        "phantasmoon-gui",
+        "phantasmoon.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Start the browser-accessible desktop: ```sh docker compose up --build ``` Open <https://localhost:3001>, launch a terminal, and validate the example bot: ```sh phantasmoon-gui --check /workspace/robot",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/AI/Pickles",
+      "name": "Pickles",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "dist.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 923 pts **Author: @hckerror** medium Downloaded the classifier model from an unofficial mirror, what could have gone wrong? Will be useful: POST /infer Content-Type: application/json ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/AI/Slop",
+      "name": "Slop",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "adg_out.txt",
+        "arith_bpe_live_out.txt",
+        "arith_common_out.txt",
+        "arith_float_out.txt",
+        "arith_focus_out.txt",
+        "block_bpe_out.txt",
+        "block_decode_out.txt",
+        "bos_full_temp08.bin",
+        "bos_full_temp1.bin",
+        "bos_header_temp08.bin"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @hckerror** medium I received a very strange message. It seems the sender has undergone AI-ization Will be useful: Model: Qwen/Qwen2.5-0.5B-Instruct-GGUF Revision: ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Aperture Science Neurotoxin Diagnostics",
+      "name": "Aperture Science Neurotoxin Diagnostics",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "NeurotoxinDiagnostics.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 483 pts **Author: @vvanuss** hard Materials from a retired Aperture Science maintenance subsystem operating under GLaDOS supervision were recovered during a cleanup of the facility. A",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Aperture Science Still Alive",
+      "name": "Aperture Science Still Alive",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "StillAlive.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 263 pts **Author: @vvanuss** medium A restricted Aperture Science record associated with GLaDOS was recovered from an internal storage segment that survived the shutdown of the facili",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Aperture Science Stream Calibration",
+      "name": "Aperture Science Stream Calibration",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "StreamCalibration.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 202 pts **Author: @vvanuss** easy Following the opening of formal proceedings related to Aperture Science, investigators получили limited access to surviving fragments of the facility",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Aperture Science The Cake Is A Lie",
+      "name": "Aperture Science The Cake Is A Lie",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "TheCakeIsALie.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** hard A sealed transmission was recovered from an experimental Aperture Science communication link deployed between two isolated research sectors. You int",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Aperture Science Weighted Companion Cube",
+      "name": "Aperture Science Weighted Companion Cube",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "WeightedCompanionCube.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 361 pts **Author: @vvanuss** hard A sealed Aperture Science archive linked to Companion Cube logistics was recovered from an abandoned Enrichment Center workstation. Most of the surro",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/MeowMeow",
+      "name": "MeowMeow",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "Meow.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 531 pts **Author: @vvanuss** medium Meow Meow Meow Meow Meow Meow? Meow Meow Meow Meow Meow Meow Meow! Meow Meow Meow Meow Meow Meow Meow Meow Meow Meow Meow Meow Meow?",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Crypto/Ucucuga",
+      "name": "Ucucuga",
+      "category": "crypto",
+      "has_local_files": true,
+      "attachments": [
+        "public.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** nightmare To be honest, I put a lot of time and effort into this challenge, but I think I overdid it. There are two points where you have to guess the di",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Invoice Without A Bank",
+      "name": "Invoice Without A Bank",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "Invoice Without a Bank.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 440 pts **Author: @vvanuss** easy Find the message where a PDF attachment is distributed under the guise of a banking notification. Recover: The exact PDF attachment filename The iden",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Philologist",
+      "name": "Philologist",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "filolog.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 614 pts **Author: @meier** medium Героев детства мы не судим, И ведь не правы вовсе тут: Тогдашних дней грехи забудем, Ласкаясь тем, что те не врут. Однажды павши в ноги к смуте, —",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/ez_jumplist_src",
+      "name": "ez_jumplist_src",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "icon.png",
+        "license"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "Open Source Development funding and support provided by the following contributors: [SANS Institute](http://sans.org/) and [SANS DFIR](http://dfir.sans.org/).",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/ez_registry_plugins",
+      "name": "ez_registry_plugins",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "RECmdPluginExampleOutput.jpg",
+        "RegistryExplorerPluginsInAction.gif"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "This repo that contains all the Registry Plugins used by Eric Zimmerman's Registry Explorer and [RECmd](https://github.com/EricZimmerman/RECmd). You can download both tools [here](https://ericzimmerma",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/ez_registry_src",
+      "name": "ez_registry_src",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "icon.png"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "NOTE: This project uses C# version 6 features! You will need VS 2015 to compile it. Alternatively you can just use the DLL from the ExampleApp project. Full featured, offline Registry parser in C#. Fo",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/gzctf_src",
+      "name": "gzctf_src",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "LICENSE.txt",
+        "LICENSE_ADDENDUM.txt",
+        "NOTICE",
+        "renovate.json"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "[![publish](https://github.com/GZTimeWalker/GZCTF/actions/workflows/ci.yml/badge.svg)](https://github.com/GZTimeWalker/GZCTF/actions/workflows/ci.yml) [![Crowdin](https://badges.crowdin.net/gzctf/loca",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Prompt And Pretext",
+      "name": "Prompt And Pretext",
+      "category": "forensics",
+      "has_local_files": true,
+      "attachments": [
+        "Prompt and Pretext.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 948 pts **Author: @vvanuss** medium We obtained a large set of Windows event logs after suspicious activity. Find the staged PowerShell credential-phishing chain. From the obfuscated ",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Fear And Horror",
+      "name": "Fear And Horror",
+      "category": "misc",
+      "has_local_files": true,
+      "attachments": [
+        "chal_steg.pcap"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** nightmare Oh, I shouldn't have gotten involved in that... Flag format: grodno{} Ой, зря я туда полез... Формат флага: grodno{} Download Attachment",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/OSINT/FOOTBALLchik",
+      "name": "FOOTBALLchik",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "FOOTBALLchik.jpg"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 20 attempts left, keep going! **Author: @vvanuss** 518 pts medium At the end of spring, I decided to go to a football match and took this photo. Find the exact time the first goal was",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/OSINT/Fire Mural",
+      "name": "Fire Mural",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "artifact.jpg"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 161 pts **Author: @vvanuss** easy The image shows an actual site in Grodno. Identify the first and last name of the artist who created the monumental mural on the facade of this build",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/OSINT/WhoAmI",
+      "name": "WhoAmI",
+      "category": "osint",
+      "has_local_files": true,
+      "attachments": [
+        "WhoAmI.jpg"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 948 pts **Author: @vvanuss** easy While traveling through Oklahoma, I stumbled upon an interesting shop and took this selfie. Can you figure out my name? Flag format: grodno{FirstName",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Pwn/Clockwork Vault",
+      "name": "Clockwork Vault",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "clockwork_vault"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** medium The city vault is controlled by an old automated system that has been patched and reused for years. Tonight, it is locked for a private inventory,",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Pwn/Deep Port",
+      "name": "Deep Port",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "auth_instance.json",
+        "deep_port",
+        "deep_port_transcript.bin",
+        "login_after.png"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** hard Far beyond the shipping lanes, an offshore logistics platform still runs without pause. Something inside the control network has gone out of rhythm.",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Pwn/House Of Mirage",
+      "name": "House Of Mirage",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "House_of_Mirage.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** medium House of Mirage never forgets. It only reflects what it has already seen, and somewhere in those reflections the truth is still alive. Flag format",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Pwn/Museum Of Echoes",
+      "name": "Museum Of Echoes",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "museum_of_echoes"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** hard One of the interactive halls in the Museum of Echoes stopped following the staff’s commands during a private event. It is still running, but not the",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Pwn/Red Tide Terminal",
+      "name": "Red Tide Terminal",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "red_tide_terminal"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @vvanuss** nightmare An abandoned coastal command terminal has reappeared on a live network map after years of silence. Now it responds again, but only briefly, and",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Reverse/A Great Big Leap",
+      "name": "A Great Big Leap",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "goingtoofaraway5.exe"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @meier** medium Прыжок, прыжок еще прыжок — стоим чуть-чуть и вновь вперед. Сравнить пред тем уж не забудь, какой большой прошел ты путь! It seems there is more mea",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Reverse/Write The Кодэ",
+      "name": "Write The Кодэ",
+      "category": "rev",
+      "has_local_files": true,
+      "attachments": [
+        "dist.zip"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 571 pts **Author: @hckerror** hard Usually, by changing the environment, people mean going on vacation, but I prefer to change the compiler. Will be useful ./tcc -B./runtime checker.c",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Web/Wrodle",
+      "name": "Wrodle",
+      "category": "web",
+      "has_local_files": true,
+      "attachments": [
+        "answers.txt",
+        "real_answers.txt",
+        "words.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "**Point Value**: 1000 pts **Author: @Kqwwse** medium Play Wrodle for free, no SMS or registration required. The resulting flag must be wrapped in the grodno{} format. Wrodle играть бесплатно без смс и",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/pwn_3in1/pwn_3in1/ladybird",
+      "name": "ladybird",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "CMakeLists.txt",
+        "CMakePresets.json",
+        "LICENSE",
+        "vcpkg-configuration.json",
+        "vcpkg.json"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "[Ladybird](https://ladybird.org) is a truly independent web browser, using a novel engine based on web standards. > [!IMPORTANT] > Ladybird is in a pre-alpha state, and only suitable for use by develo",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/pwn_3in1/pwn_3in1/qemu",
+      "name": "qemu",
+      "category": "pwn",
+      "has_local_files": true,
+      "attachments": [
+        "COPYING",
+        "GNUmakefile",
+        "Kconfig",
+        "LICENSE",
+        "MAINTAINERS",
+        "Makefile",
+        "VERSION",
+        "configure",
+        "meson_options.txt"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "=========== QEMU README =========== QEMU is a generic and open source machine & userspace emulator and virtualizer. QEMU is capable of emulating a complete machine in software without any need for har",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/rev_nevm/work/rev_nevm",
+      "name": "rev_nevm",
+      "category": "unknown",
+      "has_local_files": true,
+      "attachments": [
+        "challenge_1.bin",
+        "challenge_2.bin",
+        "challenge_3.bin",
+        "challenge_4.bin",
+        "tiny_byte.bin",
+        "tiny_div.bin",
+        "tiny_gt.bin",
+        "tiny_lt.bin",
+        "tiny_mod.bin",
+        "tiny_shr.bin"
+      ],
+      "remote_url": null,
+      "remote_urls": [],
+      "remote_alive": null,
+      "description_excerpt": "This challenge is inspired by **Loki** (<https://www.usenix.org/system/files/sec22-schloegel.pdf>). Run with `./run.sh`.",
+      "est_difficulty_guess": "unknown",
+      "points": null,
+      "solves_count": null,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/Join_the_Discord_)",
+      "name": "Join the Discord? :)",
+      "category": "unknown",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://tdho.st/discord",
+      "remote_urls": [
+        "https://tdho.st/discord"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "We have hidden a flag in our Discord server! [Join Here](https://tdho.st/discord)",
+      "est_difficulty_guess": "easy",
+      "points": 100,
+      "solves_count": 16,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Login_Bypass",
+      "name": "Login Bypass",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://login-bypass-ctf.tdho.st/",
+      "remote_urls": [
+        "https://login-bypass-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "The TallDwarf staff portal has been around since 2022. So has this login form.",
+      "est_difficulty_guess": "easy",
+      "points": 185,
+      "solves_count": 16,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/The_Imitation_Game",
+      "name": "The Imitation Game",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://imitation-game-ctf.tdho.st/",
+      "remote_urls": [
+        "https://imitation-game-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "The TallDwarf customer portal hands you something when you log in as a guest. It appears to be very trusting of you.",
+      "est_difficulty_guess": "easy",
+      "points": 188,
+      "solves_count": 13,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Server_Dashboard",
+      "name": "Server Dashboard",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://server-dashboard-ctf.tdho.st/",
+      "remote_urls": [
+        "https://server-dashboard-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "Something doesn't seem quite right about how this API works. I think there is something hiding in one of these servers, can you find it? Demo Account API Token: `tdh_demo_3012_k7mQ9x`",
+      "est_difficulty_guess": "easy",
+      "points": 189,
+      "solves_count": 12,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Up_Down_Degraded",
+      "name": "Up? Down? Degraded?",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://status-ctf.tdho.st/",
+      "remote_urls": [
+        "https://status-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "Theres a problem with this status page. Use it to locate the admin login credentials on the server, then enumerate the admin login path (or guess it as it's not exactly rocket science) to login as the",
+      "est_difficulty_guess": "medium",
+      "points": 243,
+      "solves_count": 8,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Diagnostics_Shenanigans",
+      "name": "Diagnostics Shenanigans",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://diagnostics-shenanigans-ctf.tdho.st/",
+      "remote_urls": [
+        "https://diagnostics-shenanigans-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "Subdomain enumeration revealed a DNS testing tool, can you exploit this tool to get the flag?",
+      "est_difficulty_guess": "medium",
+      "points": 244,
+      "solves_count": 7,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Web/PingBox",
+      "name": "PingBox",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "http://13.203.69.239:31007/",
+      "remote_urls": [
+        "http://13.203.69.239:31007/",
+        "http://15.207.105.32:31007/",
+        "http://13.202.73.64:31007/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "PingBox is a tiny chat app. Create a chat, share the link with a friend, and enjoy the Chatting! Got a chat you think looks sketchy? Use the Report page and an admin will take a look.",
+      "est_difficulty_guess": "medium",
+      "points": 266,
+      "solves_count": 15,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Support_Centre",
+      "name": "Support Centre",
+      "category": "web",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://support-centre-ctf.tdho.st/",
+      "remote_urls": [
+        "https://support-centre-ctf.tdho.st/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "The support ticket system lets you write to staff. Staff read tickets in the admin panel. Staff have cookies you want. Information extracted from a (now deleted) leaked internal document: - v3.0.0 Tic",
+      "est_difficulty_guess": "medium",
+      "points": 349,
+      "solves_count": 2,
+      "used_at": null
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Misc/Sir,_Just_SIR!",
+      "name": "Sir, Just SIR!",
+      "category": "misc",
+      "has_local_files": false,
+      "attachments": [],
+      "remote_url": "https://vetty-vagaiyara-shop.azurewebsites.net/",
+      "remote_urls": [
+        "https://vetty-vagaiyara-shop.azurewebsites.net/"
+      ],
+      "remote_alive": true,
+      "description_excerpt": "Amar - an investigative agent - has been tracking Rolex, the notorious kingpin of the drug underworld and leader of the criminal syndicate known as Vetty Vagaiyara. After months of surveillance, Amar ",
+      "est_difficulty_guess": "hard",
+      "points": 445,
+      "solves_count": 2,
+      "used_at": null
+    }
+  ],
+  "rejected": [
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/forensics/Chronofault",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/forensics/Enablement",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/forensics/Handprint",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/forensics/Interval",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/forensics/Khiimori",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/misc/Countersign",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/misc/Real_world_Fraud",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/misc/Welcome",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/rev/Automaton",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/rev/Ehlel",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/rev/Furnace",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/web/Custodian",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/2026_haruulzangi_CTF/web/DreamComeTwo",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/Bink_Ink_(Root)",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/Brunner_Mifflin_(Root)",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/The_Three_Ways_-_Continuous_Improvement",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/The_Three_Ways_-_Feedback",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Boot2Root/The_Three_Ways_-_Flow",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Forensics/Baked_In",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Misc/Checkmate",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Apply_here",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/BOREd2root_(Root)",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/BOREd2root_(User)",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Bears",
+      "reason": "needs_human_review"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Blackboard",
+      "reason": "needs_human_review"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Brunner_Mifflin_-_Complaint_Box",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Business_Trip",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Company_Intranet",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Corporate_Hotline",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Going_Paperless",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Insanity_Check",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Legacy_Cipher",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Start_Here_Sanity_Check",
+      "reason": "needs_human_review"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Touch_Base",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Onboarding/Why_those_random_letters",
+      "reason": "needs_human_review"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/Dumb-factor_Authentication",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/PHP_2003",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/Secret_Event",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BrunnerCTF_2026_-_Global/Web/Welcome_Aboard",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/BushBashCTF/xor/__MACOSX",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/forensics/Chronofault",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/forensics/Enablement",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/forensics/Handprint",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/forensics/Interval",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/forensics/Khiimori",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/misc/Countersign",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/misc/Real_world_Fraud",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/misc/Welcome",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/rev/Automaton",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/rev/Ehlel",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/rev/Furnace",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/web/Custodian",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Competition/web/DreamComeTwo",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Crypto/Crypto_Challenge_1/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Crypto/Crypto_Challenge_2/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Crypto/Crypto_Challenge_2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Crypto/Crypto_Challenge_3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_3/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_4/solver",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/Misc_Challenge_4/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/OSINT_Challenge_1/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Misc/OSINT_Challenge_1/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_1/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_1/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_2/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_3/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Pwn/Pwn_Challenge_3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Reverse/Reverse_Challenge_1/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Reverse/Reverse_Challenge_1/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Reverse/Reverse_Challenge_2/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Reverse/Reverse_Challenge_2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Reverse/Reverse_Challenge_3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Web/Web_Challenge_1/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Web/Web_Challenge_2/challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Web/Web_Challenge_2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/CTF_Da_Nang_2026/Web/Web_Challenge_3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/misc/Read_the_Fine_Print",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Black_Thunk",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Gopher_Carousel",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/NaN_Penguin_Cipher",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Parallex_Engine",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/E0f_team_CTF/rev/Snake_Oil_Bytecode",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Crypto/Just_Follow_the_Recipe",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Crypto/com_petition",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Crypto/easy_dsa",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/culinary-circles/culinary-circles",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/customer-service",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/food-inspector/food-inspector",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/fruit-market",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/knitted-flag",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/old_food/data",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/organized",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/Miscellaneous/supercat/supercat",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/pwning/food-inspector/food-inspector",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/pwning/food-inspector-2/food-inspector-2",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/pwning/no-free-lunch/no-free-lunch",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/pwning/scanwich-station/scanwich-station",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/reverse/koenigsberg-delivery-problem/koenigsberg-delivery-problem",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/reverse/leftover-leftovers",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/reverse/leftovers",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/reverse/my-favorite-ingredient",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/reverse/stupidcontract",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/specctf",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/cookoff/solution",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/fancy-food-notifications",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/pharry",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/recipeloader",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/restaurant-builder",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/scanwich-station/scanwich-station",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/secretpickle-easy",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/simple-food-notifications",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/GPN_CTF/web/tinyweb/tinyweb",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Ghidra/Test_MCP.rep",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Ghidra/vscode/ghidra_debug/.vscode",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/LYKNCTF/static",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Boot2root/w4nn4d13's_Trap",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Crypto/S-box",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Osint/Los_Pollos_Hermanos",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Osint/This_Cord",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/N1PH_RSxTCTF/Web/Moogle_Arrived",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/challenge",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/script",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/temp_run",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/CIA_-_What_does_'I'_stand_for/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Missing_Pen/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Missing_Pen/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/SOFAR_-_Vault/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/SSSH/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/SSSH/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Signaling/script",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Signaling/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/Stranger_Papers/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/That_Should_Be_nhh/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Crypto/That_Should_Be_nhh/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Bug_bounty/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/QR/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Suspicious/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/Sơn_Tùng_M-TP/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/anhcd/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/🐧/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/🪟/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Forensics/🪟/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/AI2Own/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/Operation_Midnight_Drop/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/The_Wellness_Ring_Bypass/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/baby-heap-V2/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/baby-heap-V2-revenge/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/blackbox-V4/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/blackbox-V4/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Pwn/seccomp-V3/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/GhostVM/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/MMO/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/P(roc)E(ss)/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/P(roc)E(ss)/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Pablo_Escobar/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/PhoneFarm/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Tiger_Bạc/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Tiger_Bạc/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Reverse/Winux/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Approve_Please,_Genie!/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Approve_Please,_Genie!/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Brain_Rot/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Brain_Rot/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/LEMON_MELON_COOKIE/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/LEMON_MELON_COOKIE/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Machine_Love/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Machine_Love/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/PTIT_Portfolio_Renderer/challenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/PTIT_Portfolio_Renderer/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Palworld_Mod/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/PTIT_CTF_2026/Web/Độ_Mixi/writeup",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/End_Update_No_Okay",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/INTRO/Please_Read_the_Rules",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/MISC/A_Jarring_Amount_of_Cracking",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/MISC/NBT_Needle",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/MISC/Server_Message_Of_The_Day",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/OSINT/Presenting_vs_Serving",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/TallDwarf_Hosting_Hostile_Takeover/WEB_EXPLOITATION/Diagnostics_Shenanigans_Reforged",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/UIUCTF/crypto/positive-thinking",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/UIUCTF/misc",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/Rewind",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/crypto/Rewind_Revenge",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Black_Box",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Dead_Current",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Dead_Letter_Wake",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Ghost_in_the_GPU",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Hydra_FC",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/Unrotated",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/layer-eight",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/forensics/mermaids_last_song",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/misc/Clockwork_Nailoong",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/misc/Setting_Sails",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/Guess_r_y",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/Rice",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/osint/get_zucked",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/rev/Black_Tide_Survey",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/rev/pekpek-stadium-64",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/rev/rival-battle",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/rev/stars-below",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/webex/both-cups",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/Z0d1ak_CTF/webex/captcha",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/FBBL-FORENSICS-WS01",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/cold_start",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/crack_me_vault",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/ekusher_shobdo",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/four_registers",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/muktir_shongket",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/phantom_device",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/bdsec/unlock",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/aes",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ctf-archive",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/diffie-hellman",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/ecc",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/general",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/hashes",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/introduction",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/isogenies",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/maths",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/misc",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/post-quantum",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/rsa",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/web",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/d3ctf/ghost/work/d3ctf-ghost",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/d3ctf/ghost_raw",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/After The Swarm",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/deletedcheck",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/Pinned to Yesterday/ez_recmd_src",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Forensics/The USB That Wouldnt Repeat",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/1000-7",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Ghost Layers",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Herobrine",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Invisible Editor",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Talent",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/Urod",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Misc/ХАХАХАХАХАХАХАХАХАХАХАХАХАХАХАХА",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/OSINT/Strongest Beaver",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Reverse/WrongCube",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Web/Baby Web",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Web/Iä Shub-Niggurath",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Web/Pulse",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/Web/Zakviel",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/ctf_archives_probe_1783787934/ctfs/Junior.Crypt",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/grudo/ctf_archives_probe_1783787934/ctfs/NewYear",
+      "reason": "not_solvable(no local attachments, no remote url)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/collatz",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/cyclegolf",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/fire",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/format",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/glass",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/just-another-injection-challenge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/my-first-unpickler",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/one-pickle",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/silent-cat",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/void2",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/jailCTF/what-numbers-v2",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/beginer/BabyRF",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/beginer/TranscendentRenovation",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/beginer/beginner_baby-lcg/beginner_baby-lcg",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/beginer/get-the-flag/app",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/beginer/me_fr",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/crypto/crypto_1+1=3/crypto_1+1=3",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/crypto/crypto_immiscible/crypto_immiscible",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/crypto/crypto_rsa-eclipse/crypto_rsa-eclipse",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/for/scan",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/hardware/spectre",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/pwn/pwn_rudimentary-calculator/pwn_rudimentary-calculator",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/web/catvault",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/web/catvault_2",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/web/svg",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/web/zebda/zebda",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/l3akCTF/words/words",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/misc/intel_stream",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/pwn/Mind the Gap",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/pwn/ghostwriter",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/pwn/phantomgate_fw_4.2.1",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/rev/0xRE",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/rev/beatme",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/rev/infi",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/rev/rezero",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/threat intelll/REZero",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/mtaCTF/threat intelll/hassh",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/no_hack_no_ctf/67/chal/share",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3ctf/D3D12",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3ctf/FunnyGame_Data/Plugins/x86_64",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3ctf/FunnyGame_Data/Resources",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3fake/lift",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3fake/sun/data",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/r3fake/sun/static",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/blockchain_open-world/blockchain_open-world",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/blockchain_pp-farming",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/blockchain_pp-farming-2",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/crypto_apbq-rsa-iv",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/crypto_iihash/crypto-ecosystem/knowledge",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/crypto_needle-in-a-multivariate-sekai/crypto_needle-in-a-multivariate-sekai",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/crypto_orbital-strike",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/game_minions-in-16k/game_minions-in-16k",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/minecraf",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/misc_deadgame2/extracted_replay",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/misc_deadgame2/scripts",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/misc_impossible-stego/impossible-stego/misc_impossible-stego",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/misc_sekaiid/misc_sekaiid",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/misc_ufo",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/pwn_3in1/pwn_3in1/artifacts",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/pwn_ppp/pwn_ppp",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/rev_chibile/rev_chibile",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/skycraft",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_&lt;_w+/web_&lt;_w+/app",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_&lt;_w+/web_&lt;_w+/proxy",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_&lt;_w+2/web_&lt;_w+/app",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_&lt;_w+2/web_&lt;_w+/proxy",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_end/web_end/api",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_end/web_end/bot",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_end/web_end/proxy",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/sekai/web_migurimental/web_migurimental",
+      "reason": "already_solved(flag.txt)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/67",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/:)))))/chall",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/Vigroterse",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/ilovebamboo",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/intercepted_message",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/crypto/meowmeow/mrrp",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/rev/Badge_Check/__MACOSX",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/rev/redline",
+      "reason": "unclear_statement(empty description & README)"
+    },
+    {
+      "path": "/home/light/Workspace/CTF/thryvecCTF/rev/soul_dist",
+      "reason": "unclear_statement(empty description & README)"
+    }
+  ]
+}

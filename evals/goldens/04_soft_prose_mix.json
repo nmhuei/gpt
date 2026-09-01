@@ -1,0 +1,29 @@
+{
+  "id": "soft-prose-mix-accepted",
+  "desc": "(d) soft <cmd> wrapped in natural prose parses without correction (gated on FIX-T2)",
+  "module": "toolcall",
+  "requires_fix": "FIX-T2",
+  "input": {
+    "protocol": "soft",
+    "text": "Checking the workspace first.\n<cmd>ls -la</cmd>\nThat should reveal the flag file.",
+    "allowed_tools": ["Bash"],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "calls": [{"name": "Bash", "arguments": {"command": "ls -la"}}],
+    "prose_present": true
+  }
+}

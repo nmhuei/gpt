@@ -1,0 +1,47 @@
+{
+  "id": "v2_log_debug",
+  "version": 2,
+  "title": "Reproduce and fix two independent production incident defects",
+  "language": "en",
+  "timeout_s": 2100,
+  "baseline": {
+    "pytest_expect": "pass",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "urlwatch",
+  "required_files": [
+    "tests/test_regression_incident_042.py",
+    "urlwatch/checker.py",
+    "urlwatch/transport.py"
+  ],
+  "min_visible_tests_passed": 2,
+  "min_grader_tests_passed": 8,
+  "allowed_globs": [
+    "urlwatch/**",
+    "tests/test_regression_incident_042.py"
+  ],
+  "locked_paths": [
+    "tests/test_healthy.py",
+    "incident/app.log",
+    "incident/metrics.txt",
+    "incident/timeline.md"
+  ],
+  "model_regression_check": {
+    "path": "tests/test_regression_incident_042.py",
+    "must_fail_on_fixture": true,
+    "min_asserts": 2
+  },
+  "mutations": [
+    {
+      "id": "w1_remove_inflight_guard",
+      "kind": "v2log:remove_inflight_guard",
+      "attr": "process"
+    },
+    {
+      "id": "w2_leak_session_again",
+      "kind": "v2log:leak_session_again",
+      "attr": "request"
+    }
+  ],
+  "prompt": "Production incident 042 hit `urlwatch`. Evidence is under incident/: duplicate alert storms happened during retry recovery and open sessions grew monotonically. There are TWO independent defects. Read the evidence, reproduce both locally, fix both minimally without disabling retries or alerts, and add `tests/test_regression_incident_042.py` with at least two real assert statements that fail on the unfixed fixture and pass after the fixes. Do not edit incident/ or existing tests."
+}

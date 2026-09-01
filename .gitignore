@@ -23,3 +23,9 @@ traces/
 *.trace.zip
 scratch/
 diff.txt
+.ctf_used_challenges.json
+docs/reports/auto-review/
+docs/reports/soak/
+
+# WebGPT runtime data (browser profiles contain session cookies — NEVER commit)
+data/

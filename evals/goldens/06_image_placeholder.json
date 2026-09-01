@@ -1,0 +1,34 @@
+{
+  "id": "image-placeholder-render",
+  "desc": "(f) multimodal image blocks render as an explicit omitted-image placeholder with KB size",
+  "module": "promptcompat",
+  "input": {
+    "initial": true,
+    "tool_protocol": "soft",
+    "tools": [],
+    "env": {"WEBGPT_IMAGE_PLACEHOLDER": "1"},
+    "messages": [
+      {
+        "role": "user",
+        "content": [
+          {"type": "text", "text": "What does this screenshot show?"},
+          {
+            "type": "image",
+            "source": {
+              "type": "base64",
+              "media_type": "image/png",
+              "data_repeat": {"char": "A", "count": 4096}
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expect": {
+    "contains": [
+      "[image omitted: image/png ~3KB — image upload not supported yet]",
+      "What does this screenshot show?"
+    ],
+    "not_contains": ["AAAAAAAA"]
+  }
+}

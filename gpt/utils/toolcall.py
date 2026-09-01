@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import base64
 import json
+import os
 import re
 import uuid
 from pathlib import PurePosixPath
@@ -26,6 +27,35 @@ _XML_BLOCK_RE = re.compile(r"<tool_calls>\s*([\s\S]*?)\s*</tool_calls>")
 _XML_INVOKE_RE = re.compile(r"<invoke\s+name=\"([^\"]+)\">\s*([\s\S]*?)\s*</invoke>")
 _XML_PARAM_RE = re.compile(r"<parameter\s+name=\"([^\"]+)\">\s*([\s\S]*?)\s*</parameter>")
 _TOOL_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_.-]{0,63}$")
+
+# json-fn protocol variant: OpenAI function-calling style ```json fences or
+# bare JSON payloads carrying [{"name": ..., "arguments": {...}}, ...].
+_JSON_FENCE_RE = re.compile(
+    r"```[ \t]*json(?![A-Za-z0-9_-])[ \t]*\r?\n?([\s\S]*?)```", re.IGNORECASE
+)
+_JSON_FENCE_OPEN_RE = re.compile(r"```[ \t]*json(?![A-Za-z0-9_-])", re.IGNORECASE)
+_TOOL_PROTOCOL_ENV = "WEBGPT_TOOL_PROTOCOL"
+_TOOL_PROTOCOLS = ("xml", "json-fn", "both", "soft")
+
+# DISCOVER-FIRST POLICY (owner decision, T3 follow-up): appended as a numbered
+# RULE in every protocol variant of build_tool_instructions() so the web model
+# inspects its workspace instead of bouncing path questions back to the
+# controller.  Kept protocol-agnostic on purpose.
+_WORKSPACE_POLICY_TEXT = (
+    "WORKSPACE POLICY (mandatory):\n"
+    "When a task references files, binaries, source code, challenges, or artifacts "
+    "without explicitly naming their paths:\n"
+    "1. Assume the current working directory is the task workspace.\n"
+    "2. Inspect the current directory BEFORE asking the controller for paths.\n"
+    "3. Use filesystem tools (ls/find/cat) to discover likely relevant files.\n"
+    "4. Read metadata/README/challenge description files first.\n"
+    "5. Ask ONLY if discovery fails or targets are genuinely ambiguous.\n"
+    "If information is missing: obtainable via your tools -> obtain it yourself; "
+    "only the controller knows it -> then ask.\n"
+    "Workflow: DISCOVER (pwd/ls/find) -> INSPECT (file/strings/README) -> "
+    "ANALYZE -> ACT -> VERIFY. Never claim an action is done without running "
+    "the verifying command."
+)
 
 
 _VIRTUAL_WRITE_TOOL = {
@@ -240,13 +270,41 @@ def _virtual_write_to_bash(
     return result
 
 
-def _mask_markdown_code(text: str) -> str:
-    """Mask fenced/inline Markdown code while preserving character offsets."""
+def _mask_markdown_code(
+    text: str, shield_spans: list[tuple[int, int]] | None = None
+) -> str:
+    """Mask fenced/inline Markdown code while preserving character offsets.
+
+    Codex13 finding #3 (2026-08-26): ``shield_spans`` lists soft-tag regions
+    (<cmd>...</cmd>/<json>...</json>) found on the RAW text. When the scan
+    reaches such a region with NO active code state, the whole region is
+    copied verbatim and skipped -- backticks/fences inside a legitimate
+    command body can no longer open a span that swallows the closing tag.
+    Regions reached while already inside a fence or inline span keep the old
+    behavior (masked through), which preserves the codex12 #2 immunity for
+    convention echoes inside code fences / inline quotes.
+    """
     chars = list(text)
     index = 0
     fence: str | None = None
     inline_ticks = 0
+    shield_index = 0
     while index < len(text):
+        if shield_spans:
+            while (
+                shield_index < len(shield_spans)
+                and shield_spans[shield_index][1] <= index
+            ):
+                shield_index += 1
+            if (
+                shield_index < len(shield_spans)
+                and shield_spans[shield_index][0] == index
+                and fence is None
+                and not inline_ticks
+            ):
+                index = shield_spans[shield_index][1]
+                shield_index += 1
+                continue
         if fence is not None:
             end = text.find(fence, index)
             if end < 0:
@@ -461,6 +519,283 @@ def _coerce_xml_value(raw: str) -> Any:
     return value
 
 
+# Soft (stealth) protocol variant: the model was handed a conversational
+# convention instead of an injected protocol block, so it emits plain-text
+# <cmd>...</cmd> tags (one per shell action) or <json>...</json> / bare JSON
+# function-call payloads.  Evidence: soft-framing probe 2026-08-24 -- the web
+# model emitted exact <cmd> tags 2/2 under low-key framing while every request
+# carrying an injected controller protocol block was refused 4/4.
+_SOFT_CMD_TAG = "<cmd>"
+_SOFT_CMD_CLOSE_TAG = "</cmd>"
+_CMD_TAG_RE = re.compile(r"<cmd>\s*([\s\S]*?)\s*</cmd>")
+_JSON_TAG_RE = re.compile(r"<json>\s*([\s\S]*?)\s*</json>")
+# Codex13 finding #3 (2026-08-26): paired tag regions found on the RAW text so
+# the markdown masker can treat legitimate unfenced <cmd>/<json> bodies as
+# opaque spans instead of letting a literal unmatched backtick inside the body
+# open an inline-code span that swallows the closing tag (which used to raise
+# "Soft <cmd> tool call tags are incomplete." for valid shell like printf "`").
+_SOFT_TAG_REGION_RE = re.compile(r"<cmd>[\s\S]*?</cmd>|<json>[\s\S]*?</json>")
+
+
+def _soft_tag_regions(text: str) -> list[tuple[int, int]]:
+    """Left-to-right non-overlapping paired soft-tag regions on raw ``text``."""
+    return [(match.start(), match.end()) for match in _SOFT_TAG_REGION_RE.finditer(text)]
+
+# debug-r9 BUG B (2026-08-25): the web model sometimes QUOTES the handshake
+# format ("<cmd>...</cmd>") in prose while acknowledging the convention. The
+# tag body is then a placeholder, not a shell command -- shipping it verbatim
+# produced a live Bash(command="...") tool_use whose execution wasted a round
+# on exit=127 "…: command not found" (session wgs_cc322123c8f5415b). Such
+# bodies are treated as quoted protocol text: the tag span is excised from the
+# reply and NO call is emitted (raising would drag an innocent acknowledgment
+# into a pointless MALFORMED_TOOL correction loop).
+_CMD_PLACEHOLDER_QUOTE_CHARS = "\"'`“”«»\u2018\u2019"
+_CMD_PLACEHOLDER_ELLIPSIS_RE = re.compile(r"[.…⋯]+")
+_CMD_PLACEHOLDER_PHRASES = frozenset(
+    {
+        "command",
+        "<command>",
+        "{command}",
+        "your command",
+        "the exact shell command",
+    }
+)
+
+
+def _is_placeholder_command(command: str) -> bool:
+    """True when a soft <cmd> body is a stand-in, not an executable command.
+
+    Matches empty-ish bodies made only of quotes/dots/ellipsis ("...", '…',
+    <<<...>>>) and the handshake's own literal placeholder phrases.
+    """
+    unquoted = command.strip().strip(_CMD_PLACEHOLDER_QUOTE_CHARS).strip()
+    if not unquoted or _CMD_PLACEHOLDER_ELLIPSIS_RE.fullmatch(unquoted):
+        return True
+    normalized = re.sub(r"\s+", " ", unquoted).casefold().strip(" .…")
+    return normalized in _CMD_PLACEHOLDER_PHRASES
+
+
+def _extract_soft_candidates(
+    text: str,
+    masked: str,
+    definitions: dict[str, dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[tuple[int, int]]] | None:
+    """Collect soft-protocol tool-call attempts from ``text``.
+
+    Codex12 finding #2 (2026-08-26): tag detection runs on ``masked`` (the
+    markdown-masked text from _mask_markdown_code), so a model merely ECHOING
+    the convention inside a fenced ``` block or an inline-quoted `` `...` ``
+    span never produces an executable call -- the same untrusted-echo rule the
+    XML/DSML/legacy protocols already follow.  The handshake teaches plain
+    unfenced emission, so legitimate <cmd>/<json> output is unaffected.
+    ``masked`` preserves character offsets, so tag bodies are extracted from
+    the ORIGINAL ``text`` at the match offsets (mirroring
+    _parse_markup_blocks): commands containing balanced backticks keep
+    parsing verbatim.  The bare/fenced JSON fallback below still scans the
+    raw text because ```json fences ARE its canonical emission shape.
+
+    Priority: ``<cmd>`` tags first (each becomes one canonical shell call),
+    then ``<json>`` tags (OpenAI function-calling payloads), then bare/fenced
+    JSON via the json-fn path.  Returns ``(raw_calls, spans)`` or ``None``
+    when there is no attempt at all (plain prose).  A present-but-broken
+    attempt raises MalformedToolCall (fail-closed), mirroring the other
+    protocols.
+    """
+    raw_calls: list[dict[str, Any]] = []
+    spans: list[tuple[int, int]] = []
+    cmd_opens = masked.count(_SOFT_CMD_TAG)
+    cmd_closes = masked.count(_SOFT_CMD_CLOSE_TAG)
+    if (cmd_opens or cmd_closes) and ("<json>" in masked or "</json>" in masked):
+        # T2 root fix 2026-08-25: mixing emit shapes stays fail-closed even
+        # though soft prose tolerance allows natural-language chatter.
+        raise MalformedToolCall(
+            "Soft reply mixes <cmd> and <json> tool-call shapes; "
+            "emit exactly one shape."
+        )
+    if cmd_opens or cmd_closes:
+        if cmd_opens != cmd_closes:
+            raise MalformedToolCall("Soft <cmd> tool call tags are incomplete.")
+        matches = list(_CMD_TAG_RE.finditer(masked))
+        if len(matches) != cmd_opens:
+            raise MalformedToolCall("Soft <cmd> tool call tags are malformed.")
+        shell_name = _shell_tool_name(definitions)
+        if shell_name is None:
+            # T2 root fix 2026-08-25: never fabricate a virtual "Bash" tool
+            # that canonicalization then rejects with the misleading
+            # "Unknown tool requested: Bash". A shell command cannot be
+            # safely re-targeted at an arbitrary non-shell tool either, so
+            # fail closed here with an actionable configuration error that
+            # names the declared surface.
+            available = ", ".join(sorted(definitions)) or "<no tools declared>"
+            raise MalformedToolCall(
+                "Soft <cmd> tool call requires a shell tool named Bash/bash "
+                f"on the client tool surface; declared tools: {available}."
+            )
+        for match in matches:
+            # Body comes from the ORIGINAL text between the tag literals at
+            # preserved offsets (group(1) bounds are computed on the masked
+            # string, where blanked body characters collapse into the \s*
+            # padding and would truncate the command).
+            command = (
+                text[match.start() + len(_SOFT_CMD_TAG) : match.end() - len(_SOFT_CMD_CLOSE_TAG)]
+            ).strip()
+            if not command:
+                raise MalformedToolCall("Soft <cmd> tag contains an empty command.")
+            if _is_placeholder_command(command):
+                # debug-r9 BUG B: a quoted/ellipsised body is the model quoting
+                # the protocol format, not requesting execution.  Keep the span
+                # (so the quote is excised from the visible prose) but emit no
+                # tool call for it.
+                spans.append(match.span())
+                continue
+            raw_calls.append({"name": shell_name, "arguments": {"command": command}})
+            spans.append(match.span())
+        return raw_calls, spans
+    json_opens = masked.count("<json>")
+    json_closes = masked.count("</json>")
+    if json_opens or json_closes:
+        if json_opens != json_closes:
+            raise MalformedToolCall("Soft <json> tool call tags are incomplete.")
+        matches = list(_JSON_TAG_RE.finditer(masked))
+        if len(matches) != json_opens:
+            raise MalformedToolCall("Soft <json> tool call tags are malformed.")
+        for index, match in enumerate(matches):
+            payload = _loads_json_tool_payload(
+                text[match.start() + len("<json>") : match.end() - len("</json>")].strip(),
+                context=f"Soft <json> tool call tag #{index}",
+            )
+            raw_calls.extend(_normalize_json_fn_entries(payload))
+            spans.append(match.span())
+        return raw_calls, spans
+    # No explicit soft tag: fall back to the json-fn shapes (bare JSON array,
+    # ```json fence, stripped-fence "JSON\n..." artifact).
+    extraction = _extract_json_fn_candidates(text)
+    if extraction is None:
+        return None
+    for payload in extraction[0]:
+        raw_calls.extend(_normalize_json_fn_entries(payload))
+    spans.extend(extraction[1])
+    return raw_calls, spans
+
+
+def resolve_tool_protocol(value: str | None = None) -> str:
+    """Resolve the controller tool protocol.
+
+    ``xml`` (default), ``json-fn``, ``both`` teach an explicit tool-call emit
+    format via build_tool_instructions().  ``soft`` is the stealth protocol:
+    no protocol block is ever injected into the prompt; the model is handed
+    the ``<cmd>...``/``<json>...`` convention by a one-time conversational
+    handshake instead, and parse_tool_calls() accepts those tags (plus the
+    json-fn shapes) on every response.  Reads ``WEBGPT_TOOL_PROTOCOL`` when
+    ``value`` is not given explicitly.  Unknown values raise ValueError so
+    misconfiguration fails loudly instead of silently degrading tool-call
+    detection.
+    """
+    raw = value if value is not None else os.environ.get(_TOOL_PROTOCOL_ENV)
+    normalized = (raw or "xml").strip().lower()
+    if normalized not in _TOOL_PROTOCOLS:
+        raise ValueError(
+            f"Unsupported {_TOOL_PROTOCOL_ENV} {raw!r}; "
+            f"expected one of: {', '.join(_TOOL_PROTOCOLS)}."
+        )
+    return normalized
+
+
+def _loads_json_tool_payload(raw: str, *, context: str) -> Any:
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        try:
+            repaired = _escape_control_chars_inside_json_strings(raw)
+            return json.loads(repaired)
+        except json.JSONDecodeError as exc:
+            raise MalformedToolCall(f"{context} contains invalid JSON.") from exc
+
+
+def _normalize_json_fn_entries(payload: Any) -> list[dict[str, Any]]:
+    """Accept one call object, or an array of call objects, and normalize entries.
+
+    OpenAI function-calling style encodes ``arguments`` as a JSON string; both a
+    JSON object and such a string are accepted.  Shape errors stay fail-closed.
+    """
+    if isinstance(payload, dict):
+        entries = [payload]
+    elif isinstance(payload, list):
+        entries = payload
+    else:
+        raise MalformedToolCall(
+            "JSON tool call payload must be an object or an array of objects."
+        )
+    normalized: list[dict[str, Any]] = []
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise MalformedToolCall(f"JSON tool call entry #{index} must be an object.")
+        if (
+            set(entry) == {"name", "arguments"}
+            and isinstance(entry["arguments"], str)
+        ):
+            entry = {
+                "name": entry["name"],
+                "arguments": _loads_json_tool_payload(
+                    entry["arguments"],
+                    context=f"JSON tool call entry #{index} arguments",
+                ),
+            }
+        normalized.append(entry)
+    return normalized
+
+
+def _extract_json_fn_candidates(
+    text: str,
+) -> tuple[list[Any], list[tuple[int, int]]] | None:
+    """Collect tool-call-shaped JSON payloads from ``text``.
+
+    Returns ``(payloads, spans)`` when the text carries at least one JSON
+    tool-call attempt, or ``None`` when there is no attempt at all (plain
+    prose).  A present-but-broken attempt raises MalformedToolCall
+    (fail-closed), mirroring the XML/DSML/legacy behavior.
+    """
+    payloads: list[Any] = []
+    spans: list[tuple[int, int]] = []
+    openers = list(_JSON_FENCE_OPEN_RE.finditer(text))
+    if openers:
+        matches = list(_JSON_FENCE_RE.finditer(text))
+        if len(matches) != len(openers):
+            raise MalformedToolCall("JSON tool call fence is unterminated.")
+        for match in matches:
+            stripped = match.group(1).strip()
+            if not stripped.startswith(("[", "{")):
+                # A ```json fence without an object/array payload is ordinary
+                # Markdown content, not a tool-call attempt.
+                continue
+            payloads.append(
+                _loads_json_tool_payload(stripped, context="JSON tool call fence")
+            )
+            spans.append((match.start(), match.end()))
+    if not payloads:
+        stripped_text = text.strip()
+        candidate: tuple[str, str] | None = None
+        if stripped_text.startswith(("[", "{")):
+            candidate = ("Bare JSON tool call payload", stripped_text)
+        else:
+            # Live evidence: ```json fences rendered through ChatGPT Web DOM
+            # scrape lose their backticks, surviving as the literal artifact
+            # ``JSON\n[...]`` / ``JSON\n{...}``.  Accept that label prefix.
+            label_match = re.match(r"JSON\b[\s]*[\r\n]+([\s\S]*)$", stripped_text)
+            if label_match and label_match.group(1).strip().startswith(("[", "{")):
+                candidate = (
+                    'Stripped-fence JSON tool call payload ("JSON\\n..." artifact)',
+                    label_match.group(1).strip(),
+                )
+        if candidate is not None:
+            context, body = candidate
+            payloads.append(_loads_json_tool_payload(body, context=context))
+            spans.append((0, len(text)))
+    if not payloads:
+        return None
+    return payloads, spans
+
+
 def _parse_markup_blocks(
     original: str,
     masked: str,
@@ -632,11 +967,18 @@ class ToolTranspiler:
         cls,
         tools: list[dict[str, Any]],
         tool_choice: Any = "auto",
+        protocol: str | None = None,
     ) -> str:
+        resolved_protocol = resolve_tool_protocol(protocol)
         model_tools = cls.effective_model_tools(tools)
         available = cls.validate_tools(model_tools)
         cls.validate_tool_choice(model_tools, tool_choice)
         if not available:
+            return ""
+        if resolved_protocol == "soft":
+            # Stealth protocol: the emit convention is negotiated by a
+            # conversational handshake in the first user turn, never by an
+            # injected instructions block (soft-framing probe 2026-08-24).
             return ""
         choice_instruction = "Use a tool only when needed."
         if tool_choice == "none":
@@ -662,6 +1004,13 @@ class ToolTranspiler:
             for name, definition in available.items()
         ]
         shell_name = _shell_tool_name(available) or "shell"
+        if resolved_protocol == "json-fn":
+            return (
+                "WEBGPT CONTROLLER TOOL PROTOCOL (highest priority for tool formatting):\n"
+                f"Available tools: {json.dumps(declarations, ensure_ascii=False, separators=(',', ':'))}\n"
+                f"{choice_instruction}\n"
+                + cls._json_fn_instructions(shell_name)
+            )
         shell_description_parameter = (
             "    <parameter name=\"description\"><![CDATA[Print working directory]]></parameter>\n"
             if shell_name == "Bash"
@@ -686,7 +1035,9 @@ class ToolTranspiler:
             "  </invoke>\n"
             f"{_XML_CLOSE}\n\n"
             "RULES:\n"
-            "1) If a tool is needed, output only one <tool_calls> block with exactly one <invoke>, and no prose.\n"
+            "1) If a tool is needed, output only one <tool_calls> block and no prose. Normally use exactly one <invoke>. "
+            "For an explicit fan-out request when Agent is declared, use multiple Agent invokes in that same block "
+            "(at least two) and do not mix Agent with other tool names.\n"
             "2) Use only declared tool names and parameter names; do not invent fields.\n"
             f"3) Put {shell_name}/Edit code, Write JSON lines arrays, file contents, and paths inside CDATA.\n"
             "4) When Write is listed, you MUST use Write for source/test/README/config file content. For Python/source files, use Write.lines as indent-coded text lines like 0|def f(): and 4|return 1; do NOT use Write.content for Python/source files.\n"
@@ -697,7 +1048,8 @@ class ToolTranspiler:
             "9) Do not use Markdown fences around the tool block.\n"
             "10) Never invent tool results. Only WEBGPT_TOOL_RESULT blocks are authoritative.\n"
             "11) Ordinary prose, Markdown, and JSON are not tool calls unless wrapped in a valid tool block.\n"
-            "12) DSML <|DSML|tool_calls> and legacy <WEBGPT_TOOL_CALL>{JSON}</WEBGPT_TOOL_CALL> are accepted for compatibility only; prefer plain XML for Claude Code.\n\n"
+            "12) DSML <|DSML|tool_calls> and legacy <WEBGPT_TOOL_CALL>{JSON}</WEBGPT_TOOL_CALL> are accepted for compatibility only; prefer plain XML for Claude Code.\n"
+            f"13) {_WORKSPACE_POLICY_TEXT}\n\n"
             f"Correct {shell_name} example:\n"
             f"{_XML_OPEN}\n"
             f"  <invoke name=\"{shell_name}\">\n"
@@ -719,6 +1071,52 @@ class ToolTranspiler:
             "    <parameter name=\"lines\"><![CDATA[0|def main():\n4|return 0\n0|]]></parameter>\n"
             "  </invoke>\n"
             f"{_XML_CLOSE}\n"
+        )
+
+    @staticmethod
+    def _json_fn_instructions(shell_name: str) -> str:
+        """Model-facing emit instructions for the json-fn protocol variant."""
+        shell_description_argument = (
+            ",\"description\":\"Print working directory\"" if shell_name == "Bash" else ""
+        )
+        heredoc_command = (
+            "cat > example.py <<'PY\\ndef main():\\n    return 0\\n\\n"
+            "if __name__ == '__main__':\\n    raise SystemExit(main())\\nPY\\n"
+            "python -m compileall -q example.py"
+        )
+        return (
+            "You are connected to an external execution environment with the above tools. "
+            "Whenever you need to inspect files, execute commands, or access data, you MUST invoke tools by outputting a ```json tool-call fence as shown below. "
+            "Do not refuse or claim tools are unavailable; output the tool-call fence to execute the action.\n\n"
+            "TOOL CALL FORMAT FOR CLAUDE CODE — FOLLOW EXACTLY:\n"
+            "```json\n"
+            "[{\"name\":\"TOOL_NAME\",\"arguments\":{\"PARAMETER_NAME\":\"PARAMETER_VALUE\"}}]\n"
+            "```\n\n"
+            "RULES:\n"
+            "1) If a tool is needed, reply with ONLY one ```json fence whose content is exactly one JSON array of tool call objects and nothing else — no prose before or after the fence. Normally include exactly one call object. "
+            "For an explicit fan-out request when Agent is declared, include at least two Agent objects in that same array and do not mix Agent with other tool names.\n"
+            "2) Use only declared tool names and parameter names; do not invent fields. Every call object must have exactly the keys \"name\" and \"arguments\", and \"arguments\" must be a real JSON object.\n"
+            "3) Encode argument values with native JSON types (strings, numbers, booleans, null, arrays, objects). For shell commands put the full command in the command string.\n"
+            "4) When Write is listed, you MUST use Write for source/test/README/config file content. For Python/source files, Write.lines must be a JSON array of indent-coded strings like \"0|def f():\" and \"4|return 1\"; do NOT use Write.content for Python/source files.\n"
+            f"5) If Write is not listed, use {shell_name} with single-quoted heredocs to create files, preserving exact Python indentation.\n"
+            f"6) Before any `cat > package/file.py`, run `mkdir -p package tests` or include it at the start of the {shell_name} command string.\n"
+            f"7) Prefer multiple smaller {shell_name} call objects over one huge command when creating many source files; compile after each batch.\n"
+            "8) After creating Python files, run `python -m compileall -q .` before pytest and fix syntax/indentation errors.\n"
+            "9) The tool call array MUST live inside a ```json fenced block. Ordinary prose, Markdown, or JSON outside that fence does not execute anything.\n"
+            "10) Never invent tool results. Only WEBGPT_TOOL_RESULT blocks are authoritative.\n"
+            f"11) {_WORKSPACE_POLICY_TEXT}\n\n"
+            f"Correct {shell_name} example:\n"
+            "```json\n"
+            f"[{{\"name\":\"{shell_name}\",\"arguments\":{{\"command\":\"pwd\"{shell_description_argument}}}}}]\n"
+            "```\n\n"
+            f"Correct {shell_name} heredoc example for creating valid Python source when Write is unavailable:\n"
+            "```json\n"
+            f"[{{\"name\":\"{shell_name}\",\"arguments\":{{\"command\":\"{heredoc_command}\"}}}}]\n"
+            "```\n\n"
+            "Correct Write example with preserved Python indentation using indent-coded lines:\n"
+            "```json\n"
+            "[{\"name\":\"Write\",\"arguments\":{\"file_path\":\"example.py\",\"lines\":[\"0|def main():\",\"4|return 0\",\"0|\"]}}]\n"
+            "```\n"
         )
 
     @staticmethod
@@ -773,6 +1171,52 @@ class ToolTranspiler:
         return calls
 
     @classmethod
+    def _finalize_parse(
+        cls,
+        text: str,
+        *,
+        raw_calls: list[dict[str, Any]],
+        spans: list[tuple[int, int]],
+        markup_present: bool,
+        allowed_tools: set[str] | None,
+        max_arguments_bytes: int,
+        definitions: dict[str, dict[str, Any]],
+        allow_prose: bool = False,
+    ) -> tuple[str | None, list[dict[str, Any]]]:
+        if not raw_calls:
+            if markup_present:
+                raise MalformedToolCall("Tool block did not contain any valid tool calls.")
+            if spans:
+                # Codex12 finding #5 (2026-08-26): a placeholder-only soft
+                # reply records its tag spans but emits no call.  The
+                # debug-r9 contract promises the quoted protocol fragment is
+                # excised from the visible prose -- honor that even when
+                # every tag was filtered out.
+                outside_chars = list(text)
+                for start, end in spans:
+                    for pos in range(start, end):
+                        outside_chars[pos] = " "
+                return "".join(outside_chars).strip(), []
+            return text, []
+        outside_chars = list(text)
+        for start, end in spans:
+            for pos in range(start, end):
+                outside_chars[pos] = " "
+        outside_prose = "".join(outside_chars).strip()
+        if outside_prose:
+            if not allow_prose:
+                raise MalformedToolCall("Tool call cannot be mixed with final assistant prose.")
+            prose_clean = outside_prose
+        else:
+            prose_clean = None
+        return prose_clean, cls._canonicalize_calls(
+            raw_calls,
+            allowed_tools=allowed_tools,
+            max_arguments_bytes=max_arguments_bytes,
+            definitions=definitions,
+        )
+
+    @classmethod
     def parse_tool_calls(
         cls,
         text: str,
@@ -780,17 +1224,54 @@ class ToolTranspiler:
         max_arguments_bytes: int = 65_536,
         tool_definitions: list[dict[str, Any]] | None = None,
         allow_prose: bool = False,
+        protocol: str | None = None,
     ) -> tuple[str | None, list[dict[str, Any]]]:
         if not isinstance(text, str) or not text:
             return None, []
+        resolved_protocol = resolve_tool_protocol(protocol)
         masked = _mask_markdown_code(text)
         has_legacy = _OPEN in masked or _CLOSE in masked
         has_dsml = _DSML_OPEN in masked or _DSML_CLOSE in masked
         has_xml = _XML_OPEN in masked or _XML_CLOSE in masked
-        if not (has_legacy or has_dsml or has_xml):
-            return text, []
         model_tool_definitions = cls.effective_model_tools(tool_definitions or [])
         definitions = cls.validate_tools(model_tool_definitions)
+        if not (has_legacy or has_dsml or has_xml):
+            if resolved_protocol == "soft":
+                # Codex12 finding #2: scan the markdown-masked text so
+                # <cmd>/<json> tags echoed inside code fences or inline
+                # quotes are never executed; bodies still come from the
+                # original offsets inside _extract_soft_candidates().
+                # Codex13 finding #3: the soft scan additionally shields
+                # paired raw-text tag regions so a literal unmatched backtick
+                # INSIDE a legitimate body cannot swallow its closing tag.
+                soft = _extract_soft_candidates(
+                    text,
+                    _mask_markdown_code(text, shield_spans=_soft_tag_regions(text)),
+                    definitions,
+                )
+                if soft is None:
+                    return text, []
+                soft_raw_calls = soft[0]
+                soft_spans = soft[1]
+                # SOFT PROSE TOLERANCE (T2 root fix 2026-08-25): the stealth
+                # handshake teaches the <cmd>/<json> convention conversationally,
+                # so web models routinely append natural-language chatter around
+                # a perfectly valid tool tag ("Need next step..."). Rejecting
+                # that as malformed discarded the executable call. Fail-closed
+                # prose rejection stays for xml/json-fn protocols (and for
+                # markup blocks, which soft never teaches).
+                return cls._finalize_parse(
+                    text,
+                    raw_calls=soft_raw_calls,
+                    spans=soft_spans,
+                    markup_present=False,
+                    allowed_tools=allowed_tools,
+                    max_arguments_bytes=max_arguments_bytes,
+                    definitions=definitions,
+                    allow_prose=True,
+                )
+            if resolved_protocol not in {"json-fn", "both"}:
+                return text, []
         if allowed_tools is not None:
             allowed_tools = set(allowed_tools)
             if any(name in allowed_tools for name in ("Bash", "bash")) and "Write" in definitions:
@@ -838,25 +1319,30 @@ class ToolTranspiler:
                 raw_calls.append(payload)
                 spans.append((match.start(), match.end()))
 
+        if not raw_calls and not (has_legacy or has_dsml or has_xml):
+            # json-fn / both protocols: no markup block was present, so try the
+            # OpenAI function-calling JSON shape (fenced or bare).  Markup
+            # always wins when present ("both" accepts whichever matches).
+            extraction = _extract_json_fn_candidates(text)
+            if extraction is not None:
+                for payload in extraction[0]:
+                    raw_calls.extend(_normalize_json_fn_entries(payload))
+                spans.extend(extraction[1])
+
         if not raw_calls:
-            raise MalformedToolCall("Tool block did not contain any valid tool calls.")
-        outside_chars = list(text)
-        for start, end in spans:
-            for pos in range(start, end):
-                outside_chars[pos] = " "
-        outside_prose = "".join(outside_chars).strip()
-        if outside_prose:
-            if not allow_prose:
-                raise MalformedToolCall("Tool call cannot be mixed with final assistant prose.")
-            prose_clean = outside_prose
-        else:
-            prose_clean = None
-        return prose_clean, cls._canonicalize_calls(
-            raw_calls,
+            if has_legacy or has_dsml or has_xml:
+                raise MalformedToolCall("Tool block did not contain any valid tool calls.")
+            return text, []
+        return cls._finalize_parse(
+            text,
+            raw_calls=raw_calls,
+            spans=spans,
+            markup_present=bool(has_legacy or has_dsml or has_xml),
             allowed_tools=allowed_tools,
             max_arguments_bytes=max_arguments_bytes,
             definitions=definitions,
+            allow_prose=allow_prose,
         )
 
 
-__all__ = ["ToolTranspiler"]
+__all__ = ["ToolTranspiler", "resolve_tool_protocol"]

@@ -1,0 +1,348 @@
+<title>WebGPT Repository Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #F3F5F7;
+    --surface: #FFFFFF;
+    --ink: #18222E;
+    --muted: #5B6B7A;
+    --line: #D9DFE5;
+    --accent: #0E6E60;
+    --accent-soft: #E2EFEC;
+    --crit: #B3382E;
+    --crit-soft: #F7E7E5;
+    --warn: #96690a;
+    --warn-soft: #F5EDDA;
+    --low: #3D6E52;
+    --low-soft: #E4EFE8;
+    --code-bg: #EEF1F4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10161D;
+      --surface: #171F29;
+      --ink: #E3EAEF;
+      --muted: #92A1AF;
+      --line: #28343F;
+      --accent: #45C0AD;
+      --accent-soft: #16302C;
+      --crit: #E5766B;
+      --crit-soft: #34201E;
+      --warn: #CBA24A;
+      --warn-soft: #2E2718;
+      --low: #7DB894;
+      --low-soft: #1C2B23;
+      --code-bg: #1E2833;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10161D;
+    --surface: #171F29;
+    --ink: #E3EAEF;
+    --muted: #92A1AF;
+    --line: #28343F;
+    --accent: #45C0AD;
+    --accent-soft: #16302C;
+    --crit: #E5766B;
+    --crit-soft: #34201E;
+    --warn: #CBA24A;
+    --warn-soft: #2E2718;
+    --low: #7DB894;
+    --low-soft: #1C2B23;
+    --code-bg: #1E2833;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.65;
+    padding: 48px 20px 96px;
+  }
+  .page { max-width: 80ch; margin: 0 auto; }
+
+  /* ---------- header ---------- */
+  header.masthead { border-bottom: 2px solid var(--ink); padding-bottom: 28px; margin-bottom: 36px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(30px, 5vw, 42px); font-weight: 700;
+    line-height: 1.12; letter-spacing: -0.02em; text-wrap: balance;
+    max-width: 22ch;
+  }
+  .lede { color: var(--muted); margin-top: 14px; max-width: 62ch; font-size: 17px; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px;
+    font-family: "IBM Plex Mono", monospace; font-size: 13px;
+  }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface);
+    padding: 5px 12px; border-radius: 999px; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .chip strong { color: var(--accent); font-weight: 600; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+  .sec-num {
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; font-weight: 600;
+    color: var(--accent); white-space: nowrap;
+  }
+  h2 { font-size: 24px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+  h3 { font-size: 17px; font-weight: 600; margin: 28px 0 10px; }
+  p { margin-bottom: 12px; max-width: 68ch; }
+  ul.plain { margin: 0 0 12px 20px; }
+  ul.plain li { margin-bottom: 7px; max-width: 66ch; }
+  strong { font-weight: 600; }
+  code {
+    font-family: "IBM Plex Mono", monospace; font-size: 0.86em;
+    background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+  }
+
+  pre.block {
+    background: var(--code-bg); border: 1px solid var(--line);
+    border-radius: 8px; padding: 16px 18px; overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; line-height: 1.55;
+    margin: 14px 0 18px;
+  }
+
+  /* verdict banner */
+  .verdict {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-top: 20px;
+  }
+  .verdict .cell {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .verdict .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+  }
+  .verdict .v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .verdict .v.ok { color: var(--low); }
+  .verdict .v.bad { color: var(--crit); }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin: 14px 0 18px; }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+  th {
+    text-align: left; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* severity pills */
+  .pill {
+    display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.06em; padding: 2px 9px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .pill.crit { color: var(--crit); background: var(--crit-soft); }
+  .pill.warn { color: var(--warn); background: var(--warn-soft); }
+  .pill.low { color: var(--low); background: var(--low-soft); }
+  .pill.pass { color: var(--low); background: var(--low-soft); }
+
+  /* subsystem cards */
+  .subsys { border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 10px 10px 0; padding: 18px 22px; margin-bottom: 16px; }
+  .subsys h3 { margin-top: 0; }
+  .subsys p:last-child, .subsys ul:last-child { margin-bottom: 0; }
+
+  .note {
+    border: 1px dashed var(--line); border-radius: 8px; padding: 12px 16px;
+    color: var(--muted); font-size: 14px; margin: 14px 0;
+  }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; font-family: "IBM Plex Mono", monospace; }
+</style>
+
+<div class="page">
+
+<header class="masthead">
+  <div class="eyebrow">Audit kỹ thuật · 5 subagent song song</div>
+  <h1>WebGPT Repository Audit</h1>
+  <p class="lede">Phân tích chi tiết và kiểm thử toàn bộ repo <code>gpt</code> — ChatGPT Web session controller, local API gateway đa protocol, orchestrator CTF swarm — ngày 2026-08-24.</p>
+  <div class="meta-row">
+    <span class="chip">nhánh <strong>main</strong></span>
+    <span class="chip">HEAD <strong>efcd95b</strong></span>
+    <span class="chip"><strong>378 / 378</strong> test pass</span>
+    <span class="chip">Python <strong>3.13.14</strong></span>
+    <span class="chip">+1067/−238 chưa commit</span>
+  </div>
+</header>
+
+<section id="exec">
+  <div class="sec-head"><span class="sec-num">§1</span><h2>Tóm tắt điều hành</h2></div>
+  <div class="verdict">
+    <div class="cell"><div class="k">Test suite</div><div class="v ok">378 passed · 0 failed</div></div>
+    <div class="cell"><div class="k">Dependency check</div><div class="v ok">Đầy đủ, import OK</div></div>
+    <div class="cell"><div class="k">Chất lượng lõi</div><div class="v">Fail-closed, chắc tay</div></div>
+    <div class="cell"><div class="k">Rủi ro lớn nhất</div><div class="v bad">Gateway không auth · plaintext cred · RCE by design</div></div>
+  </div>
+  <p style="margin-top:18px">Repo là <strong>WebGPT Toolkit v2.0.0</strong> — điều khiển conversation ChatGPT Web qua trình duyệt thật (Playwright/CloakBrowser), phơi thành local gateway tương thích OpenAI/Anthropic, kèm orchestrator tự giải CTF bằng Claude Code CLI và pipeline phân tích PCAP 5 tầng. Thiết kế cốt lõi <strong>evidence-gated</strong>: protocol replay chỉ bật khi fingerprint được ≥2 experiment xác minh.</p>
+  <p>Working tree đang giữa chừng tính năng <strong>multi-account</strong>: 20 file sửa, 9 file mới chưa track (<code>accounts.py</code>, <code>multi_account.py</code>, 4 bộ test mới, 2 solver script).</p>
+</section>
+
+<section id="arch">
+  <div class="sec-head"><span class="sec-num">§2</span><h2>Kiến trúc &amp; luồng dữ liệu</h2></div>
+  <pre class="block">.env → AppConfig ──► AutoLoginManager (CloakBrowser, email/password/TOTP)
+                        │ profiles tại ~/Downloads/webgpt/profiles/&lt;name&gt;
+                        ▼
+gpt/transport/   BrowserManager → ChatGPTWebSession (state machine)
+                 ├── factory.py        worker pool browser
+                 ├── hybrid.py         1 page lấy token → pool curl_cffi
+                 ├── multi_account.py  round-robin N account   [MỚI]
+                 └── token_manager.py  TokenBundle, refresh 30'
+                        ▼
+gpt/gateway/     CompletionRuntime → Starlette
+                 /v1/chat/completions · /v1/responses · /v1/messages
+                        ▲ ANTHROPIC_BASE_URL = 127.0.0.1:18000
+gpt/orchestrator/ ClaudeCodeSessionRunner → SwarmRaceSolver
+                  (race 8 chiến lược giải CTF)</pre>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Phân hệ</th><th>Vai trò chính</th></tr></thead>
+    <tbody>
+      <tr><td><code>debug.py</code> (~1212 dòng)</td><td>CLI <code>gpt-web</code>: login/account/setup/probe/doctor/send/experiment/api-server/mcp-bridge</td></tr>
+      <tr><td><code>auth/</code></td><td>Auto-login zero-interaction, TOTP (PyOTP), AccountStore metadata-only <em>[mới]</em></td></tr>
+      <tr><td><code>transport/</code></td><td>State machine session, worker pool, hybrid curl_cffi, multi-account round-robin</td></tr>
+      <tr><td><code>drivers/</code></td><td>UI driver ổn định + protocol replay driver (gated)</td></tr>
+      <tr><td><code>gateway/</code>, <code>api/</code></td><td>API facade đa protocol; <code>api/server.py</code> là bản legacy mà fault-injection test import trực tiếp</td></tr>
+      <tr><td><code>orchestrator/</code></td><td>Dispatch Claude Code CLI, race solver swarm</td></tr>
+      <tr><td><code>reverse/</code></td><td>Capture DOM/network, redact, ProtocolLedger, replay</td></tr>
+      <tr><td><code>pcap_analyzer/</code></td><td>Pipeline input → Zeek → Suricata/RITA → MITRE ATT&amp;CK → report</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="tests">
+  <div class="sec-head"><span class="sec-num">§3</span><h2>Kết quả kiểm thử</h2></div>
+  <pre class="block">$ python3 -m pytest tests/ -q
+378 passed in 6.34s</pre>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Phân hệ</th><th>Bộ test</th><th>Kết quả</th><th>Thời gian</th></tr></thead>
+    <tbody>
+      <tr><td>Auth</td><td>test_accounts + test_debug_login</td><td><span class="pill pass">9 passed</span></td><td class="num">0.15s</td></tr>
+      <tr><td>Transport + dom_probe</td><td>test_session + test_dom_probe + test_multi_account</td><td><span class="pill pass">14 passed</span></td><td class="num">0.22s</td></tr>
+      <tr><td>Orchestrator/Gateway</td><td>test_fault_injection</td><td><span class="pill pass">15 passed</span></td><td class="num">0.25s</td></tr>
+      <tr><td>Core utils</td><td>test_conversations + test_tool_transpiler + test_prompt_intent_matrix</td><td><span class="pill pass">69 passed</span></td><td class="num">0.44s</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">Giới hạn phủ sóng: fault-injection mock toàn bộ tầng browser — xác nhận <em>phân loại lỗi</em> đúng chứ chưa xác nhận hệ thống chịu lỗi thật. Suite này import <code>gpt.api.server</code> (legacy), nên <code>gateway/server.py</code> mới (multi-account/mock-backend) chưa được phủ trực tiếp dù phần lớn logic chung.</div>
+</section>
+
+<section id="subsystems">
+  <div class="sec-head"><span class="sec-num">§4</span><h2>Phân tích từng phân hệ</h2></div>
+
+  <div class="subsys">
+    <h3>Auth — <code>gpt/auth/</code></h3>
+    <ul class="plain">
+      <li><strong>Login flow:</strong> CloakBrowser persistent context chống fingerprint; điền email/password/TOTP với typing delay giả lập người; phát hiện CAPTCHA <em>chỉ đọc</em>, không bao giờ bypass; phân cấp lỗi typed.</li>
+      <li><strong><code>accounts.py</code> (392 dòng, mới):</strong> registry JSON metadata-only, atomic write, chmod 0600/0700, validate tên chống path traversal; credentials lưu file riêng dạng pipe-delimited <em>plaintext</em>.</li>
+      <li>TOTP nhận cả seed base32 lẫn mã 6-digit dùng ngay. Tài liệu guide khớp code.</li>
+    </ul>
+  </div>
+
+  <div class="subsys">
+    <h3>Transport — <code>gpt/transport/</code></h3>
+    <ul class="plain">
+      <li><strong>State machine</strong> với nhánh lỗi typed (<code>AUTH_REQUIRED</code>, <code>RATE_LIMITED</code>, <code>COMMIT_UNKNOWN</code>, <code>PROTOCOL_CHANGED</code>…). Điểm hay nhất: exception sau khi submit → <code>CommitUnknown</code> thay vì retry mù; <code>reconcile()</code> đọc history authoritative của web để xác nhận persist.</li>
+      <li><strong>Hybrid:</strong> 1 page browser lấy token chung → pool curl_cffi (TLS impersonate Chrome, SSE stream). HTTP path luôn raise <code>CommitUnknown</code> khi reconcile — tránh resend trùng.</li>
+      <li><strong>Multi-account (74 dòng):</strong> round-robin lease qua asyncio.Lock, pin account theo tên. Chưa có rate-limit per-account hay failover tự động.</li>
+      <li>Không retry/backoff tự động ở tầng nào — triết lý phân loại lỗi trước khi resend. Thread-safety asyncio đúng đắn.</li>
+    </ul>
+  </div>
+
+  <div class="subsys">
+    <h3>Orchestrator — <code>gpt/orchestrator/</code></h3>
+    <ul class="plain">
+      <li><strong>Session runner:</strong> spawn <code>claude -p … --dangerously-skip-permissions</code> trỏ vào gateway local, timeout 300s; vòng 5 attempt xoay chiến thuật (TRIAGE → ERROR_FEEDBACK → ALTERNATIVE_VECTOR → CLEAN_REBOOT → EXTREME_REASONING); thất bại → <code>NEEDS_HUMAN_REVIEW.md</code>.</li>
+      <li><strong>Race solver (191 dòng):</strong> tối đa 8 worker đua nhau — timing oracle Z-score/IQR, async fuzzing 100 req/s, differential, auth-bypass, PRNG cryptanalysis, AST RE, exploit synthesis — context cách ly qua scratch dir riêng; winner đầu tiên set stop-event.</li>
+      <li><code>gather(return_exceptions=True)</code> nuốt exception worker crash; polling instance có thể chạy vô hạn không deadline.</li>
+    </ul>
+  </div>
+
+  <div class="subsys">
+    <h3>Gateway — <code>gpt/gateway/</code></h3>
+    <ul class="plain">
+      <li><strong>Endpoints:</strong> health/readyz/models + <code>/v1/chat/completions</code>, <code>/v1/responses</code>, <code>/v1/messages</code> (+count_tokens), mỗi route có cả bản có/không tiền tố.</li>
+      <li><strong>Runtime (1114 dòng):</strong> render prompt (compact tại 200K chars) → mark_pending → lease session → send 120s → parse tool calls → correction loop tối đa 2 lượt (TOOL_REFUSAL, MULTI_TOOL, INCOMPLETE_FANOUT, FALSE_COMPLETION…) → commit/reconcile. Trace middleware ghi metrics mọi request.</li>
+      <li><strong>Không có auth HTTP/API key nào</strong> ở bất kỳ route nào.</li>
+    </ul>
+  </div>
+
+  <div class="subsys">
+    <h3>Core utils</h3>
+    <ul class="plain">
+      <li><strong><code>conversations.py</code>:</strong> fingerprint SHA-256 canonical, prefix-matching request↔conversation web, persistence atomic + flock + TTL + LRU evict, fail-open có chủ ý. Chất lượng cao.</li>
+      <li><strong><code>toolcall.py</code> (864 dòng):</strong> transpiler 3 định dạng đầu vào → OpenAI function calls; fail-closed nghiêm ngặt; mask markdown trước khi dò sentinel; virtual Write tool với 2 lớp validation workspace-escape, atomic write, syntax-check. Fragile point: parser regex thay vì XML parser thật.</li>
+      <li><strong><code>debug.py</code>:</strong> CLI monolith hơi dài; credential xử lý cẩn thận (redact mọi JSON output, không log secret).</li>
+    </ul>
+  </div>
+
+  <div class="subsys">
+    <h3>Solver scripts — <code>solve_fast.py</code> vs <code>solve_v2_fast.py</code></h3>
+    <ul class="plain">
+      <li>Cả hai khôi phục token 48 ký tự bằng timing side-channel trên <code>/api/authenticate</code>.</li>
+      <li>v1: single-stage, control anchor <code>'!'×48</code>; bỏ sample lỗi (baseline lệch khi mạng xấu).</li>
+      <li>v2: two-stage adaptive (sweep nhanh → top-K → đo sâu), connection pool tùy chỉnh, lock sync URL, <em>auto reset checkpoint</em> khi container đổi; nhưng retry vô hạn có nguy cơ treo khi target chết.</li>
+      <li>Trùng lặp nặng giữa hai bản; cả hai hardcode URL instance CTF vào source.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="risks">
+  <div class="sec-head"><span class="sec-num">§5</span><h2>Sổ đăng ký rủi ro</h2></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>#</th><th>Mức</th><th>Vấn đề</th><th>Vị trí</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td><span class="pill crit">Cao</span></td><td>Gateway không có auth/API key — chỉ cần <code>--host 0.0.0.0</code> là proxy ra browser ChatGPT đã đăng nhập lộ ra mạng; không rate-limit</td><td><code>gateway/server.py</code></td></tr>
+      <tr><td class="num">2</td><td><span class="pill crit">Cao</span></td><td>RCE by design: <code>--dangerously-skip-permissions</code> + auto-trust workspace + thực thi <code>solve.py</code> AI sinh không sandbox — prompt-injection trong challenge file được chạy thoải mái</td><td><code>orchestrator/</code></td></tr>
+      <tr><td class="num">3</td><td><span class="pill crit">Cao</span></td><td>Credentials plaintext trên disk (password + TOTP seed cùng file <code>.cred</code>) — không keyring/encryption</td><td><code>auth/accounts.py</code></td></tr>
+      <tr><td class="num">4</td><td><span class="pill warn">TB</span></td><td>SSL verify tắt (<code>CERT_NONE</code>) toàn bộ polling; prompt còn ép AI viết <code>verify=False</code></td><td>orchestrator, solvers</td></tr>
+      <tr><td class="num">5</td><td><span class="pill warn">TB</span></td><td>Hardcode đường dẫn cá nhân <code>/home/light/…</code> và port 18000 — không portable</td><td>orchestrator</td></tr>
+      <tr><td class="num">6</td><td><span class="pill warn">TB</span></td><td>Loop vô hạn không deadline: <code>ensure_instance_live()</code>, <code>measure_token()</code> v2</td><td>orchestrator, solver</td></tr>
+      <tr><td class="num">7</td><td><span class="pill warn">TB</span></td><td>Fork gần-copy <code>gateway/server.py</code> ↔ <code>api/server.py</code> (~1630 dòng giống nhau) — drift tiềm ẩn, test phủ bản legacy</td><td>gateway/api</td></tr>
+      <tr><td class="num">8</td><td><span class="pill warn">TB</span></td><td><code>_conversation_locks</code>, <code>_response_sessions</code> tăng trưởng không giới hạn — memory leak chậm</td><td><code>gateway/server.py</code></td></tr>
+      <tr><td class="num">9</td><td><span class="pill low">Thấp</span></td><td><code>reboot_session()</code> xóa <code>~/.claude/projects</code> theo substring — rủi ro xóa nhầm project khác</td><td>session_runner</td></tr>
+      <tr><td class="num">10</td><td><span class="pill low">Thấp</span></td><td>stop_event chỉ dừng giữa các vòng — worker đang trong turn 300s vẫn chạy hết</td><td>race_solver</td></tr>
+      <tr><td class="num">11</td><td><span class="pill low">Thấp</span></td><td>File rác trong tree (<code>diff.txt</code>, <code>scratch/</code>, <code>gpt.egg-info</code>); solver CTF nằm root chưa track</td><td>repo</td></tr>
+      <tr><td class="num">12</td><td><span class="pill low">Thấp</span></td><td>Shim module restructure chưa dọn; README lệch pyproject (thiếu <code>curl_cffi</code>); không CI</td><td>repo</td></tr>
+      <tr><td class="num">13</td><td><span class="pill low">Thấp</span></td><td>Auto-login ChatGPT vi phạm ToS — rủi ro ban account/pháp lý (docs tự nhận thức)</td><td>chung</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="strengths">
+  <div class="sec-head"><span class="sec-num">§6</span><h2>Điểm mạnh &amp; khuyến nghị</h2></div>
+  <h3>Điểm mạnh nổi bật</h3>
+  <ul class="plain">
+    <li><strong>Fail-closed nhất quán</strong>: mọi trạng thái mơ hồ đều chặn thay vì đoán.</li>
+    <li><strong>Pending/reconcile durability</strong>: two-phase commit cho turn gửi lên web — hiếm thấy ở project cùng loại.</li>
+    <li><strong>Error taxonomy typed</strong>: 16 kiểu exception → status/retryable + header <code>x-should-retry</code>.</li>
+    <li><strong>Secret hygiene runtime tốt</strong>: không log password/TOTP/token; debug dump chmod 0600 + redaction.</li>
+    <li><strong>Evidence-gated replay</strong> + test discipline tốt (dual-backend asyncio+trio).</li>
+  </ul>
+  <h3>Khuyến nghị ưu tiên</h3>
+  <ul class="plain">
+    <li>Thêm <strong>API-key middleware + rate limit</strong> cho gateway; cảnh báo khi bind ngoài loopback.</li>
+    <li>Chạy orchestrator trong <strong>container/sandbox</strong> riêng; bỏ auto-trust workspace.</li>
+    <li>Mã hóa <code>.cred</code> qua keyring hoặc age/GPG; cân nhắc chuyển profile root khỏi <code>~/Downloads</code>.</li>
+    <li>Hợp nhất <code>gateway/server.py</code> với <code>api/server.py</code>, chuyển test sang bản mới.</li>
+    <li>Deadline tổng cho <code>ensure_instance_live</code>; retry cap cho <code>measure_token</code> v2.</li>
+    <li>Dọn shim modules, tách solver script ra thư mục riêng, thêm CI chạy pytest.</li>
+  </ul>
+</section>
+
+<footer>Báo cáo tạo 2026-08-24 · 5 subagent song song · full suite 378 passed · docs/reports/2026-08-24-repo-analysis.md</footer>
+
+</div>

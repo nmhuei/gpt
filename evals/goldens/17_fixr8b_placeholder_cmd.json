@@ -1,0 +1,41 @@
+{
+  "id": "fixr8b-placeholder-cmd-no-tool-call",
+  "desc": "(i) FIX-R8B/debug-r9 BUG B: quoted/ellipsised <cmd> placeholder emits NO tool call; span trimmed while surrounding prose survives. REVISED 2026-08-26 post-FIX-A (markdown-masked soft scan + span-trim): the placeholder span is now EXCISED from prose even in a placeholder-only reply (was expected verbatim). Reasoning: (1) intentional FIX-A design -- a quoted body is protocol echo; excising keeps <cmd> tags out of visible replies (stealth soft protocol) and avoids MALFORMED_TOOL loops; (2) consistency -- this same golden already requires excision in mixed_text via prose_not_contains; the identical span cannot be kept when alone; (3) no functional impact -- gateway runtime discards transpiler prose ('_, calls'), FALSE_COMPLETION classifies raw reply text. placeholder_only_prose_is_original set to false because the eval handler has no positive-content hook for only-prose; the no-call lock (placeholder_bodies + empty only_calls) and mixed-text excision remain fully asserted.",
+  "module": "fixr8b",
+  "input": {
+    "op": "placeholder_cmd",
+    "env": {"WEBGPT_TOOL_PROTOCOL": "soft"},
+    "protocol": "soft",
+    "allowed_tools": ["Bash"],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "placeholder_bodies": [
+      "\"...\"",
+      "'…'",
+      "...",
+      "\"the exact shell command\"",
+      "<command>"
+    ],
+    "executable_bodies": ["pwd", "echo hi > flag.txt"],
+    "mixed_text": "Sure - the convention is <cmd>\"...\"</cmd>; running the check now.\n<cmd>pwd</cmd>",
+    "placeholder_only_text": "Send me something like <cmd>\"...\"</cmd> whenever you are ready."
+  },
+  "expect": {
+    "calls": [{"name": "Bash", "arguments": {"command": "pwd"}}],
+    "prose_contains": ["the convention is", "running the check now."],
+    "prose_not_contains": ["<cmd>", "\"...\""],
+    "placeholder_only_prose_is_original": false
+  }
+}

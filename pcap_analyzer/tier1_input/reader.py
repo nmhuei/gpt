@@ -77,7 +77,8 @@ class PcapReader:
 
     @staticmethod
     def _parse_pcapng(data: bytes) -> tuple[int, float | None, float | None, int | None]:
-        offset, endian, interfaces = 0, "<", {}
+        offset, endian = 0, "<"
+        interfaces: dict[int, int] = {}
         count, first, last, linktype = 0, None, None, None
         while offset + 12 <= len(data):
             block_type = data[offset : offset + 4]

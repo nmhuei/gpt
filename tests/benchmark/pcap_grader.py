@@ -179,7 +179,8 @@ class Grader:
             return None
 
         expected_hash = hashlib.sha256(pcap.read_bytes()).hexdigest()
-        input_data = report.get("input") if isinstance(report.get("input"), dict) else {}
+        input_obj = report.get("input")
+        input_data: dict[str, Any] = input_obj if isinstance(input_obj, dict) else {}
         metadata_checks = [
             input_data.get("sha256") == expected_hash,
             input_data.get("size_bytes") == pcap.stat().st_size,
@@ -212,7 +213,8 @@ class Grader:
                 self.note("mitre", f"missing {technique}")
 
         findings = self.findings(report)
-        summary = report.get("summary") if isinstance(report.get("summary"), dict) else {}
+        summary_obj = report.get("summary")
+        summary: dict[str, Any] = summary_obj if isinstance(summary_obj, dict) else {}
         severities = {name: 0 for name in ("info", "low", "medium", "high", "critical")}
         for item in findings:
             severity = item.get("severity")

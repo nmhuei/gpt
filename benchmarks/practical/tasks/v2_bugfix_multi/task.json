@@ -1,0 +1,55 @@
+{
+  "id": "v2_bugfix_multi",
+  "version": 2,
+  "title": "Fix multi-module integer pricing and allocation defects",
+  "language": "en",
+  "timeout_s": 1200,
+  "baseline": {
+    "pytest_expect": "fail",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "orderkit",
+  "required_files": [
+    "orderkit/pricing.py",
+    "orderkit/ledger.py",
+    "tests/test_totals.py",
+    "README.md"
+  ],
+  "min_visible_tests_passed": 8,
+  "min_grader_tests_passed": 14,
+  "allowed_globs": [
+    "orderkit/**"
+  ],
+  "locked_paths": [
+    "tests/test_totals.py",
+    "README.md"
+  ],
+  "structural_checks": [
+    {
+      "file": "orderkit/pricing.py",
+      "regex": "10000"
+    },
+    {
+      "file": "orderkit/ledger.py",
+      "regex": "remainder"
+    }
+  ],
+  "mutations": [
+    {
+      "id": "m_compound_pct",
+      "kind": "v2bug:compound_pct",
+      "attr": "apply_discounts"
+    },
+    {
+      "id": "m_half_up_round",
+      "kind": "v2bug:half_up_round",
+      "attr": "apply_discounts"
+    },
+    {
+      "id": "m_first_fit_alloc",
+      "kind": "v2bug:first_fit_alloc",
+      "attr": "allocate_cents"
+    }
+  ],
+  "prompt": "The project in this workspace is `orderkit`, an order-pricing library that works exclusively in INTEGER cents. Production reports: discounted baskets are sometimes billed incorrectly, and nightly reconciliation flags allocation drift when weights differ. Failing tests in `tests/test_totals.py` encode the symptoms. Find and fix BOTH root causes so ALL tests pass. The intended contracts are documented in README.md and docstrings. Do not edit tests or documentation, keep public APIs stable, and use integer-exact arithmetic only. Verify with `python -m pytest`."
+}

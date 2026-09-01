@@ -18,7 +18,7 @@ logger = logging.getLogger("gpt.mcp_bridge")
 
 DEFAULT_BQA_REST = "http://127.0.0.1:18427/api/v1"
 DEFAULT_BURP_MCP = "http://127.0.0.1:9876/"
-DEFAULT_OUTPUT_DIR = Path.home() / "Downloads" / "webgpt" / "tool_outputs"
+DEFAULT_OUTPUT_DIR = Path.home() / ".local" / "share" / "webgpt" / "tool_outputs"
 
 
 @dataclass

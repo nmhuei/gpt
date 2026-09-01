@@ -1,0 +1,13 @@
+1. **High** — Codex’s 401 “rotate once” retry does not force an OAuth refresh. It invalidates in-memory state, then `get_access_token()` reloads and returns the same still-fresh token; the retry can repeat the rejected bearer. A second 401 invalidates only the browser credential cache, leaving the Codex OAuth source reusable on the next request. [curl_transport.py:359](/home/light/GitHub/gpt/gpt/transport/curl_transport.py:359), [codex_auth.py:420](/home/light/GitHub/gpt/gpt/transport/codex_auth.py:420), [codex_auth.py:447](/home/light/GitHub/gpt/gpt/transport/codex_auth.py:447)
+
+2. **Medium** — fconv’s conduit prepare failure path swallows `401/403` and continues without invalidating access credentials. This reuses a known-rejected bearer for the subsequent SSE request, contrary to the prepare-stage invalidation goal. The initial fconv header-build failure also invalidates the sentinel cache rather than access credentials. [curl_transport.py:273](/home/light/GitHub/gpt/gpt/transport/curl_transport.py:273), [curl_transport.py:523](/home/light/GitHub/gpt/gpt/transport/curl_transport.py:523)
+
+3. **Medium** — Markdown masking treats an unmatched backtick inside a legitimate unfenced `<cmd>` body as an inline-code opener through end-of-text, masking `</cmd>` and causing `MalformedToolCall`. For example, `<cmd>printf "\`"</cmd>` fails, while balanced substitutions work. This is a soft-protocol regression for valid shell commands containing literal unmatched backticks. [toolcall.py:273](/home/light/GitHub/gpt/gpt/utils/toolcall.py:273), [toolcall.py:539](/home/light/GitHub/gpt/gpt/utils/toolcall.py:539), [toolcall.py:1205](/home/light/GitHub/gpt/gpt/utils/toolcall.py:1205)
+
+4. **Low** — `correction_count` is incremented before the SHA-256 anti-repeat check can abort without sending another correction. Terminal telemetry therefore overstates actual correction sends by one in the repeated/escalated-prompt path. [runtime.py:2144](/home/light/GitHub/gpt/gpt/gateway/runtime.py:2144), [runtime.py:2183](/home/light/GitHub/gpt/gpt/gateway/runtime.py:2183)
+
+CLEAN — `gpt/api/protocol_adapters.py`: text-only block extraction remains byte-equivalent; image/document ingress markers preserve order; rendered prompt token estimation is aligned; `stop_sequences`/enabled thinking return request errors; adaptive thinking remains accepted.
+
+CLEAN — late-fail streaming in `gpt/gateway/server.py` and `gpt/api/server.py`: pre-content failures produce an error event, post-content failures close with a valid terminal sequence and increment `late_failure_masked`.
+
+Verification: targeted test execution was blocked because this read-only sandbox has no writable temporary directory. Static imports succeeded and `git diff --check` is clean.

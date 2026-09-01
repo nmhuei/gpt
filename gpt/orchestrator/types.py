@@ -3,7 +3,6 @@ from __future__ import annotations
 import enum
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
 
 
 class ChallengeStatus(str, enum.Enum):
@@ -15,6 +14,10 @@ class ChallengeStatus(str, enum.Enum):
     SESSION_REBOOT = "SESSION_REBOOT"
     SOLVED = "SOLVED"
     ESCALATED = "ESCALATED_NEEDS_HUMAN"
+
+
+class InstanceNotLiveError(Exception):
+    """Raised when the challenge instance stays unresponsive past its wait deadline."""
 
 
 class SolvingStrategy(str, enum.Enum):

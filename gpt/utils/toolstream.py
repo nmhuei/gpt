@@ -5,8 +5,10 @@ from typing import Any
 
 from gpt.state import MalformedToolCall
 from gpt.toolcall import ToolTranspiler
+from gpt.utils.toolcall import resolve_tool_protocol
 
 _OPEN = "<WEBGPT_TOOL_CALL>"
+_SOFT_OPENS = ("<cmd>", "<json>")
 
 
 @dataclass
@@ -33,7 +35,10 @@ class ToolStreamSieve:
     ) -> None:
         self.tools = tools
         self.tool_choice = tool_choice
-        self.tail_guard = tail_guard or max(len(_OPEN) - 1, 1)
+        self.protocol = resolve_tool_protocol()
+        candidate_opens = (_OPEN, *_SOFT_OPENS) if self.protocol == "soft" else (_OPEN,)
+        self._candidate_opens = candidate_opens
+        self.tail_guard = tail_guard or max(max(map(len, candidate_opens)) - 1, 1)
         self._buffer = ""
         self._all_text = ""
         self._mode = "undecided"
@@ -54,7 +59,10 @@ class ToolStreamSieve:
             stripped = self._buffer.lstrip()
             if not stripped:
                 return ToolStreamResult()
-            if _OPEN.startswith(stripped) or stripped.startswith(_OPEN):
+            if any(
+                opening.startswith(stripped) or stripped.startswith(opening)
+                for opening in self._candidate_opens
+            ):
                 self._mode = "tool_candidate"
                 return ToolStreamResult()
             self._mode = "text"
@@ -64,10 +72,17 @@ class ToolStreamSieve:
             # authoritative strict parse once the whole assistant turn exists.
             return ToolStreamResult()
 
-        # Text mode: withhold a short suffix so a sentinel split across chunks
-        # cannot leak before we can classify it as a mixed malformed response.
-        if _OPEN in self._buffer:
-            sentinel_at = self._buffer.index(_OPEN)
+        # Text mode: withhold a short suffix so a tool marker split
+        # across chunks cannot leak before we can classify it as a mixed
+        # malformed response. Under the soft protocol this includes <cmd> and
+        # <json>, not only the historical WEBGPT sentinel.
+        marker_positions = [
+            (self._buffer.index(opening), opening)
+            for opening in self._candidate_opens
+            if opening in self._buffer
+        ]
+        if marker_positions:
+            sentinel_at, _opening = min(marker_positions, key=lambda item: item[0])
             prefix = self._buffer[:sentinel_at]
             if prefix:
                 emitted.append(prefix)

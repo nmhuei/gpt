@@ -1,0 +1,55 @@
+{
+  "id": "anthropic-is-error-render",
+  "desc": "(e) Anthropic tool_result.is_error survives adaptation and renders as an explicit error marker in the payload",
+  "module": "adapters",
+  "input": {
+    "request": {
+      "model": "claude-sonnet-test",
+      "max_tokens": 256,
+      "system": "Be terse.",
+      "tools": [
+        {
+          "name": "Bash",
+          "description": "run shell command",
+          "input_schema": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      ],
+      "messages": [
+        {
+          "role": "assistant",
+          "content": [
+            {"type": "tool_use", "id": "call_err1", "name": "Bash", "input": {"command": "false"}}
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "tool_result",
+              "tool_use_id": "call_err1",
+              "is_error": true,
+              "content": "Command failed with exit code 1."
+            },
+            {"type": "text", "text": "Please retry differently."}
+          ]
+        }
+      ]
+    },
+    "render": {"initial": false, "tool_protocol": "soft"}
+  },
+  "expect": {
+    "openai_tool_names": ["Bash"],
+    "tool_results": [{"tool_call_id": "call_err1", "is_error": true}],
+    "contains": [
+      "\"is_error\": true",
+      "\"id\": \"call_err1\"",
+      "Command failed with exit code 1.",
+      "Please retry differently."
+    ],
+    "not_contains": ["\"is_error\": false"]
+  }
+}

@@ -9,13 +9,131 @@ import shutil
 import subprocess
 import sys
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
-from gpt.orchestrator.types import ChallengeStatus, ChallengeTask, SolvingStrategy
+from gpt.orchestrator.types import (
+    ChallengeStatus,
+    ChallengeTask,
+    InstanceNotLiveError,
+    SolvingStrategy,
+)
+from gpt.tools.process import AsyncProcessRunner
 
 FLAG_REGEX = re.compile(r"(?:flag|ctf|danangctf|dragons|brunner|vuln)\{[^}]+\}", re.IGNORECASE)
-CLAUDE_BIN = "/home/light/.local/bin/claude"
+
+# B3-full: rollback flag. Khi set "0", toàn bộ subprocess quay về đường cũ
+# (subprocess.run trong asyncio.to_thread) — không hủy được giữa chừng.
+COOPERATIVE_CANCEL_ENV = "WEBGPT_COOPERATIVE_CANCEL"
+# Thời gian grace sau SIGTERM trước khi nâng cấp lên SIGKILL.
+SUBPROCESS_KILL_GRACE_SECONDS = 5.0
+
+
+def cooperative_cancel_enabled() -> bool:
+    return os.environ.get(COOPERATIVE_CANCEL_ENV, "1") != "0"
+
+
+async def _run_subprocess_legacy(
+    cmd: list[str],
+    *,
+    cwd: str,
+    env: dict[str, str] | None,
+    timeout: float | None,
+) -> tuple[int, str, str]:
+    """Deprecated rollback adapter preserving the historical subprocess.run seam.
+
+    It intentionally remains monkeypatchable for legacy callers/tests, but
+    captures bytes and decodes with replacement so the old UnicodeDecodeError
+    failure cannot return.
+    """
+
+    def _exec() -> tuple[int, str, str]:
+        proc = subprocess.run(
+            cmd,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+            text=False,
+            timeout=timeout,
+        )
+        stdout = (
+            proc.stdout
+            if isinstance(proc.stdout, str)
+            else (proc.stdout or b"").decode("utf-8", errors="replace")
+        )
+        stderr = (
+            proc.stderr
+            if isinstance(proc.stderr, str)
+            else (proc.stderr or b"").decode("utf-8", errors="replace")
+        )
+        return int(proc.returncode or 0), stdout, stderr
+
+    return await asyncio.to_thread(_exec)
+
+
+async def _run_subprocess(
+    cmd: list[str],
+    *,
+    cwd: str,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
+    stop_event: asyncio.Event | None = None,
+) -> tuple[int, str]:
+    rc, out, err = await _run_subprocess_full(
+        cmd, cwd=cwd, env=env, timeout=timeout, stop_event=stop_event
+    )
+    return rc, out + "\n" + err
+
+
+async def _run_subprocess_full(
+    cmd: list[str],
+    *,
+    cwd: str,
+    env: dict[str, str] | None = None,
+    timeout: float | None = None,
+    stop_event: asyncio.Event | None = None,
+) -> tuple[int, str, str]:
+    """Shared process runtime with legacy timeout semantics at this boundary."""
+    if not cooperative_cancel_enabled() or stop_event is None:
+        return await _run_subprocess_legacy(
+            cmd, cwd=cwd, env=env, timeout=timeout
+        )
+
+    runner = AsyncProcessRunner(
+        default_timeout_seconds=float(timeout or 300.0),
+        max_output_chars=1_000_000,
+        terminate_grace_seconds=SUBPROCESS_KILL_GRACE_SECONDS,
+    )
+    result = await runner.run_argv(
+        cmd,
+        cwd=Path(cwd),
+        env=env,
+        timeout_seconds=timeout,
+        stop_event=stop_event,
+    )
+    stderr = result.stderr
+    if result.timed_out:
+        marker = f"Hết thời gian thực thi ({timeout}s)."
+        stderr = f"{stderr.rstrip()}\n{marker}".lstrip()
+    return int(result.exit_code or 0), result.stdout, stderr
+
+
+# Defaults for the local gateway bridge. Every value can be overridden per
+# terminal via the matching environment variable (see ``gpt-web env export``).
+DEFAULT_ANTHROPIC_BASE_URL = "http://127.0.0.1:18000"
+DEFAULT_ANTHROPIC_API_KEY = "sk-webgpt-local"
+DEFAULT_CLAUDE_MODEL = "claude-3-5-sonnet"
+DEFAULT_CLAUDE_CONTEXT_TOKENS = "200000"
+DEFAULT_CLAUDE_OUTPUT_TOKENS = "8192"
+
+
+def _claude_bin() -> str:
+    """Resolve the Claude CLI binary: env override, then PATH, then known location."""
+    return (
+        os.environ.get("WEBGPT_CLAUDE_BIN")
+        or shutil.which("claude")
+        or str(Path.home() / ".local" / "bin" / "claude")
+    )
 
 
 class ClaudeCodeSessionRunner:
@@ -31,7 +149,7 @@ class ClaudeCodeSessionRunner:
 
     def _ensure_trusted_workspace(self) -> None:
         try:
-            cpath = Path("/home/light/.claude.json")
+            cpath = Path.home() / ".claude.json"
             if cpath.exists():
                 cdata = json.loads(cpath.read_text())
                 cdata.setdefault("projects", {})[str(self.task.directory)] = {
@@ -101,7 +219,7 @@ class ClaudeCodeSessionRunner:
         """Cleans up any cached Claude Code session files for this workspace to eliminate poisoned context."""
         self._log("🔄 Khởi động lại session sạch (Rebooting session context)...")
         try:
-            claude_projects_dir = Path("/home/light/.claude/projects")
+            claude_projects_dir = Path.home() / ".claude" / "projects"
             if claude_projects_dir.exists():
                 for pdir in claude_projects_dir.iterdir():
                     if str(self.task.directory).replace("/", "-") in pdir.name:
@@ -109,31 +227,37 @@ class ClaudeCodeSessionRunner:
         except Exception as e:
             self._log(f"Warning cleaning session cache: {e}")
 
-    async def run_claude_turn(self, prompt: str) -> tuple[int, str]:
+    async def run_claude_turn(
+        self, prompt: str, stop_event: asyncio.Event | None = None
+    ) -> tuple[int, str]:
+        # Only fill values the caller has not already scoped for this shell,
+        # so per-terminal overrides survive instead of being clobbered here.
         env = os.environ.copy()
-        env["ANTHROPIC_BASE_URL"] = "http://127.0.0.1:18000"
-        env["ANTHROPIC_API_KEY"] = "sk-webgpt-local"
-        env["CLAUDE_DEFAULT_MODEL"] = "claude-3-5-sonnet"
-        env["CLAUDE_CODE_MAX_CONTEXT_TOKENS"] = "200000"
-        env["CLAUDE_CODE_MAX_OUTPUT_TOKENS"] = "8192"
+        env.setdefault("ANTHROPIC_BASE_URL", DEFAULT_ANTHROPIC_BASE_URL)
+        env.setdefault("ANTHROPIC_API_KEY", DEFAULT_ANTHROPIC_API_KEY)
+        env.setdefault("CLAUDE_DEFAULT_MODEL", DEFAULT_CLAUDE_MODEL)
+        env.setdefault("CLAUDE_CODE_MAX_CONTEXT_TOKENS", DEFAULT_CLAUDE_CONTEXT_TOKENS)
+        env.setdefault("CLAUDE_CODE_MAX_OUTPUT_TOKENS", DEFAULT_CLAUDE_OUTPUT_TOKENS)
+
+        try:
+            turn_timeout = float(os.environ.get("WEBGPT_CLAUDE_TURN_TIMEOUT", "300"))
+        except ValueError:
+            turn_timeout = 300.0
 
         safe_prompt = prompt.replace("\x00", "")
-        cmd = [CLAUDE_BIN, "-p", safe_prompt, "--dangerously-skip-permissions", "--print"]
+        cmd = [_claude_bin(), "-p", safe_prompt, "--dangerously-skip-permissions", "--print"]
 
-        def _exec():
-            proc = subprocess.run(
-                cmd,
-                cwd=str(self.task.directory),
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-            return proc.returncode, proc.stdout + "\n" + proc.stderr
+        return await _run_subprocess(
+            cmd,
+            cwd=str(self.task.directory),
+            env=env,
+            timeout=turn_timeout,
+            stop_event=stop_event,
+        )
 
-        return await asyncio.to_thread(_exec)
-
-    async def execute_solve_script(self, timeout: int = 30) -> tuple[int, str, str, str | None]:
+    async def execute_solve_script(
+        self, timeout: int = 30, stop_event: asyncio.Event | None = None
+    ) -> tuple[int, str, str, str | None]:
         solve_path = self.task.directory / "solve.py"
         if not solve_path.exists():
             return 1, "", "File solve.py chưa tồn tại.", None
@@ -142,56 +266,115 @@ class ClaudeCodeSessionRunner:
         if self.task.target_url:
             cmd.append(self.task.target_url)
 
-        def _exec():
-            try:
-                proc = subprocess.run(
-                    cmd,
-                    cwd=str(self.task.directory),
-                    capture_output=True,
-                    text=True,
-                    timeout=timeout,
-                )
-                combined = f"{proc.stdout}\n{proc.stderr}"
-                match = FLAG_REGEX.search(combined)
-                flag = match.group(0) if match else None
-                return proc.returncode, proc.stdout, proc.stderr, flag
-            except subprocess.TimeoutExpired:
-                return 124, "", f"Hết thời gian thực thi ({timeout}s).", None
-            except Exception as e:
-                return 1, "", str(e), None
+        try:
+            retcode, stdout, stderr = await _run_subprocess_full(
+                cmd,
+                cwd=str(self.task.directory),
+                env=None,
+                timeout=timeout,
+                stop_event=stop_event,
+            )
+        except subprocess.TimeoutExpired:
+            # Semantic cũ (đường legacy): mô phỏng mã thoát 124.
+            return 124, "", f"Hết thời gian thực thi ({timeout}s).", None
+        except Exception as e:
+            return 1, "", str(e), None
 
-        return await asyncio.to_thread(_exec)
+        combined = f"{stdout}\n{stderr}"
+        match = FLAG_REGEX.search(combined)
+        flag = match.group(0) if match else None
+        return retcode, stdout, stderr, flag
 
-    async def ensure_instance_live(self) -> bool:
+    async def ensure_instance_live(
+        self,
+        max_wait_seconds: float | None = None,
+        stop_event: asyncio.Event | None = None,
+    ) -> bool:
         """If target_url is provided, checks if it is responsive.
-        If it returns 502/503 or connection errors, loops and waits gracefully for the user
-        to renew/boot the container without exiting!
-        """
-        if not self.task.target_url or not self.task.target_url.startswith("http"):
-            return True
+        Dynamically auto-syncs target_url if metadata.json is updated when containers renew/reboot,
+        and handles 404 (frp offline), 502, 503 without crashing or exiting.
 
+        ``max_wait_seconds`` caps the total wait: None reads env
+        ``WEBGPT_INSTANCE_LIVE_DEADLINE`` (default 1800); "0" or a non-positive
+        value means wait forever (legacy behavior). When the deadline elapses
+        while the instance is still down, raises :class:`InstanceNotLiveError`.
+
+        ``stop_event`` (B3-full, optional): khi được set trong lúc chờ, raise
+        ngay :class:`InstanceNotLiveError` để caller (race solver) phân biệt
+        abort do race kết thúc với instance chết thật.
+        """
+        import json
         import ssl
         import urllib.error
         import urllib.request
+
+        if max_wait_seconds is None:
+            raw = os.environ.get("WEBGPT_INSTANCE_LIVE_DEADLINE", "1800")
+            try:
+                max_wait_seconds = float(raw)
+            except ValueError:
+                max_wait_seconds = 1800.0
+
+        # "0" / negative => no deadline (giữ nguyên behavior chờ vô hạn như cũ).
+        deadline: float | None = max_wait_seconds if max_wait_seconds and max_wait_seconds > 0 else None
 
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
 
-        waited = 0
+        waited = 0.0
         while True:
+            if stop_event is not None and stop_event.is_set():
+                reason = "[Cooperative Cancel] Worker bị hủy trong khi đang chờ instance sống."
+                self._log(f"⏹️ [Instance Wait] {reason}")
+                raise InstanceNotLiveError(reason)
+
+            if deadline is not None and waited >= deadline:
+                reason = (
+                    f"Instance không sống sau {deadline:g} giây "
+                    f"(target={self.task.target_url}). Container không hồi phục dù đã thăm dò liên tục."
+                )
+                self._log(f"🚨 [Instance Deadline] {reason}")
+                raise InstanceNotLiveError(reason)
+
+            # Dynamically check if metadata.json was updated with a new URL
+            for mpath in [
+                self.task.directory / "metadata.json",
+                self.task.directory.parent / "metadata.json",
+                self.task.directory.parent.parent / "metadata.json",
+            ]:
+                if mpath.exists():
+                    try:
+                        m_data = json.loads(mpath.read_text(encoding="utf-8"))
+                        new_url = (m_data.get("connection_info") or m_data.get("instance_url") or "").rstrip("/")
+                        if new_url and new_url.startswith("http") and new_url != self.task.target_url:
+                            self._log(f"🔄 [Dynamic URL Detected] Cập nhật URL container mới: {new_url}")
+                            self.task.target_url = new_url
+                    except Exception as exc:
+                        self._log(f"⚠️ [Metadata Reload] Không đọc được {mpath}: {type(exc).__name__}: {exc}")
+                    break
+
+            if not self.task.target_url or not self.task.target_url.startswith("http"):
+                return True
+
             try:
                 req = urllib.request.Request(
                     self.task.target_url,
                     headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
                 )
                 with urllib.request.urlopen(req, context=ctx, timeout=4) as resp:
-                    if resp.status < 500:
+                    body = resp.read(256).decode("utf-8", errors="ignore")
+                    # If frp 404 proxy page returned
+                    if resp.status == 404 and "frp" in body.lower():
+                        if waited % 30 == 0:
+                            self._log("⏳ [Instance Offline: FRP 404] Container đang chờ boot/renew... (Tự động thăm dò metadata.json mỗi 5s)")
+                    elif resp.status < 500:
                         if waited > 0:
                             self._log(f"✅ [Instance Online] Container đã hoạt động trở lại (HTTP {resp.status})! Tiếp tục giải...")
                         return True
             except urllib.error.HTTPError as e:
-                if e.code in (502, 503, 504):
+                body = e.read(256).decode("utf-8", errors="ignore") if hasattr(e, "read") else ""
+                if e.code in (502, 503, 504) or (e.code == 404 and "frp" in body.lower()):
                     if waited % 30 == 0:
                         self._log(f"⏳ [Instance Offline: HTTP {e.code}] Đang chờ bạn boot/renew container trên web CTFd... (Tự động thăm dò lại mỗi 5s, không exit)")
                 else:
@@ -202,8 +385,17 @@ class ClaudeCodeSessionRunner:
                 if waited % 30 == 0:
                     self._log(f"⏳ [Instance Offline: {e}] Đang chờ bạn boot/renew container trên web CTFd... (Tự động thăm dò lại mỗi 5s, không exit)")
 
-            await asyncio.sleep(5)
-            waited += 5
+            remaining = None if deadline is None else deadline - waited
+            sleep_for = 5.0 if remaining is None else max(min(5.0, remaining), 0.05)
+            if stop_event is not None:
+                # Ngủ có thể đánh thức sớm: stop_event set -> vòng sau raise ngay.
+                try:
+                    await asyncio.wait_for(stop_event.wait(), timeout=sleep_for)
+                except asyncio.TimeoutError:
+                    pass
+            else:
+                await asyncio.sleep(sleep_for)
+            waited += sleep_for
 
     async def solve_challenge(self) -> ChallengeTask:
         self.task.start_time = time.monotonic()
@@ -211,7 +403,26 @@ class ClaudeCodeSessionRunner:
         self._ensure_trusted_workspace()
 
         # Wait for instance to be live if URL is configured
-        await self.ensure_instance_live()
+        try:
+            await self.ensure_instance_live()
+        except InstanceNotLiveError as exc:
+            self.task.end_time = time.monotonic()
+            self.task.status = ChallengeStatus.ESCALATED
+            report = (
+                f"# 🚨 BÁO CÁO CẢNH BÁO: CẦN NGƯỜI DÙNG HỖ TRỢ (HUMAN REVIEW NEEDED)\n\n"
+                f"- **Bài thi:** `{self.task.name}` (Category: {self.task.category}, Points: {self.task.points})\n"
+                f"- **Thư mục:** `{self.task.directory}`\n"
+                f"- **Target URL:** {self.task.target_url or 'N/A'}\n"
+                f"- **Lý do:** instance không sống sau khi chờ — {exc}\n\n"
+                f"## 💡 Đề Xuất Hướng Xử Lý Cho Kỹ Sư:\n"
+                f"1. Kiểm tra container/instance có thực sự được khởi động trên web CTFd không.\n"
+                f"2. Xác nhận lại URL trong metadata.json hoặc connection_info.\n"
+                f"3. Sau khi instance sống lại, chạy lại tool để tiếp tục giải."
+            )
+            self.task.diagnostic_report = report
+            (self.task.directory / "NEEDS_HUMAN_REVIEW.md").write_text(report, encoding="utf-8")
+            self._log(f"🚨 Chuyển sang NEEDS_HUMAN_REVIEW: {exc}")
+            return self.task
 
         dir_context = self._collect_files()
 
@@ -249,7 +460,7 @@ class ClaudeCodeSessionRunner:
             self._log(f"▶️ [Vòng {attempt}/{self.task.max_attempts}] Chiến thuật: {self.task.current_strategy.value}")
 
             # Send prompt to Claude Code
-            code, ai_output = await self.run_claude_turn(current_prompt)
+            _code, ai_output = await self.run_claude_turn(current_prompt)
 
             # Check if Flag is directly in AI output
             direct_flag = FLAG_REGEX.search(ai_output)

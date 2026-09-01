@@ -1,3 +1,4 @@
+from gpt.auth.accounts import AccountRecord, AccountStore
 from gpt.auth.authenticator import (
     AutoLoginManager,
     CaptchaChallengeError,
@@ -9,6 +10,8 @@ from gpt.auth.authenticator import (
 from gpt.auth.totp import generate_totp_code
 
 __all__ = [
+    "AccountRecord",
+    "AccountStore",
     "AutoLoginManager",
     "CaptchaChallengeError",
     "Invalid2FACodeError",

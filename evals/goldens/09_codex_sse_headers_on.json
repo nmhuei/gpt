@@ -1,0 +1,30 @@
+{
+  "id": "codex-sse-headers-on",
+  "desc": "(a) WEBGPT_CODEX_SSE=ON builds the codex envelope: originator + OpenAI-Beta + Bearer access token, and NO oai-device-id / OpenAI-Sentinel trio",
+  "module": "codex_sse",
+  "input": {
+    "op": "headers",
+    "env": {"WEBGPT_CODEX_SSE": "1"},
+    "codex": true,
+    "bundle": {
+      "access_token": "eyJ-access-codex-token",
+      "cf_clearance": "cf-clearance-tok-1",
+      "cookies": {"__Host-next-auth.csrf-token": "csrf-abc"}
+    }
+  },
+  "expect": {
+    "flag_enabled": true,
+    "headers_eq": {
+      "originator": "codex_cli_rs",
+      "OpenAI-Beta": "responses=experimental",
+      "Authorization": "Bearer eyJ-access-codex-token"
+    },
+    "headers_contains": ["cf_clearance=cf-clearance-tok-1"],
+    "headers_absent": [
+      "oai-device-id",
+      "openai-sentinel-chat-requirements-token",
+      "openai-sentinel-proof-token",
+      "openai-sentinel-turnstile-token"
+    ]
+  }
+}

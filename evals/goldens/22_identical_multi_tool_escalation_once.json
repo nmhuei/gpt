@@ -1,0 +1,82 @@
+{
+  "id": "identical-multi-tool-escalation-once-budget-telemetry",
+  "desc": "CORRECTION-TIGHTEN combined lock on one identical-malformation loop: the same over-cap MULTI_TOOL reply rebuilds a byte-identical correction, gets the controller escalation hint appended EXACTLY ONCE (first duplicate), then fails fast at correction_budget_exhausted with protocol_shaped 2/2 -- and correction_count telemetry reports only corrections actually SENT (2); the aborting third round is undone pre-send (Codex13 #4) even though WEBGPT_MAX_CORRECTIONS=5 would allow more. MULTI_TOOL dodges the LIVE-R3 identical-hard-reason guard by design, so anti-repeat + sub-budget are exercised directly.",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {"WEBGPT_MAX_CORRECTIONS": "5"},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "<tool_calls><invoke name=\"Bash\"><parameter name=\"command\">echo 0</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 1</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 2</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 3</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 4</parameter></invoke></tool_calls>",
+      "<tool_calls><invoke name=\"Bash\"><parameter name=\"command\">echo 0</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 1</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 2</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 3</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 4</parameter></invoke></tool_calls>",
+      "<tool_calls><invoke name=\"Bash\"><parameter name=\"command\">echo 0</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 1</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 2</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 3</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 4</parameter></invoke></tool_calls>"
+    ]
+  },
+  "expect": {
+    "raises_contains": [
+      "Tool correction budget exhausted",
+      "MULTI_TOOL",
+      "protocol_shaped 2/2"
+    ],
+    "send_count": 3,
+    "sent_prompt_checks": [
+      {"index": 1, "not_contains": ["ESCALATION (final retry)"]},
+      {
+        "index": 2,
+        "contains": ["ESCALATION (final retry)"],
+        "starts_with_prior_rstrip": 1
+      }
+    ],
+    "events": [
+      {
+        "kind": "tool_correction",
+        "reason": "MULTI_TOOL",
+        "correction_class": "protocol_shaped",
+        "effective_cap": 2
+      },
+      {
+        "kind": "correction_prompt_built",
+        "reason": "MULTI_TOOL",
+        "repeat_of_previous": false,
+        "escalated": false
+      },
+      {
+        "kind": "correction_prompt_built",
+        "reason": "MULTI_TOOL",
+        "repeat_of_previous": true,
+        "escalated": true
+      },
+      {
+        "kind": "correction_budget_exhausted",
+        "reason": "MULTI_TOOL",
+        "correction_class": "protocol_shaped",
+        "used": 2,
+        "cap": 2,
+        "max_corrections": 5,
+        "correction_count": 2,
+        "turn_id": "turn-03"
+      }
+    ]
+  }
+}

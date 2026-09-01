@@ -6,7 +6,7 @@ import tempfile
 from collections.abc import Callable
 from pathlib import Path
 
-DEFAULT_WEBGPT_DIR = Path.home() / "Downloads" / "webgpt"
+DEFAULT_WEBGPT_DIR = Path.home() / ".local" / "share" / "webgpt"
 DEFAULT_PROFILE_DIR = DEFAULT_WEBGPT_DIR / "profile"
 DEFAULT_BRAVE_PROFILE_DIR = DEFAULT_WEBGPT_DIR / "brave-profile"
 DEFAULT_CLOAK_PROFILE_DIR = DEFAULT_WEBGPT_DIR / "cloak-profile"

@@ -133,3 +133,26 @@ def test_pending_commit_unknown_state_survives_store_restart(tmp_path):
         [],
         "auto",
     )
+
+
+def test_persistence_keeps_account_affinity_and_web_bootstrap(tmp_path):
+    path = tmp_path / "conversations.json"
+    store = ConversationStore(state_path=path)
+    messages = [{"role": "user", "content": "hello"}]
+    record, _tail, _cached = store.resolve(messages, "chatgpt-web", [])
+    record.account_name = "personal"
+    record.web_bootstrapped = True
+    store.commit(
+        record,
+        messages,
+        {"role": "assistant", "content": "hi"},
+        {"id": "response_1"},
+        "chatgpt-web",
+        [],
+        "conv_1",
+    )
+
+    restored = ConversationStore(state_path=path)
+    loaded = next(iter(restored._records.values()))
+    assert loaded.account_name == "personal"
+    assert loaded.web_bootstrapped is True

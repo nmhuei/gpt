@@ -1,0 +1,28 @@
+{
+  "id": "codex-sse-payload-shape",
+  "desc": "(b) codex payload is Responses-shaped: system/developer blocks become instructions; controller prose (bootstrap/tool contract) rides as its own user input item at its chronological position — nothing dropped, but instructions stays short/system-only like codex_cli_rs (CLI-shape parity, next-horizon F1.3). Anti-echo note: DEBUG-R8 RC1 echo is caused by instructions buried INSIDE ~41k one-line JSON message content at ~68k scale (soft mode), not by gap-prose placement; a plain-text user item is not JSON-buried and carries no duplication either way. store:false + stream:true mandatory, conversation_id never sent",
+  "module": "codex_sse",
+  "input": {
+    "op": "payload",
+    "model_id": "gpt-5.2",
+    "conversation_id": "conv-must-be-dropped",
+    "text": "Controller bootstrap contract.\n<WEBGPT_MESSAGE role=\"system\">\n{\"content\": \"You are WebGPT.\"}\n</WEBGPT_MESSAGE>\n<WEBGPT_MESSAGE role=\"user\">\n{\"content\": \"list files\"}\n</WEBGPT_MESSAGE>\n<WEBGPT_MESSAGE role=\"assistant\">\n{\"content\": \"running ls\"}\n</WEBGPT_MESSAGE>\n<WEBGPT_MESSAGE role=\"user\">\n{\"content\": \"thanks\"}\n</WEBGPT_MESSAGE>"
+  },
+  "expect": {
+    "fields_eq": {
+      "model": "gpt-5.2",
+      "tool_choice": "auto",
+      "tools": []
+    },
+    "store": false,
+    "stream": true,
+    "no_conversation_id": true,
+    "instructions_lines": ["You are WebGPT."],
+    "items": [
+      {"index": 0, "role": "user", "content_type": "input_text", "text": "Controller bootstrap contract."},
+      {"index": 1, "role": "user", "content_type": "input_text", "text": "list files"},
+      {"index": 2, "role": "assistant", "content_type": "output_text", "text": "running ls"},
+      {"index": 3, "role": "user", "content_type": "input_text", "text": "thanks"}
+    ]
+  }
+}

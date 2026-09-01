@@ -1,0 +1,67 @@
+{
+  "id": "correction-budget-protocol-cap",
+  "desc": "(i) CORRECTION-TIGHTEN: third protocol-shaped failure (MALFORMED_TOOL -> MULTI_TOOL -> MALFORMED_TOOL, interleaved so the LIVE-R3 identical-reason guard cannot pre-empt) raises early at the hard sub-budget cap 2 even though WEBGPT_MAX_CORRECTIONS=5",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {"WEBGPT_MAX_CORRECTIONS": "5"},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "I will run it.\n<tool_calls>\n  <invoke name=\"Bash\">\n    <parameter name=\"command\">pwd</parameter>\n",
+      "<tool_calls><invoke name=\"Bash\"><parameter name=\"command\">echo 0</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 1</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 2</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 3</parameter></invoke><invoke name=\"Bash\"><parameter name=\"command\">echo 4</parameter></invoke></tool_calls>",
+      "I will run it.\n<tool_calls>\n  <invoke name=\"Bash\">\n    <parameter name=\"command\">pwd</parameter>\n"
+    ]
+  },
+  "expect": {
+    "raises_contains": [
+      "Tool correction budget exhausted",
+      "MALFORMED_TOOL",
+      "protocol_shaped 2/2"
+    ],
+    "send_count": 3,
+    "events": [
+      {
+        "kind": "tool_correction",
+        "reason": "MALFORMED_TOOL",
+        "correction_class": "protocol_shaped",
+        "effective_cap": 2
+      },
+      {
+        "kind": "tool_correction",
+        "reason": "MULTI_TOOL",
+        "correction_class": "protocol_shaped",
+        "effective_cap": 2
+      },
+      {
+        "kind": "correction_budget_exhausted",
+        "reason": "MALFORMED_TOOL",
+        "correction_class": "protocol_shaped",
+        "used": 2,
+        "cap": 2,
+        "max_corrections": 5,
+        "turn_id": "turn-03"
+      }
+    ]
+  }
+}

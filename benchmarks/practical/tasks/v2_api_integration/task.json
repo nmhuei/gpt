@@ -1,0 +1,115 @@
+{
+  "id": "v2_api_integration",
+  "version": 2,
+  "title": "Implement a resilient paginated API client against a local mock server",
+  "language": "en",
+  "timeout_s": 2400,
+  "baseline": {
+    "pytest_expect": "pass",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "feedclient",
+  "required_files": [
+    "feedclient/client.py",
+    "feedclient/retry.py",
+    "feedclient/pager.py",
+    "feedclient/errors.py"
+  ],
+  "min_visible_tests_passed": 2,
+  "min_grader_tests_passed": 9,
+  "allowed_globs": [
+    "feedclient/**"
+  ],
+  "locked_paths": [
+    "tests/test_unit_errors.py",
+    "mockserver/server.py",
+    "mockserver/scenarios.py",
+    "docs/API.md"
+  ],
+  "structural_checks": [
+    {
+      "file": "feedclient/client.py",
+      "regex": "class FeedClient"
+    },
+    {
+      "file": "feedclient/retry.py",
+      "regex": "class RetryPolicy"
+    },
+    {
+      "file": "feedclient/pager.py",
+      "regex": "def iterate_items\\("
+    }
+  ],
+  "integration": {
+    "spawn_cmd": [
+      "{python}",
+      "mockserver/server.py",
+      "{port}"
+    ],
+    "ready_path": "/healthz",
+    "ready_timeout_s": 4,
+    "wall_budget_s": 20,
+    "pytest_timeout_s": 20,
+    "cases": [
+      {
+        "server_env": {
+          "SCENARIO": "happy"
+        },
+        "pytest_k": "integration_happy"
+      },
+      {
+        "server_env": {
+          "SCENARIO": "paginated"
+        },
+        "pytest_k": "integration_paginated"
+      },
+      {
+        "server_env": {
+          "SCENARIO": "ratelimited"
+        },
+        "pytest_k": "integration_ratelimited"
+      },
+      {
+        "server_env": {
+          "SCENARIO": "flaky500"
+        },
+        "pytest_k": "integration_flaky500"
+      },
+      {
+        "server_env": {
+          "SCENARIO": "unauthorized"
+        },
+        "pytest_k": "integration_unauthorized"
+      },
+      {
+        "server_env": {
+          "SCENARIO": "badjson"
+        },
+        "pytest_k": "integration_badjson"
+      }
+    ]
+  },
+  "mutations": [
+    {
+      "id": "a1_retry_disabled",
+      "kind": "v2api:retry_disabled",
+      "attr": "should_retry"
+    },
+    {
+      "id": "a2_fixed_sleep",
+      "kind": "v2api:fixed_sleep",
+      "attr": "delay"
+    },
+    {
+      "id": "a3_cursor_drop",
+      "kind": "v2api:cursor_drop",
+      "attr": "iterate_items"
+    },
+    {
+      "id": "a4_retry_on_401",
+      "kind": "v2api:retry_on_401",
+      "attr": "should_retry"
+    }
+  ],
+  "prompt": "Implement `feedclient` against the local mock server described in docs/API.md. Complete the typed error hierarchy behavior, RetryPolicy, FeedClient and iterate_items. Retry only network/5xx and 429; 5xx backoff is 0.1*2^k via injected sleep, 429 honors Retry-After, and other 4xx are never retried. Follow next_cursor to exhaustion and de-duplicate ids across page boundaries. Do not modify mockserver/, docs/, or existing tests. Public signatures in skeleton docstrings must remain stable; real time.sleep must not be used when an injected sleep is supplied."
+}

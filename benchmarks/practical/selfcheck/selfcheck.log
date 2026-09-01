@@ -1,0 +1,90 @@
+##### RUN: grade.py --task bugfix --ws benchmarks/practical/selfcheck/bugfix-solved #####
+==================================================================
+practical-bench grader | task=bugfix | ws=/home/light/GitHub/gpt/benchmarks/practical/selfcheck/bugfix-solved
+==================================================================
+  [PASS] baseline_visible_expectation       expect fail; got rc=1; rc-ok passed=2 failed=3 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=1; rc-ok passed=11 failed=7 errors=0 skipped=0 (grader 11/18)
+  [PASS] required_files_present             all present
+  [PASS] suite_green_with_hidden_assertions rc-ok passed=23 failed=0 errors=0 skipped=0 (grader 18/18); mins visible>=5 grader>=12
+  [PASS] mutation:edge_strip_only           caught by suite (rc-ok passed=18 failed=5 errors=0 skipped=0 (grader 14/18))
+  [PASS] mutation:unique_tokens_only        caught by suite (rc-ok passed=22 failed=1 errors=0 skipped=0 (grader 17/18))
+------------------------------------------------------------------
+RESULT: PASS  (checks 6/6)
+==================================================================
+exit=0
+##### RUN: grade.py --task bugfix --ws <empty-dir> (/tmp/tmp.XBDdCJEwFw) #####
+==================================================================
+practical-bench grader | task=bugfix | ws=/tmp/tmp.XBDdCJEwFw
+==================================================================
+  [PASS] baseline_visible_expectation       expect fail; got rc=1; rc-ok passed=2 failed=3 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=1; rc-ok passed=11 failed=7 errors=0 skipped=0 (grader 11/18)
+  [FAIL] required_files_present             missing: wordstat/counter.py, wordstat/stats.py, tests/test_counter.py
+------------------------------------------------------------------
+RESULT: FAIL  (checks 2/3)
+==================================================================
+exit=1
+##### RUN: grade.py --task feature --ws benchmarks/practical/selfcheck/feature-solved #####
+==================================================================
+practical-bench grader | task=feature | ws=/home/light/GitHub/gpt/benchmarks/practical/selfcheck/feature-solved
+==================================================================
+  [PASS] baseline_visible_expectation       expect fail; got rc=1; rc-ok passed=0 failed=4 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=1; rc-ok passed=0 failed=17 errors=0 skipped=0 (grader 0/17)
+  [PASS] required_files_present             all present
+  [PASS] suite_green_with_hidden_assertions rc-ok passed=21 failed=0 errors=0 skipped=0 (grader 17/17); mins visible>=4 grader>=10
+  [PASS] mutation:keep_case                 caught by suite (rc-ok passed=7 failed=14 errors=0 skipped=0 (grader 6/17))
+  [PASS] mutation:no_dedupe                 caught by suite (rc-ok passed=16 failed=5 errors=0 skipped=0 (grader 13/17))
+------------------------------------------------------------------
+RESULT: PASS  (checks 6/6)
+==================================================================
+exit=0
+##### RUN: grade.py --task feature --ws <empty-dir> (/tmp/tmp.XBDdCJEwFw) #####
+==================================================================
+practical-bench grader | task=feature | ws=/tmp/tmp.XBDdCJEwFw
+==================================================================
+  [PASS] baseline_visible_expectation       expect fail; got rc=1; rc-ok passed=0 failed=4 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=1; rc-ok passed=0 failed=17 errors=0 skipped=0 (grader 0/17)
+  [FAIL] required_files_present             missing: slugkit/slugs.py, tests/test_slugs.py
+------------------------------------------------------------------
+RESULT: FAIL  (checks 2/3)
+==================================================================
+exit=1
+##### RUN: grade.py --task refactor --ws benchmarks/practical/selfcheck/refactor-solved #####
+==================================================================
+practical-bench grader | task=refactor | ws=/home/light/GitHub/gpt/benchmarks/practical/selfcheck/refactor-solved
+==================================================================
+  [PASS] baseline_visible_expectation       expect pass; got rc=0; rc-ok passed=9 failed=0 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=2; rc-ok passed=0 failed=0 errors=1 skipped=0 (grader 0/0)
+  [PASS] required_files_present             all present
+  [PASS] suite_green_with_hidden_assertions rc-ok passed=23 failed=0 errors=0 skipped=0 (grader 14/14); mins visible>=9 grader>=10
+  [PASS] structural:text.py                 metrics/text.py matches 'from\\s+\\.util\\s+import|from\\s+metrics\\.util\\s+import': True
+  [PASS] structural:stats.py                metrics/stats.py matches 'from\\s+\\.util\\s+import|from\\s+metrics\\.util\\s+import': True
+  [PASS] mutation:loose_normalize           caught by suite (rc-ok passed=13 failed=10 errors=0 skipped=0 (grader 10/14))
+------------------------------------------------------------------
+RESULT: PASS  (checks 7/7)
+==================================================================
+exit=0
+##### RUN: grade.py --task refactor --ws <empty-dir> (/tmp/tmp.XBDdCJEwFw) #####
+==================================================================
+practical-bench grader | task=refactor | ws=/tmp/tmp.XBDdCJEwFw
+==================================================================
+  [PASS] baseline_visible_expectation       expect pass; got rc=0; rc-ok passed=9 failed=0 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=2; rc-ok passed=0 failed=0 errors=1 skipped=0 (grader 0/0)
+  [FAIL] required_files_present             missing: metrics/text.py, metrics/stats.py, metrics/util.py, tests/test_text.py, tests/test_stats.py
+------------------------------------------------------------------
+RESULT: FAIL  (checks 2/3)
+==================================================================
+exit=1
+##### EXTRA RUN: --task bugfix --ws <pristine fixture copy> #####
+==================================================================
+practical-bench grader | task=bugfix | ws=/tmp/tmpfdavbv03/ws
+==================================================================
+  [PASS] baseline_visible_expectation       expect fail; got rc=1; rc-ok passed=2 failed=3 errors=0 skipped=0 (grader 0/0)
+  [PASS] baseline_gradersuite_red           hidden suite must fail on pristine fixture; got rc=1; rc-ok passed=11 failed=7 errors=0 skipped=0 (grader 11/18)
+  [PASS] required_files_present             all present
+  [FAIL] suite_green_with_hidden_assertions rc-ok passed=13 failed=10 errors=0 skipped=0 (grader 11/18); mins visible>=5 grader>=12
+  [PASS] mutation:edge_strip_only           caught by suite (rc-ok passed=17 failed=6 errors=0 skipped=0 (grader 13/18))
+  [PASS] mutation:unique_tokens_only        caught by suite (rc-ok passed=21 failed=2 errors=0 skipped=0 (grader 16/18))
+------------------------------------------------------------------
+RESULT: FAIL  (checks 5/6)
+==================================================================
+exit=1

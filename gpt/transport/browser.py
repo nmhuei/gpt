@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import os
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -17,7 +19,16 @@ from playwright.async_api import (
 from gpt.profile import DEFAULT_PROFILE_DIR, ensure_profile_dir
 from gpt.state import BrowserDisconnected
 
+logger = logging.getLogger("gpt.transport.browser")
+
 DEFAULT_VIEWPORT: ViewportSize = {"width": 1280, "height": 800}
+
+# Owner-confirmed anti-Cloudflare strategy: every browser launch must prefer
+# CloakBrowser (anti-fingerprint) so cf_clearance is minted from a consistent,
+# hardened fingerprint.  A vanilla Playwright Chromium has none of that hardening
+# and its clearances get challenged immediately, so falling back to it is only
+# allowed when the operator explicitly opts in via WEBGPT_REQUIRE_CLOAKBROWSER=0.
+_REQUIRE_CLOAK_ENV = "WEBGPT_REQUIRE_CLOAKBROWSER"
 
 
 class BrowserManager:
@@ -46,6 +57,10 @@ class BrowserManager:
         self._lock = asyncio.Lock()
         self._initial_page_claimed = False
         self._attached_over_cdp = False
+        # Which backend actually served the last start(): "cdp",
+        # "cloakbrowser", or "chromium-fallback" (unhardened — inspect this in
+        # diagnostics whenever a clearance keeps getting challenged).
+        self.launch_backend: str | None = None
 
     @property
     def context(self) -> BrowserContext | None:
@@ -74,6 +89,7 @@ class BrowserManager:
                     if not self._browser.contexts:
                         raise BrowserDisconnected("CDP browser has no default context.")
                     self._context = self._browser.contexts[0]
+                    self.launch_backend = "cdp"
                     return self._context
                 except Exception:
                     await self._cleanup_unlocked()
@@ -100,7 +116,22 @@ class BrowserManager:
                             headless=self.headless,
                             viewport=self.viewport,
                         )
-                    except Exception:
+                        self.launch_backend = "cloakbrowser"
+                    except Exception as exc:
+                        # CloakBrowser-first policy: a vanilla Chromium fallback
+                        # must be an explicit operator decision and is always
+                        # announced loudly, because its fingerprint gets
+                        # challenged by Cloudflare immediately.
+                        self._guard_vanilla_fallback("persistent", exc)
+                        logger.warning(
+                            "CloakBrowser persistent launch failed (%s); falling back "
+                            "to vanilla Playwright Chromium WITHOUT anti-fingerprint "
+                            "hardening. Cloudflare will likely challenge this "
+                            "browser. Repair cloakbrowser, or set %s=0 to silence "
+                            "this refusal path.",
+                            exc,
+                            _REQUIRE_CLOAK_ENV,
+                        )
                         stealth_args = [
                             "--disable-blink-features=AutomationControlled",
                             "--no-sandbox",
@@ -110,6 +141,7 @@ class BrowserManager:
                         self._context = await self._playwright.chromium.launch_persistent_context(
                             user_data_dir=str(ensure_profile_dir(self.profile_dir)), **options
                         )
+                        self.launch_backend = "chromium-fallback"
                 else:
                     try:
                         from cloakbrowser import launch_async
@@ -117,7 +149,18 @@ class BrowserManager:
                             headless=self.headless,
                         )
                         self._context = await self._browser.new_context(viewport=self.viewport)
-                    except Exception:
+                        self.launch_backend = "cloakbrowser"
+                    except Exception as exc:
+                        self._guard_vanilla_fallback("ephemeral", exc)
+                        logger.warning(
+                            "CloakBrowser ephemeral launch failed (%s); falling back "
+                            "to vanilla Playwright Chromium WITHOUT anti-fingerprint "
+                            "hardening. Cloudflare will likely challenge this "
+                            "browser. Repair cloakbrowser, or set %s=0 to silence "
+                            "this refusal path.",
+                            exc,
+                            _REQUIRE_CLOAK_ENV,
+                        )
                         launch_keys = {"headless", "executable_path"}
                         launch_options = {k: v for k, v in options.items() if k in launch_keys}
                         launch_options["args"] = [
@@ -128,11 +171,29 @@ class BrowserManager:
                         context_options = {k: v for k, v in options.items() if k not in launch_keys}
                         self._browser = await self._playwright.chromium.launch(**launch_options)
                         self._context = await self._browser.new_context(**context_options)
+                        self.launch_backend = "chromium-fallback"
 
                 return self._context
             except Exception:
                 await self._cleanup_unlocked()
                 raise
+
+    @staticmethod
+    def _guard_vanilla_fallback(mode: str, cause: Exception) -> None:
+        """Refuse the unhardened Chromium fallback unless explicitly allowed.
+
+        Default is strict: if CloakBrowser cannot launch, stop here instead of
+        silently minting clearances from a fingerprint Cloudflare will flag.
+        Operators opt into the fallback with WEBGPT_REQUIRE_CLOAKBROWSER=0.
+        """
+        raw = os.environ.get(_REQUIRE_CLOAK_ENV, "").strip().casefold()
+        required = raw not in {"0", "false", "no", "off"}
+        if required:
+            raise BrowserDisconnected(
+                f"CloakBrowser {mode} launch failed ({cause}) and the vanilla "
+                f"Chromium fallback is disabled by default. Repair cloakbrowser "
+                f"or set {_REQUIRE_CLOAK_ENV}=0 to allow the unhardened fallback."
+            ) from cause
 
     @staticmethod
     def _validate_local_cdp_url(url: str) -> None:

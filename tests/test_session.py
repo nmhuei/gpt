@@ -3,7 +3,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from gpt.session import ChatGPTWebSession
-from gpt.state import CommitUnknown, ProtocolChanged, RateLimited, SessionState
+from gpt.state import (
+    AuthRequired,
+    CommitUnknown,
+    ProtocolChanged,
+    RateLimited,
+    SessionState,
+)
 from gpt.types import (
     ModelInfo,
     RequestSubmitted,
@@ -150,3 +156,105 @@ async def test_session_preserves_rate_limit_instead_of_commit_unknown_after_subm
     ]
     assert SessionState.COMMIT_UNKNOWN.value not in states
     assert SessionState.RATE_LIMITED.value in states
+
+
+@pytest.mark.anyio
+async def test_create_waits_for_full_page_load_before_capability_probe(monkeypatch):
+    events: list[str] = []
+
+    class BootstrapPage:
+        url = "https://chatgpt.com/"
+
+        async def goto(self, *_args, **_kwargs):
+            events.append("domcontentloaded")
+
+        async def wait_for_load_state(self, state, **_kwargs):
+            assert state == "load"
+            events.append("load")
+
+        def is_closed(self):
+            return False
+
+        async def close(self):
+            events.append("page_close")
+
+    page = BootstrapPage()
+
+    class BootstrapManager:
+        connected = True
+
+        async def start(self):
+            events.append("manager_start")
+
+        async def new_page(self):
+            return page
+
+    class BootstrapUI:
+        def __init__(self, _page):
+            pass
+
+        async def dismiss_popups(self):
+            events.append("dismiss")
+
+        async def auth_status(self):
+            return "anonymous"
+
+        async def capabilities(self):
+            events.append("capabilities")
+            return MagicMock(models=[], selected_effort=None)
+
+    monkeypatch.setattr("gpt.transport.session.UIDriver", BootstrapUI)
+
+    session = await ChatGPTWebSession.create(browser_manager=BootstrapManager())
+
+    assert "load" in events
+    assert events.index("domcontentloaded") < events.index("load") < events.index("capabilities")
+    await session.close()
+
+
+@pytest.mark.anyio
+async def test_create_maps_login_required_to_auth_required(monkeypatch):
+    events: list[str] = []
+
+    class LoginPage:
+        url = "https://chatgpt.com/"
+
+        async def goto(self, *_args, **_kwargs):
+            events.append("goto")
+
+        async def wait_for_load_state(self, _state, **_kwargs):
+            events.append("load")
+
+        def is_closed(self):
+            return False
+
+        async def close(self):
+            events.append("page_close")
+
+    page = LoginPage()
+
+    class LoginManager:
+        connected = True
+
+        async def start(self):
+            events.append("manager_start")
+
+        async def new_page(self):
+            return page
+
+    class LoginUI:
+        def __init__(self, _page):
+            pass
+
+        async def dismiss_popups(self):
+            pass
+
+        async def auth_status(self):
+            return "required"
+
+    monkeypatch.setattr("gpt.transport.session.UIDriver", LoginUI)
+
+    with pytest.raises(AuthRequired, match="authentication is required"):
+        await ChatGPTWebSession.create(browser_manager=LoginManager())
+
+    assert "page_close" in events

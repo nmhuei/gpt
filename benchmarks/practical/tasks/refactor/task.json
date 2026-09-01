@@ -1,0 +1,39 @@
+{
+  "id": "refactor",
+  "version": 1,
+  "title": "De-duplicate metrics.text/metrics.stats into shared util module",
+  "language": "en",
+  "baseline": {
+    "pytest_expect": "pass",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "metrics",
+  "required_files": [
+    "metrics/text.py",
+    "metrics/stats.py",
+    "metrics/util.py",
+    "tests/test_text.py",
+    "tests/test_stats.py"
+  ],
+  "min_visible_tests_passed": 9,
+  "min_grader_tests_passed": 10,
+  "structural_checks": [
+    {
+      "file": "metrics/text.py",
+      "regex": "from\\s+\\.util\\s+import|from\\s+metrics\\.util\\s+import"
+    },
+    {
+      "file": "metrics/stats.py",
+      "regex": "from\\s+\\.util\\s+import|from\\s+metrics\\.util\\s+import"
+    }
+  ],
+  "mutations": [
+    {
+      "id": "loose_normalize",
+      "kind": "refactor:loose_normalize",
+      "attr": "normalize_token",
+      "desc": "if the shared util's normalize_token is weakened (drops the alphanumeric filter), old tests MUST fail -- proves both modules actually route through the shared util instead of keeping hidden duplicates"
+    }
+  ],
+  "prompt": "This workspace contains `metrics`, where `normalize_token` and `tokenize` are copy-pasted duplicates living in both `metrics/text.py` and `metrics/stats.py`. TASK: refactor so the single source of truth lives in a NEW module `metrics/util.py`; both `metrics/text.py` and `metrics/stats.py` must import the shared functions from it (relative `from .util import ...` or absolute `from metrics.util import ...`). HARD RULES: (1) behavior must be identical -- every existing test in `tests/test_text.py` and `tests/test_stats.py` must keep passing UNMODIFIED (do not edit/delete tests); (2) the public API must survive: `metrics.text.normalize_token`, `metrics.text.tokenize`, `metrics.stats.normalize_token`, `metrics.stats.tokenize`, `metrics.stats.count_frequency` all stay importable with identical behavior; (3) the duplicates must really go away -- after refactoring, the shared util must be the only implementation actually used. Verify with `python -m pytest` inside the workspace."
+}

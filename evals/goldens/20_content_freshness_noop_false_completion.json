@@ -1,0 +1,96 @@
+{
+  "id": "content-freshness-noop-transcript-false-completion",
+  "desc": "codex12 #1 content-based freshness locked at RUNTIME level: a transcript whose only committed tool activity is a no-op <cmd>true</cmd>-style invoke stays a fresh tool conversation (_fresh_tool_conversation/_single_noop_invoke), so an action-claim prose reply still fires FALSE_COMPLETION through the real execute_raw_on_session correction loop instead of being accepted as a summary",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {"WEBGPT_MAX_CORRECTIONS": "5"},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Now actually run the verification step."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Use the Bash tool to run the verification step."},
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_noopfresh1",
+            "type": "function",
+            "function": {"name": "Bash", "arguments": "{\"command\": \"true\"}"}
+          }
+        ]
+      },
+      {"role": "tool", "tool_call_id": "call_noopfresh1", "content": ""},
+      {"role": "user", "content": "Now actually run the verification step."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      },
+      {
+        "type": "function",
+        "function": {
+          "name": "Write",
+          "description": "Creates or overwrites a file in the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {"type": "string"},
+              "lines": {"type": "string"}
+            },
+            "required": ["file_path", "lines"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "Done! I've successfully created hello.txt with your content.",
+      "Done! I've successfully created hello.txt with your content.",
+      "Done! I've successfully created hello.txt with your content."
+    ]
+  },
+  "expect": {
+    "raises_contains": [
+      "Correction loop not converging",
+      "FALSE_COMPLETION"
+    ],
+    "send_count": 3,
+    "events": [
+      {
+        "kind": "tool_correction",
+        "reason": "FALSE_COMPLETION",
+        "correction_class": "general"
+      },
+      {
+        "kind": "correction_prompt_built",
+        "reason": "FALSE_COMPLETION",
+        "repeat_of_previous": false,
+        "escalated": false
+      },
+      {
+        "kind": "correction_prompt_built",
+        "reason": "FALSE_COMPLETION",
+        "repeat_of_previous": true,
+        "escalated": true
+      },
+      {
+        "kind": "persistent_correction_repeat",
+        "reason": "FALSE_COMPLETION",
+        "correction_count": 2,
+        "turn_id": "turn-03"
+      }
+    ]
+  }
+}

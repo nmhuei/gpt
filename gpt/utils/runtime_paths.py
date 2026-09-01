@@ -11,7 +11,7 @@ except ImportError:  # pragma: no cover - the production gateway runs on POSIX h
     fcntl = None  # type: ignore[assignment]
 
 DEFAULT_RUNTIME_ROOT = Path(
-    os.environ.get("WEBGPT_RUNTIME_ROOT", "~/Downloads/webgpt")
+    os.environ.get("WEBGPT_RUNTIME_ROOT", "~/.local/share/webgpt")
 ).expanduser()
 
 RUNTIME_SUBDIRECTORIES = (

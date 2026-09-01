@@ -1,0 +1,71 @@
+{
+  "id": "correction-anti-repeat-escalation",
+  "desc": "(ii) CORRECTION-TIGHTEN anti-repeat: FALSE_COMPLETION x3 rebuilds a byte-identical correction (same sha256 digest); the first duplicate gets the controller escalation hint appended, the second duplicate fails fast instead of resending. REVISED 2026-08-26 golden-expand: persistent_correction_repeat.correction_count is 2, not 3 -- Codex13 #4 undoes the pre-check increment when the aborting round dies BEFORE any send, so telemetry counts corrections actually sent (original + 2 correction sends, aborting third round excluded).",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {"WEBGPT_MAX_CORRECTIONS": "5"},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "I've created the file notes.txt and here is the output: all done.",
+      "I've created the file notes.txt and here is the output: all done.",
+      "I've created the file notes.txt and here is the output: all done."
+    ]
+  },
+  "expect": {
+    "raises_contains": [
+      "Correction loop not converging",
+      "FALSE_COMPLETION"
+    ],
+    "send_count": 3,
+    "sent_prompt_checks": [
+      {"index": 1, "not_contains": ["ESCALATION (final retry)"]},
+      {
+        "index": 2,
+        "contains": ["ESCALATION (final retry)"],
+        "starts_with_prior_rstrip": 1
+      }
+    ],
+    "events": [
+      {
+        "kind": "correction_prompt_built",
+        "reason": "FALSE_COMPLETION",
+        "repeat_of_previous": false,
+        "escalated": false
+      },
+      {
+        "kind": "correction_prompt_built",
+        "reason": "FALSE_COMPLETION",
+        "repeat_of_previous": true,
+        "escalated": true
+      },
+      {
+        "kind": "persistent_correction_repeat",
+        "reason": "FALSE_COMPLETION",
+        "correction_count": 2,
+        "turn_id": "turn-03"
+      }
+    ]
+  }
+}

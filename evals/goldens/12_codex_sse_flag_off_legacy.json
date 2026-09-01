@@ -1,0 +1,32 @@
+{
+  "id": "codex-sse-flag-off-legacy",
+  "desc": "(d) WEBGPT_CODEX_SSE unset → _codex_sse_enabled() is False and the legacy envelope returns: oai-device-id + full OpenAI-Sentinel trio required, no originator / OpenAI-Beta codex headers",
+  "module": "codex_sse",
+  "input": {
+    "op": "headers",
+    "env": {},
+    "codex": false,
+    "bundle": {
+      "access_token": "eyJ-access-web-token",
+      "cf_clearance": "cf-clearance-tok-2",
+      "oai_device_id": "device-uuid-42"
+    },
+    "sentinel": {
+      "requirements_token": "req-token-77",
+      "proof_token": "proof-abc",
+      "turnstile_token": "ts-xyz"
+    }
+  },
+  "expect": {
+    "flag_enabled": false,
+    "headers_eq": {
+      "oai-device-id": "device-uuid-42",
+      "openai-sentinel-chat-requirements-token": "req-token-77",
+      "openai-sentinel-proof-token": "proof-abc",
+      "openai-sentinel-turnstile-token": "ts-xyz",
+      "Authorization": "Bearer eyJ-access-web-token"
+    },
+    "headers_contains": ["cf_clearance=cf-clearance-tok-2"],
+    "headers_absent": ["originator", "OpenAI-Beta"]
+  }
+}

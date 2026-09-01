@@ -1,0 +1,70 @@
+{
+  "id": "content-freshness-real-work-prose-accepted",
+  "desc": "converse half of content-based freshness at RUNTIME level: once a REAL controller tool call/result (Write hello.txt) is in the transcript, the same action-claim prose is a legitimate final summary -- _tool_correction_issue returns no verdict, execute_raw_on_session accepts on the first generation with zero corrections and emits submit_completed",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Great - summarize what you did."}
+    ],
+    "messages": [
+      {
+        "role": "user",
+        "content": "Use the Write tool to create hello.txt with the content HYBRID_FLIP_T2_OK."
+      },
+      {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_realfresh1",
+            "type": "function",
+            "function": {
+              "name": "Write",
+              "arguments": "{\"file_path\": \"hello.txt\", \"lines\": \"HYBRID_FLIP_T2_OK\\n\"}"
+            }
+          }
+        ]
+      },
+      {"role": "tool", "tool_call_id": "call_realfresh1", "content": "File created"},
+      {"role": "user", "content": "Great - summarize what you did."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Write",
+          "description": "Creates or overwrites a file in the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "file_path": {"type": "string"},
+              "lines": {"type": "string"}
+            },
+            "required": ["file_path", "lines"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "Done! I've successfully created hello.txt with your content."
+    ]
+  },
+  "expect": {
+    "send_count": 1,
+    "sent_prompt_checks": [
+      {"index": 0, "contains": ["hello.txt"]}
+    ],
+    "events": [
+      {
+        "kind": "submit_completed",
+        "correction_count": 0,
+        "multi_tool_turns": 0,
+        "turn_id": "turn-01"
+      }
+    ]
+  }
+}

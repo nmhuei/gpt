@@ -4,6 +4,7 @@ import pytest
 
 from gpt.drivers.ui import UIDriver
 from gpt.state import ModelUnavailable, UIChanged
+from gpt.types import SendRequest
 
 
 @pytest.mark.anyio
@@ -182,3 +183,71 @@ async def test_capability_snapshot_uses_observed_model_and_effort_state_only():
     assert snapshot.selected_effort == "Deep"
     assert snapshot.models[0].selected_effort == "Deep"
     assert snapshot.models[0].reasoning_efforts == ["Fast", "Balanced", "Deep"]
+
+
+@pytest.mark.anyio
+async def test_send_does_not_silently_ignore_failed_55_high_selection():
+    page = MagicMock()
+    driver = UIDriver(page)
+    driver._assistant_count = AsyncMock(return_value=0)
+    driver.dismiss_popups = AsyncMock()
+    driver._raise_known_page_error = AsyncMock()
+
+    picker = MagicMock()
+    picker.inner_text = AsyncMock(return_value="GPT-5.5")
+    driver._first_visible = AsyncMock(return_value=picker)
+    driver.select_reasoning_effort = AsyncMock(
+        side_effect=UIChanged("effort readback failed")
+    )
+
+    with pytest.raises(UIChanged, match="effort readback failed"):
+        await driver.send(SendRequest(text="hello"))
+
+    driver.select_reasoning_effort.assert_awaited_once_with("high")
+
+
+@pytest.mark.anyio
+async def test_send_file_upload_failure_is_not_silently_dropped(tmp_path):
+    attachment = tmp_path / "payload.bin"
+    attachment.write_bytes(b"\x00\x01\x02")
+
+    page = MagicMock()
+    file_input = MagicMock()
+    file_input.count = AsyncMock(return_value=1)
+    file_input.set_input_files = AsyncMock(side_effect=RuntimeError("upload boom"))
+    locator = MagicMock()
+    locator.first = file_input
+    page.locator.return_value = locator
+
+    driver = UIDriver(page)
+    driver._assistant_count = AsyncMock(return_value=0)
+    driver.dismiss_popups = AsyncMock()
+    driver._raise_known_page_error = AsyncMock()
+
+    with pytest.raises(UIChanged, match="file attachment upload failed"):
+        await driver.send(
+            SendRequest(text="inspect this", files=(str(attachment),))
+        )
+
+
+@pytest.mark.anyio
+async def test_send_binary_attachment_requires_file_input(tmp_path):
+    attachment = tmp_path / "payload.bin"
+    attachment.write_bytes(b"\x00\x01\x02")
+
+    page = MagicMock()
+    file_input = MagicMock()
+    file_input.count = AsyncMock(return_value=0)
+    locator = MagicMock()
+    locator.first = file_input
+    page.locator.return_value = locator
+
+    driver = UIDriver(page)
+    driver._assistant_count = AsyncMock(return_value=0)
+    driver.dismiss_popups = AsyncMock()
+    driver._raise_known_page_error = AsyncMock()
+
+    with pytest.raises(UIChanged, match="file input is unavailable"):
+        await driver.send(
+            SendRequest(text="inspect this", files=(str(attachment),))
+        )

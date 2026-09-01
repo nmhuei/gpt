@@ -1,0 +1,30 @@
+{"ts": "12:03:01", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:02", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:03", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:04", "event": "session_open", "session": 4, "status": 503}
+{"ts": "12:03:05", "event": "retry_scheduled", "incident_id": "inc-042"}
+{"ts": "12:03:06", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:04:07", "event": "alert_sent", "incident_id": "inc-042", "attempt": 1}
+{"ts": "12:04:08", "event": "alert_sent", "incident_id": "inc-042", "attempt": 2}
+{"ts": "12:04:09", "event": "alert_sent", "incident_id": "inc-042", "attempt": 3}
+{"ts": "12:03:10", "event": "retry_scheduled", "incident_id": "inc-042"}
+{"ts": "12:03:11", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:12", "event": "session_open", "session": 12, "status": 503}
+{"ts": "12:03:13", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:14", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:15", "event": "retry_scheduled", "incident_id": "inc-042"}
+{"ts": "12:03:16", "event": "session_open", "session": 16, "status": 503}
+{"ts": "12:03:17", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:18", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:19", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:20", "event": "session_open", "session": 20, "status": 503}
+{"ts": "12:03:21", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:22", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:23", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:24", "event": "session_open", "session": 24, "status": 503}
+{"ts": "12:03:25", "event": "retry_scheduled", "incident_id": "inc-042"}
+{"ts": "12:03:26", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:27", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:28", "event": "session_open", "session": 28, "status": 503}
+{"ts": "12:03:29", "event": "check", "host": "example.test", "status": 200}
+{"ts": "12:03:30", "event": "retry_scheduled", "incident_id": "inc-042"}

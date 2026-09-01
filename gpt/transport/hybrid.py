@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import uuid
+from collections import deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from gpt.state import CommitUnknown, SessionState
@@ -31,6 +34,28 @@ from gpt.types import (
 
 logger = logging.getLogger("gpt.transport.hybrid")
 
+# Cap on the in-memory turn history kept per curl session (P3 leak guard):
+# 2 turns per send, so 40 turns == 20 round-trips of context.
+HISTORY_MAXLEN = 40
+
+# Cap on the live event queue (RAM-TOP5 guard): when no stream_callback
+# consumes events (the common tool-call turn path), a warm worker reused for
+# the life of the process would otherwise buffer every ResponseDelta forever.
+# Overflow drops the OLDEST buffered event, keeps FIFO order and counts drops.
+EVENT_QUEUE_CAP_DEFAULT = 512
+
+
+def _resolve_event_queue_cap() -> int:
+    """Resolve ``WEBGPT_HYBRID_EVENT_QUEUE_CAP``; invalid values keep default."""
+    raw = os.environ.get("WEBGPT_HYBRID_EVENT_QUEUE_CAP", "").strip()
+    if not raw:
+        return EVENT_QUEUE_CAP_DEFAULT
+    try:
+        value = int(raw)
+    except ValueError:
+        return EVENT_QUEUE_CAP_DEFAULT
+    return value if value >= 1 else EVENT_QUEUE_CAP_DEFAULT
+
 
 class CurlCffiSession:
     """Small session-compatible wrapper around one ``CurlCffiTransport``."""
@@ -41,9 +66,12 @@ class CurlCffiSession:
         self._conversation_id: str | None = None
         self._model: ModelInfo | None = None
         self._reasoning_effort: str | None = None
-        self._history: list[Turn] = []
+        self._history: deque[Turn] = deque(maxlen=HISTORY_MAXLEN)
         self._state = SessionState.READY
-        self._events: asyncio.Queue[SessionEvent | None] = asyncio.Queue()
+        self._events: asyncio.Queue[SessionEvent | None] = asyncio.Queue(
+            maxsize=_resolve_event_queue_cap()
+        )
+        self._events_dropped = 0
         self._event_history: list[SessionEvent] = []
         self._created_at = datetime.now(timezone.utc).isoformat()
         self._last_used_at = self._created_at
@@ -138,6 +166,31 @@ class CurlCffiSession:
 
     def _emit(self, event: SessionEvent) -> None:
         self._event_history.append(event)
+        self._enqueue(event)
+
+    def _enqueue(self, event: SessionEvent | None) -> None:
+        """Queue an event, dropping the oldest buffered one on overflow.
+
+        Runs without await points, so the drop-oldest swap is atomic within
+        the event loop: after ``get_nowait`` frees a slot the re-put cannot
+        hit ``QueueFull`` again.
+        """
+        try:
+            self._events.put_nowait(event)
+            return
+        except asyncio.QueueFull:
+            pass
+        try:
+            self._events.get_nowait()
+        except asyncio.QueueEmpty:
+            pass
+        self._events_dropped += 1
+        if self._events_dropped == 1 or self._events_dropped % 500 == 0:
+            logger.warning(
+                "hybrid_event_queue_overflow dropped=%d cap=%d",
+                self._events_dropped,
+                self._events.maxsize,
+            )
         self._events.put_nowait(event)
 
     def _model_label(self) -> str | None:
@@ -165,7 +218,7 @@ class CurlCffiSession:
 
     async def close(self) -> None:
         self._state = SessionState.CLOSED
-        self._events.put_nowait(None)
+        self._enqueue(None)
         await self.transport.close()
 
     def get_info(self) -> SessionInfo:
@@ -191,6 +244,9 @@ class HybridWorkerFactory:
         warm_workers: int = 1,
         queue_timeout: float = 30.0,
         target_url: str = "https://chatgpt.com",
+        auto_login: Any | None = None,
+        allow_local_mock: bool | None = None,
+        rate_limit_breaker: Any | None = None,
     ) -> None:
         if max_workers < 1:
             raise ValueError("max_workers must be >= 1")
@@ -200,9 +256,19 @@ class HybridWorkerFactory:
             raise ValueError("queue_timeout must be positive")
         self.browser_manager = browser_manager
         self.max_workers = max_workers
+        # POOL-PER-ACCT-BREAKER (row S): an explicitly injected breaker gates
+        # every acquire() exactly like ChatGPTWorkerFactory -- fail fast with
+        # BackendCoolingDown while that account's cooldown window is open, one
+        # half-open probe after it elapses. When no breaker is injected the
+        # attribute stays None and acquisition is completely ungated:
+        # byte-for-byte the historical hybrid behaviour, so scope=global
+        # deployments never change.
+        self.rate_limit_breaker = rate_limit_breaker
         self.warm_workers = warm_workers
         self.queue_timeout = queue_timeout
         self.target_url = target_url
+        self.auto_login = auto_login
+        self.allow_local_mock = allow_local_mock
         self._capacity = asyncio.Semaphore(max_workers)
         self._idle: list[CurlCffiSession] = []
         self._leased: dict[str, CurlCffiSession] = {}
@@ -222,6 +288,22 @@ class HybridWorkerFactory:
         """Whether this factory is serving the explicit local dev/test fallback."""
         return self._local_mock_backend
 
+    def _resolve_token_cache_dir(self) -> Path | None:
+        """Derive the T4-PERSIST token cache dir from the browser profile.
+
+        The TokenBundle disk cache lives next to the browser profile so a
+        gateway restart within ``refresh_interval`` can reuse it without
+        touching the browser.  When no usable profile dir is known (attribute
+        missing or not a path), return ``None`` — ``TokenManager`` then keeps
+        its pre-cache behaviour instead of crashing.
+        """
+        profile = getattr(self.browser_manager, "profile_dir", None)
+        try:
+            return Path(profile) if profile else None
+        except (TypeError, ValueError):
+            logger.warning("hybrid_token_cache_dir_unusable", exc_info=True)
+            return None
+
     async def start(self) -> None:
         if self._closed:
             raise RuntimeError("worker factory is closed")
@@ -230,7 +312,12 @@ class HybridWorkerFactory:
         await self.browser_manager.start()
         self._page = await self.browser_manager.new_page()
         await self._page.goto(self.target_url, wait_until="domcontentloaded", timeout=45_000)
-        self._token_manager = TokenManager(self._page)
+        self._token_manager = TokenManager(
+            self._page,
+            auto_login=self.auto_login,
+            allow_local_mock=self.allow_local_mock,
+            cache_dir=self._resolve_token_cache_dir(),
+        )
         bundle = await self._token_manager.extract_all()
         self._local_mock_backend = bundle.is_local_mock
         if self._local_mock_backend:
@@ -262,10 +349,26 @@ class HybridWorkerFactory:
 
     async def acquire(self) -> tuple[str, CurlCffiSession]:
         await self.start()
-        await self._acquire_capacity()
-        async with self._lock:
-            session = self._idle.pop() if self._idle else self._new_session()
-            self._leased[session.session_id] = session
+        # POOL-PER-ACCT-BREAKER (row S): only an explicitly injected breaker
+        # gates acquisition -- while that account's cooldown window is open
+        # this raises BackendCoolingDown instead of burning queue capacity,
+        # and after the window elapses exactly one half-open probe passes.
+        # No injected breaker means fully ungated historical behaviour.
+        breaker = self.rate_limit_breaker
+        ticket = None if breaker is None else breaker.before_acquire()
+        try:
+            await self._acquire_capacity()
+            async with self._lock:
+                session = self._idle.pop() if self._idle else self._new_session()
+                self._leased[session.session_id] = session
+        except BaseException:
+            if breaker is not None:
+                # Abandon the half-open probe slot so it can never wedge.
+                breaker.finish_probe(ticket)
+            raise
+        if breaker is not None:
+            # A clean worker handout counts as the successful probe.
+            breaker.record_success(ticket)
         return session.session_id, session
 
     async def release(self, session_id: str, *, reusable: bool = True) -> None:

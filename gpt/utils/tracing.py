@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import glob
 import json
+import logging
 import os
 import time
 from collections import deque
@@ -8,6 +10,11 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from threading import Lock
 from typing import Any
+
+# RAM-TOP5 disk guard: the active trace.jsonl segment is rotated once it grows
+# past this many bytes; the number of retained rotated segments is capped by
+# WEBGPT_DEBUG_MAX_FILES (see gpt.debug.resolve_debug_max_files).
+_TRACE_ROTATE_BYTES = 50_000_000
 
 
 @dataclass(frozen=True)
@@ -38,6 +45,7 @@ class RuntimeTraceBus:
             raise ValueError("max_events must be >= 1")
         self._events: deque[RuntimeTraceEvent] = deque(maxlen=max_events)
         self._sequence = 0
+        self._segment_bytes = 0
         self._lock = Lock()
         self.output_path = Path(output_path).expanduser() if output_path else None
 
@@ -85,10 +93,54 @@ class RuntimeTraceBus:
             # still locked down below; do not convert a safe external parent
             # into a request failure.
             pass
+        if self._segment_bytes == 0 and self.output_path.exists():
+            try:
+                self._segment_bytes = self.output_path.stat().st_size
+            except OSError:
+                self._segment_bytes = 0
+        if self._segment_bytes >= _TRACE_ROTATE_BYTES:
+            self._rotate_file()
+        payload = json.dumps(asdict(event), ensure_ascii=False, separators=(",", ":"))
         with self.output_path.open("a", encoding="utf-8") as handle:
-            handle.write(json.dumps(asdict(event), ensure_ascii=False, separators=(",", ":")))
+            handle.write(payload)
             handle.write("\n")
         os.chmod(self.output_path, 0o600)
+        self._segment_bytes += len(payload.encode("utf-8")) + 1
+
+    def _rotate_file(self) -> None:
+        """Rename the active trace segment and prune old ones past the cap.
+
+        Called between appends (the file is opened/closed per event), so no
+        file descriptor is held across the rename.  Best-effort: rotation or
+        pruning failures never compromise the running turn.
+        """
+        assert self.output_path is not None
+        stem = self.output_path.stem
+        suffix = self.output_path.suffix or ".jsonl"
+        rotated = self.output_path.with_name(f"{stem}.{self._sequence:09d}{suffix}")
+        try:
+            os.replace(self.output_path, rotated)
+        except OSError:
+            logging.getLogger(__name__).warning(
+                "trace_segment_rotate_failed", exc_info=True
+            )
+            self._segment_bytes = 0
+            return
+        self._segment_bytes = 0
+        try:
+            # Lazy import: gpt.debug pulls browser/session modules at import
+            # time and would create an import cycle from this leaf module.
+            from gpt.debug import prune_debug_files, resolve_debug_max_files
+
+            prune_debug_files(
+                self.output_path.parent,
+                max_files=resolve_debug_max_files(),
+                patterns=(f"{glob.escape(stem)}.*{suffix}",),
+            )
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "trace_segment_prune_failed", exc_info=True
+            )
 
 
 __all__ = ["RuntimeTraceBus", "RuntimeTraceEvent"]

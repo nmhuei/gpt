@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      patch-and-minor:
+        update-types:
+          - patch
+          - minor
+    # major updates để lại PR riêng để review thủ công

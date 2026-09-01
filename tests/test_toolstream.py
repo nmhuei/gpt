@@ -79,3 +79,44 @@ def test_stream_sieve_required_tool_rejects_plain_text():
     sieve.feed("plain final answer")
     with pytest.raises(MalformedToolCall, match="required tool"):
         sieve.finalize()
+
+
+def test_stream_sieve_soft_cmd_is_detected_before_text_leaks(monkeypatch):
+    monkeypatch.setenv("WEBGPT_TOOL_PROTOCOL", "soft")
+    tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "Bash",
+                "description": "Run shell",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"command": {"type": "string"}},
+                    "required": ["command"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+    ]
+    sieve = ToolStreamSieve(tools=tools)
+    emitted: list[str] = []
+    for chunk in ["<cm", "d>pw", "d</c", "md>"]:
+        emitted.extend(sieve.feed(chunk).text_deltas)
+    final = sieve.finalize()
+    emitted.extend(final.text_deltas)
+
+    assert emitted == []
+    assert len(final.tool_calls) == 1
+    assert final.tool_calls[0]["function"]["name"] == "Bash"
+    assert json.loads(final.tool_calls[0]["function"]["arguments"])["command"] == "pwd"
+
+
+def test_stream_sieve_soft_json_is_detected_before_text_leaks(monkeypatch):
+    monkeypatch.setenv("WEBGPT_TOOL_PROTOCOL", "soft")
+    sieve = ToolStreamSieve(tools=TOOLS)
+    raw = '<json>{"name":"read_file","arguments":{"path":"a.txt"}}</json>'
+    for index in range(0, len(raw), 4):
+        assert sieve.feed(raw[index:index + 4]).text_deltas == []
+    final = sieve.finalize()
+    assert len(final.tool_calls) == 1
+    assert final.tool_calls[0]["function"]["name"] == "read_file"

@@ -1,0 +1,58 @@
+{
+  "id": "fixr8b-correction-carries-original-task",
+  "desc": "(iii) FIX-R8B/debug-r9 aggravator: correction prompt embeds the VERBATIM original task from the FULL transcript even when the bootstrapped tail carries only the tool result (pre-fix: task_context_chars=0)",
+  "module": "fixr8b",
+  "input": {
+    "op": "original_context",
+    "env": {"WEBGPT_TOOL_PROTOCOL": "soft"},
+    "runtime_input": {
+      "replies": ["<cmd>pwd", "<cmd>pwd</cmd>"],
+      "tail": [{"role": "tool", "tool_call_id": "call_r9ctx", "content": "exit=0"}],
+      "messages": [
+        {"role": "user", "content": "Create the file t2_hello.txt containing exactly HYBRID_FLIP_T2_OK."},
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "call_r9ctx",
+              "type": "function",
+              "function": {
+                "name": "Bash",
+                "arguments": "{\"command\": \"printf 'HYBRID_FLIP_T2_OK\\n' > t2_hello.txt\"}"
+              }
+            }
+          ]
+        },
+        {"role": "tool", "tool_call_id": "call_r9ctx", "content": "exit=0"}
+      ],
+      "tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "Bash",
+            "description": "Executes a shell command inside the client workspace",
+            "parameters": {
+              "type": "object",
+              "properties": {"command": {"type": "string"}},
+              "required": ["command"]
+            }
+          }
+        }
+      ],
+      "tool_choice": "auto"
+    }
+  },
+  "expect": {
+    "send_count": 2,
+    "sent_prompt_checks": [
+      {
+        "index": 1,
+        "contains": [
+          "Here's the original request you're working on, for reference:",
+          "Create the file t2_hello.txt containing exactly HYBRID_FLIP_T2_OK."
+        ]
+      }
+    ]
+  }
+}

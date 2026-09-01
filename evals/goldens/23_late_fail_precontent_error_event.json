@@ -1,0 +1,58 @@
+{
+  "id": "late-fail-precontent-error-event",
+  "desc": "late failure BEFORE any model content: the web send dies mid-turn (fake session raises RuntimeError after recording its prompt), so the runtime's generic except path emits submit_failed_before_commit_unknown with error_type, correction_count=0 (no phantom corrections -- nothing was classified or resent) and turn_id=null (no committed web turn), then re-raises the original exception verbatim",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "raise_on_send": {
+      "on_send": 1,
+      "type": "RuntimeError",
+      "message": "stream died before first content byte"
+    },
+    "tail": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "replies": []
+  },
+  "expect": {
+    "raises_error_type": "RuntimeError",
+    "raises_error_contains": [
+      "stream died before first content byte"
+    ],
+    "send_count": 1,
+    "sent_prompt_checks": [
+      {
+        "index": 0,
+        "contains": ["Run pwd inside the workspace and show me the result."]
+      }
+    ],
+    "events": [
+      {
+        "kind": "submit_failed_before_commit_unknown",
+        "error_type": "RuntimeError",
+        "correction_count": 0,
+        "turn_id": null
+      }
+    ]
+  }
+}

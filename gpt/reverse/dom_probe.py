@@ -4,6 +4,7 @@ from typing import Any
 
 from playwright.async_api import Page
 
+from gpt.drivers.ui import UIDriver
 from gpt.types import ElementFingerprint
 
 _CANDIDATE_RULES = {
@@ -113,17 +114,19 @@ class DOMProbe:
                     "matched_selector": fp.selector_candidates[0] if fp.selector_candidates else None,
                 }
 
-        # Deduce auth status
-        if "login_button" in results["elements"] and "composer" in results["elements"]:
-            results["auth_status"] = "anonymous_free"  # Usable without login!
-        elif "login_button" in results["elements"]:
-            results["auth_status"] = "login_required"
-        elif "composer" in results["elements"]:
-            results["auth_status"] = "authenticated"
-        elif results["cloudflare_challenge"]:
+        # Keep auth classification aligned with the runtime UI driver.
+        # A composer alone is not proof of authentication: anonymous ChatGPT
+        # can expose a fully usable composer without a visible login button.
+        if results["cloudflare_challenge"]:
             results["auth_status"] = "security_challenge"
         else:
-            results["auth_status"] = "loading_or_blocked"
+            ui_status = await UIDriver(self.page).auth_status()
+            results["auth_status"] = {
+                "anonymous": "anonymous_free",
+                "authenticated": "authenticated",
+                "required": "login_required",
+                "blocked": "loading_or_blocked",
+            }.get(ui_status, "loading_or_blocked")
 
         return results
 

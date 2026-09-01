@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+import uuid
+
 import pytest
 
 from gpt.transport.token_manager import TokenManager
@@ -9,6 +12,7 @@ class FakeContext:
     async def cookies(self):
         return [
             {"name": "cf_clearance", "value": "clearance"},
+            {"name": "oai-did", "value": "did-from-cookie"},
             {"name": "oai-device-id", "value": "device-from-cookie"},
             {"name": "session", "value": "session-cookie"},
         ]
@@ -43,14 +47,78 @@ async def test_extracts_cookie_access_and_device_tokens_from_browser_context():
 
     assert bundle.access_token == "access-token"
     assert bundle.cf_clearance == "clearance"
-    assert bundle.oai_device_id == "device-from-storage"
-    assert bundle.cookie_header == "cf_clearance=clearance; oai-device-id=device-from-cookie; session=session-cookie"
+    assert bundle.oai_device_id == "did-from-cookie"
+    assert bundle.cookie_header == "cf_clearance=clearance; oai-did=did-from-cookie; oai-device-id=device-from-cookie; session=session-cookie"
 
     sentinel = await manager.get_sentinel_tokens("conversation-1")
     assert sentinel.requirements_token == "requirements"
     assert sentinel.proof_token == "proof"
     assert sentinel.turnstile_token == "turnstile"
     assert page.calls[-1][1] == "conversation-1"
+
+
+@pytest.mark.anyio
+async def test_device_id_prefers_legacy_cookie_over_local_storage():
+    """Without ``oai-did``, the legacy cookie beats browser storage."""
+
+    class LegacyContext:
+        async def cookies(self):
+            return [
+                {"name": "session", "value": "session-cookie"},
+                {"name": "oai-device-id", "value": "device-from-cookie"},
+            ]
+
+    class StoragePage(FakePage):
+        def __init__(self):
+            super().__init__()
+            self.context = LegacyContext()
+
+    bundle = await TokenManager(StoragePage()).extract_all()
+
+    assert bundle.oai_device_id == "device-from-cookie"
+
+
+@pytest.mark.anyio
+async def test_missing_device_id_is_minted_and_persisted(tmp_path):
+    """No cookie/storage device id: mint UUID4 once, reuse it later."""
+
+    class BareContext:
+        async def cookies(self):
+            return [{"name": "session", "value": "session-cookie"}]
+
+    class BarePage:
+        def __init__(self):
+            self.context = BareContext()
+            self.storage_reads = 0
+
+        async def evaluate(self, script, argument=None):
+            if "/api/auth/session" in script:
+                return {"user": {"accessToken": "access-token"}}
+            if "localStorage.getItem" in script:
+                self.storage_reads += 1
+                return None
+            raise AssertionError("unexpected page script")
+
+    page = BarePage()
+    cache_dir = tmp_path / "cache"
+    manager = TokenManager(page, refresh_interval=3_600, cache_dir=cache_dir)
+
+    first = await manager.extract_all()
+    assert isinstance(first.oai_device_id, str)
+    uuid.UUID(first.oai_device_id)  # minted value is a well-formed UUID
+
+    cached = json.loads((cache_dir / "webgpt-token-cache.json").read_text())
+    assert cached["oai_device_id"] == first.oai_device_id
+
+    second_page = BarePage()
+    reloaded = await TokenManager(
+        second_page, refresh_interval=3_600, cache_dir=cache_dir
+    ).extract_all()
+
+    assert reloaded.oai_device_id == first.oai_device_id
+    # Browser was fully re-extracted (still no id there); stability came
+    # from the persisted bundle, not from skipping extraction.
+    assert second_page.storage_reads == 1
 
 
 @pytest.mark.anyio

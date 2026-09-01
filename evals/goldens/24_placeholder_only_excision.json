@@ -1,0 +1,44 @@
+{
+  "id": "placeholder-only-excision-soft",
+  "desc": "FIX-A placeholder excision lock (extends golden 17 with the positive only-prose hooks): a reply consisting of surrounding prose plus ONLY the quoted handshake stand-in <cmd>\"...\"</cmd> emits NO tool call, keeps every word of the surrounding prose, and leaves NO trace of the tag or its quoted body in the returned prose -- <cmd>/</cmd> and \"...\" are all gone (stealth soft protocol: protocol echo must never leak into visible replies)",
+  "module": "fixr8b",
+  "input": {
+    "op": "placeholder_cmd",
+    "env": {"WEBGPT_TOOL_PROTOCOL": "soft"},
+    "protocol": "soft",
+    "allowed_tools": ["Bash"],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "placeholder_bodies": [
+      "\"...\"",
+      "'…'",
+      "\"the exact shell command\""
+    ],
+    "executable_bodies": ["pwd"],
+    "mixed_text": "Sure - the convention is <cmd>\"...\"</cmd>; running the check now.\n<cmd>pwd</cmd>",
+    "placeholder_only_text": "Send me something like <cmd>\"...\"</cmd> whenever you are ready."
+  },
+  "expect": {
+    "calls": [{"name": "Bash", "arguments": {"command": "pwd"}}],
+    "prose_contains": ["the convention is", "running the check now."],
+    "prose_not_contains": ["<cmd>", "</cmd>", "\"...\""],
+    "placeholder_only_prose_is_original": false,
+    "placeholder_only_prose_contains": [
+      "Send me something like",
+      "whenever you are ready."
+    ],
+    "placeholder_only_prose_not_contains": ["<cmd>", "</cmd>", "\"...\""]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "soft-cmd-single-parse",
+  "desc": "(b) a single <cmd> tag under the soft protocol parses into exactly one Bash tool_use",
+  "module": "toolcall",
+  "input": {
+    "protocol": "soft",
+    "text": "<cmd>pwd</cmd>",
+    "allowed_tools": ["Bash"],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "calls": [{"name": "Bash", "arguments": {"command": "pwd"}}],
+    "prose_is_null": true
+  }
+}

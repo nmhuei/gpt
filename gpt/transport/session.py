@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
+import functools
+import os
 import time
 import uuid
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
 from playwright.async_api import Page
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from gpt.drivers.protocol import ProtocolDriver
 from gpt.drivers.ui import UIDriver
@@ -39,6 +44,84 @@ from gpt.types import (
     TurnResult,
 )
 
+# Playwright failure strings that mean the renderer/page/browser is gone and no
+# further operation on this session can succeed (BUG-B).  Without translation
+# these surface as raw exceptions and gateways answer with a generic 500
+# instead of a retryable browser_disconnected classification.
+_BROWSER_CRASH_MARKERS = (
+    "target crashed",
+    "target closed",
+    "target page, context or browser has been closed",
+    "browser has been closed",
+    "connection closed",
+)
+
+
+def _is_browser_crash(exc: BaseException) -> bool:
+    """True when a Playwright failure means the page or browser is gone."""
+    if isinstance(exc, BrowserDisconnected):
+        return True
+    if isinstance(exc, asyncio.CancelledError):
+        return False
+    message = str(exc).casefold()
+    return any(marker in message for marker in _BROWSER_CRASH_MARKERS)
+
+
+# WEBGPT_HISTORY_CACHE_MAX caps how many turns ``ChatGPTWebSession`` keeps in
+# its in-memory history cache; the oldest turns are evicted first.  Prompts can
+# reach ~250k chars, so an unbounded cache on a long-lived worker grows without
+# limit (verify-fromscratch 2026-08-25 audit, RAM #1).  ``0`` disables the cap
+# and restores the previous unbounded behaviour.
+HISTORY_CACHE_MAX_ENV = "WEBGPT_HISTORY_CACHE_MAX"
+DEFAULT_HISTORY_CACHE_MAX = 128
+
+
+def resolve_history_cache_max(default: int = DEFAULT_HISTORY_CACHE_MAX) -> int:
+    """Resolve ``WEBGPT_HISTORY_CACHE_MAX``; invalid values keep the default.
+
+    ``0`` explicitly disables the cap (legacy unbounded cache).
+    """
+    raw = os.environ.get(HISTORY_CACHE_MAX_ENV, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    if value < 0:
+        return default
+    return value
+
+
+def _copy_turns(turns: list[Turn]) -> list[Turn]:
+    """Copy each Turn so callers cannot mutate the session's cached objects.
+
+    ``text`` is an immutable string and is safely shared; the mutable
+    ``metadata`` dict gets its own copy to break alias mutation.
+    """
+    return [replace(turn, metadata=dict(turn.metadata)) for turn in turns]
+
+
+def _translate_browser_crash(method):
+    """Decorator: translate Playwright page crashes into BrowserDisconnected.
+
+    The session state moves to BROWSER_DISCONNECTED first so the worker pool
+    closes this session on release instead of reusing a dead browser page.
+    """
+
+    @functools.wraps(method)
+    async def wrapper(self: ChatGPTWebSession, *args, **kwargs):
+        try:
+            return await method(self, *args, **kwargs)
+        except Exception as exc:
+            if isinstance(exc, BrowserDisconnected):
+                raise
+            if _is_browser_crash(exc):
+                raise await self._fail_browser_disconnected(exc) from exc
+            raise
+
+    return wrapper
+
 
 class ChatGPTWebSession:
     """One reliable logical ChatGPT Web conversation.
@@ -65,6 +148,7 @@ class ChatGPTWebSession:
         self._events: asyncio.Queue[SessionEvent | None] = asyncio.Queue()
         self._send_lock = asyncio.Lock()
         self._history_cache: list[Turn] = []
+        self._history_cache_max = resolve_history_cache_max()
         self._conversation_id: str | None = None
         self._selected_model: ModelInfo | None = None
         self._selected_effort: str | None = None
@@ -114,6 +198,30 @@ class ChatGPTWebSession:
             )
         )
 
+    def _set_history_cache(self, turns: list[Turn]) -> None:
+        """Replace the cached history, keeping only the newest ``max`` turns.
+
+        Eviction is oldest-first (front of the list).  When over the cap a
+        trimmed copy is stored so an already-shared list (e.g. the driver's
+        ``visible`` result) is never mutated in place.
+        """
+        max_entries = self._history_cache_max
+        if max_entries > 0 and len(turns) > max_entries:
+            turns = turns[-max_entries:]
+        self._history_cache = turns
+
+    def _append_history_cache(self, *turns: Turn) -> None:
+        """Append turns to the cache, evicting oldest entries past the cap."""
+        max_entries = self._history_cache_max
+        if max_entries <= 0:
+            self._history_cache.extend(turns)
+            return
+        combined = [*self._history_cache, *turns]
+        overflow = len(combined) - max_entries
+        if overflow > 0:
+            del combined[:overflow]
+        self._history_cache = combined
+
     @classmethod
     async def create(
         cls,
@@ -143,6 +251,10 @@ class ChatGPTWebSession:
                 owns_browser_manager=owns_manager,
             )
             await page.goto(target_url, wait_until="domcontentloaded", timeout=45_000)
+            try:
+                await page.wait_for_load_state("load", timeout=10_000)
+            except PlaywrightTimeoutError:
+                pass
             await session.ui_driver.dismiss_popups()
             status = "blocked"
             bootstrap_deadline = asyncio.get_running_loop().time() + 15
@@ -152,10 +264,11 @@ class ChatGPTWebSession:
                     break
                 await asyncio.sleep(0.5)
             if status == "required":
+                detail = "ChatGPT authentication is required; redirected to login wall."
                 await session.state_machine.transition_to(
-                    SessionState.RATE_LIMITED, "ChatGPT anonymous quota exhausted; redirected to login wall."
+                    SessionState.AUTH_REQUIRED, detail
                 )
-                raise RateLimited("ChatGPT anonymous quota exhausted; redirected to login wall.")
+                raise AuthRequired(detail)
             if status == "blocked":
                 await session.state_machine.transition_to(
                     SessionState.RATE_LIMITED, "ChatGPT anonymous composer unavailable; rate limited."
@@ -247,6 +360,16 @@ class ChatGPTWebSession:
                 await self.ui_driver.new_conversation()
             await self.state_machine.transition_to(SessionState.READY, "Page recovered.")
 
+    async def _fail_browser_disconnected(self, exc: Exception) -> BrowserDisconnected:
+        """Mark the session dead after a Playwright page/browser crash (BUG-B)."""
+        detail = f"Browser page crashed or disconnected: {exc}"
+        with contextlib.suppress(Exception):
+            await self.state_machine.transition_to(
+                SessionState.BROWSER_DISCONNECTED, detail
+            )
+        return BrowserDisconnected(detail)
+
+    @_translate_browser_crash
     async def new_conversation(self, model: str | None = None) -> SessionInfo:
         async with self._send_lock:
             await self._ensure_page()
@@ -274,15 +397,17 @@ class ChatGPTWebSession:
             await self.state_machine.transition_to(SessionState.READY)
             return self.get_info()
 
+    @_translate_browser_crash
     async def open(self, conversation_id: str) -> SessionInfo:
         async with self._send_lock:
             await self._ensure_page()
             await self.ui_driver.open_conversation(conversation_id)
             self._conversation_id = conversation_id
-            self._history_cache = await self.ui_driver.history()
+            self._set_history_cache(await self.ui_driver.history())
             await self.state_machine.transition_to(SessionState.READY)
             return self.get_info()
 
+    @_translate_browser_crash
     async def capabilities(self, refresh: bool = True) -> CapabilitySnapshot:
         await self._ensure_page()
         if refresh or self._capability_snapshot is None:
@@ -298,10 +423,12 @@ class ChatGPTWebSession:
             self._selected_effort = snapshot.selected_effort
         return self._capability_snapshot
 
+    @_translate_browser_crash
     async def models(self) -> list[ModelInfo]:
         snapshot = await self.capabilities(refresh=True)
         return list(snapshot.models)
 
+    @_translate_browser_crash
     async def select_model(self, model: str) -> None:
         async with self._send_lock:
             await self._ensure_page()
@@ -318,6 +445,7 @@ class ChatGPTWebSession:
                 raise
             await self.state_machine.transition_to(SessionState.READY)
 
+    @_translate_browser_crash
     async def select_reasoning_effort(self, effort: str) -> None:
         async with self._send_lock:
             await self._ensure_page()
@@ -343,36 +471,42 @@ class ChatGPTWebSession:
             self._current_send_submitted = False
             self._current_send_text = text
             await self.state_machine.transition_to(SessionState.PREPARING_SEND)
-            if model:
-                try:
-                    if not self._selected_model_matches(model):
-                        self._selected_model = await self.ui_driver.select_model(model)
-                except ModelUnavailable as exc:
-                    await self.state_machine.transition_to(SessionState.MODEL_UNAVAILABLE, str(exc))
-                    await self.state_machine.transition_to(SessionState.READY, str(exc))
-                    raise
-            if reasoning_effort and not self._selected_effort_matches(reasoning_effort):
-                self._selected_effort = await self.ui_driver.select_reasoning_effort(
-                    reasoning_effort
-                )
-            self._last_used_at = datetime.now(timezone.utc).isoformat()
-            file_tuple = tuple(str(f) for f in files) if files else ()
-            request = SendRequest(
-                text=text,
-                conversation_id=self._conversation_id,
-                model=self._selected_model,
-                reasoning_effort=self._selected_effort,
-                timeout_seconds=timeout_seconds,
-                files=file_tuple,
-            )
-            user_turn = Turn(
-                turn_id=f"turn_{uuid.uuid4().hex[:10]}",
-                role="user",
-                text=text,
-                model=self._selected_model.label if self._selected_model else None,
-            )
-            await self.state_machine.transition_to(SessionState.SENDING)
+            # Worker-poison guard scope starts at the PREPARING_SEND claim:
+            # every mid-send exit path from here on must land a terminal
+            # state. Cancellation during pre-send preparation (model/reasoning
+            # selection, request assembly) used to escape before the try block
+            # below and wedge the worker in PREPARING_SEND forever.
+            user_turn_id = f"turn_{uuid.uuid4().hex[:10]}"
             try:
+                if model:
+                    try:
+                        if not self._selected_model_matches(model):
+                            self._selected_model = await self.ui_driver.select_model(model)
+                    except ModelUnavailable as exc:
+                        await self.state_machine.transition_to(SessionState.MODEL_UNAVAILABLE, str(exc))
+                        await self.state_machine.transition_to(SessionState.READY, str(exc))
+                        raise
+                if reasoning_effort and not self._selected_effort_matches(reasoning_effort):
+                    self._selected_effort = await self.ui_driver.select_reasoning_effort(
+                        reasoning_effort
+                    )
+                self._last_used_at = datetime.now(timezone.utc).isoformat()
+                file_tuple = tuple(str(f) for f in files) if files else ()
+                request = SendRequest(
+                    text=text,
+                    conversation_id=self._conversation_id,
+                    model=self._selected_model,
+                    reasoning_effort=self._selected_effort,
+                    timeout_seconds=timeout_seconds,
+                    files=file_tuple,
+                )
+                user_turn = Turn(
+                    turn_id=user_turn_id,
+                    role="user",
+                    text=text,
+                    model=self._selected_model.label if self._selected_model else None,
+                )
+                await self.state_machine.transition_to(SessionState.SENDING)
                 await self.state_machine.transition_to(SessionState.WAITING_RESPONSE)
                 if self.protocol_driver.available:
                     try:
@@ -392,16 +526,14 @@ class ChatGPTWebSession:
                         request, event_callback=self._handle_driver_event
                     )
                 self._conversation_id = result.conversation_id or self.ui_driver.conversation_id()
-                self._history_cache.extend(
-                    [
-                        user_turn,
-                        Turn(
-                            turn_id=result.turn_id,
-                            role="assistant",
-                            text=result.text,
-                            model=result.model,
-                        ),
-                    ]
+                self._append_history_cache(
+                    user_turn,
+                    Turn(
+                        turn_id=result.turn_id,
+                        role="assistant",
+                        text=result.text,
+                        model=result.model,
+                    ),
                 )
                 self._current_send_submitted = False
                 self._current_send_text = None
@@ -411,23 +543,65 @@ class ChatGPTWebSession:
                 self._current_send_submitted = False
                 self._current_send_text = None
                 await self.state_machine.transition_to(SessionState.AUTH_REQUIRED, str(exc))
-                self._emit(ResponseFailed(turn_id=user_turn.turn_id, reason=str(exc)))
+                self._emit(ResponseFailed(turn_id=user_turn_id, reason=str(exc)))
                 raise
             except RateLimited as exc:
                 self._current_send_submitted = False
                 self._current_send_text = None
                 await self.state_machine.transition_to(SessionState.RATE_LIMITED, str(exc))
-                self._emit(ResponseFailed(turn_id=user_turn.turn_id, reason=str(exc)))
+                self._emit(ResponseFailed(turn_id=user_turn_id, reason=str(exc)))
                 raise
             except UIChanged as exc:
-                await self._raise_commit_unknown_if_submitted(exc, user_turn.turn_id)
+                await self._raise_commit_unknown_if_submitted(exc, user_turn_id)
                 await self.state_machine.transition_to(SessionState.UI_CHANGED, str(exc))
-                self._emit(ResponseFailed(turn_id=user_turn.turn_id, reason=str(exc)))
+                self._emit(ResponseFailed(turn_id=user_turn_id, reason=str(exc)))
+                raise
+            except ModelUnavailable:
+                # Request-scoped client error: the inner handler already
+                # restored READY, so propagate without poisoning the session.
                 raise
             except Exception as exc:
-                await self._raise_commit_unknown_if_submitted(exc, user_turn.turn_id)
+                if _is_browser_crash(exc) and not isinstance(exc, BrowserDisconnected):
+                    # A crashed renderer/browser cannot be reconciled: classify
+                    # as BrowserDisconnected so gateways answer 503 retryable
+                    # and the worker pool discards this dead session.
+                    disconnected = await self._fail_browser_disconnected(exc)
+                    self._current_send_submitted = False
+                    self._current_send_text = None
+                    self._emit(
+                        ResponseFailed(turn_id=user_turn_id, reason=str(disconnected))
+                    )
+                    raise disconnected from exc
+                await self._raise_commit_unknown_if_submitted(exc, user_turn_id)
                 await self.state_machine.transition_to(SessionState.RETRYABLE_ERROR, str(exc))
-                self._emit(ResponseFailed(turn_id=user_turn.turn_id, reason=str(exc)))
+                self._emit(ResponseFailed(turn_id=user_turn_id, reason=str(exc)))
+                raise
+            except BaseException as exc:
+                # Worker-poison guard (verify-fromscratch 2026-08-25, ĐỨT #1):
+                # asyncio cancellation from an upstream SSE-deadline expiry or
+                # client disconnect is a BaseException, so none of the handlers
+                # above ran and the state machine used to wedge in
+                # PREPARING_SEND/SENDING/WAITING_RESPONSE/GENERATING forever.
+                # The factory then handed that zombie back out and every later
+                # turn on it failed with "Cannot send while session is
+                # GENERATING". Always land on a terminal state so the factory
+                # closes the worker, and re-raise: cancellation must propagate,
+                # never be swallowed.
+                detail = (
+                    f"Send aborted before completion ({type(exc).__name__}); "
+                    "session marked fatal because the web thread state is unknown."
+                )
+                try:
+                    self._current_send_submitted = False
+                    self._current_send_text = None
+                    await self.state_machine.transition_to(
+                        SessionState.FATAL_ERROR, detail
+                    )
+                    self._emit(
+                        ResponseFailed(turn_id=user_turn_id, reason=detail)
+                    )
+                except BaseException:
+                    pass  # Cleanup must never mask the original abort.
                 raise
 
     async def events(self) -> AsyncIterator[SessionEvent]:
@@ -452,11 +626,16 @@ class ChatGPTWebSession:
         try:
             visible = await self.ui_driver.history()
             if visible:
-                self._history_cache = visible
-        except Exception:
-            pass
-        return list(self._history_cache)
+                self._set_history_cache(visible)
+        except Exception as exc:
+            if _is_browser_crash(exc) and not isinstance(exc, BrowserDisconnected):
+                # Do not silently serve stale cache after a page crash: mark the
+                # session dead so callers retry on a fresh browser session.
+                raise await self._fail_browser_disconnected(exc) from exc
+            return _copy_turns(self._history_cache)
+        return _copy_turns(self._history_cache)
 
+    @_translate_browser_crash
     async def reconcile(self, expected_user_text: str) -> ReconciliationResult:
         """Inspect authoritative web history before any retry of an uncertain send.
 
@@ -478,7 +657,7 @@ class ChatGPTWebSession:
                 self._conversation_id = observed_id
             visible = await self.ui_driver.history()
             if visible:
-                self._history_cache = visible
+                self._set_history_cache(visible)
             expected = expected_user_text.strip()
             for index in range(len(visible) - 1, -1, -1):
                 turn = visible[index]
@@ -516,6 +695,7 @@ class ChatGPTWebSession:
                 conversation_id=self._conversation_id,
             )
 
+    @_translate_browser_crash
     async def reload(self) -> None:
         async with self._send_lock:
             await self._ensure_page()

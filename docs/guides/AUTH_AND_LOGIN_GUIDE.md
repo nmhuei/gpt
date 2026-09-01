@@ -19,125 +19,92 @@
 
 ---
 
-## 🔑 Hướng Dẫn Chi Tiết: Đăng Nhập & Quản Lý Tài Khoản ChatGPT Plus
+## Account Login And Profiles
 
-### 1. Cấu Trúc Thông Tin Xác Thực Trong `.env`
-Thông tin tài khoản Plus được cấu hình trong file `.env` tại thư mục gốc của repo:
-```env
-CHATGPT_EMAIL=loading_chassis.4e+kiweslum@icloud.com
-CHATGPT_PASSWORD=Dekzti5Z!Aw6
-CHATGPT_TOTP_KEY=5JSZWJVFYDHIU5ZZAGKU74PZUIC4N4RM
-PROFILE_DIR=/home/light/Downloads/webgpt/cloak-profile
-CDP_PORT=9222
-API_PORT=8000
-BROWSER_HEADLESS=true
-```
-- `CHATGPT_TOTP_KEY`: Khóa bí mật Base32 của 2FA. `gpt/auth/totp.py` sẽ tự động tính toán mã 6 số OTP theo thời gian thực mỗi khi đăng nhập.
+Named accounts are optional. Without `--account`, browser-backed CLI commands and the gateway use anonymous mode. Each named account owns a separate persistent CloakBrowser profile under `~/.local/share/webgpt/profiles/<name>` (XDG runtime root, `$WEBGPT_PROFILES_ROOT` to override).
 
----
-
-### 2. Cách 1: Tự Động Đăng Nhập Không Cần Thao Tác (Zero-Interaction Auto Login)
-Chạy lệnh đăng nhập tự động sử dụng module `gpt.auth`:
+### Manual login (recommended)
 
 ```bash
-# Cách A: Dùng script Python tự động đọc từ .env
-python3 -c "
-import asyncio
-from gpt.config import get_config
-from gpt.auth import AutoLoginManager, LoginCredentials
-
-async def main():
-    config = get_config()
-    creds = LoginCredentials(
-        username=config.email,
-        password=config.password,
-        totp_secret_or_code=config.totp_key
-    )
-    mgr = AutoLoginManager(
-        profile_dir=config.profile_dir,
-        headless=config.headless,
-        cdp_url=config.cdp_url
-    )
-    print(f'[*] Dang dang nhap tai khoan Plus: {config.email}...')
-    ok = await mgr.login(creds, timeout_seconds=120)
-    print(f'[+] Ket qua dang nhap: {\"THANH CONG\" if ok else \"THAT BAI\"}')
-
-asyncio.run(main())
-"
+gpt-web account login --name personal
 ```
+
+This opens CloakBrowser headfully. Complete normal ChatGPT sign-in, MFA, and any human verification yourself. The command verifies `/api/auth/session`, closes CloakBrowser cleanly, and keeps the resulting browser profile for later headless reuse. CAPTCHA, Turnstile, phone verification, and other security challenges are never automated.
+
+### Optional saved credentials
+
+For operators who explicitly want automated username/password/TOTP login, credentials can be stored per account in a separate mode-0600 file. Prefer stdin so secrets do not appear in shell history:
 
 ```bash
-# Cách B: Dùng lệnh CLI gpt-web login
-python3 -m gpt.debug login \
-  --profile-dir /home/light/Downloads/webgpt/cloak-profile \
-  --cred "$(grep CHATGPT_EMAIL .env | cut -d= -f2)|$(grep CHATGPT_PASSWORD .env | cut -d= -f2)|$(grep CHATGPT_TOTP_KEY .env | cut -d= -f2)"
+printf '%s\n' 'user@example.com|password|BASE32_TOTP_SECRET' | \
+  gpt-web account credentials-set --name personal --stdin
+
+gpt-web account login --name personal --auto --use-saved
 ```
 
-> **Cơ chế hoạt động**:
-> 1. Điền Email & Password tự động vào form đăng nhập Auth0/OpenAI.
-> 2. Lấy secret seed từ `CHATGPT_TOTP_KEY`, sinh mã OTP 6 số qua `pyotp`.
-> 3. Tự động submit form 2FA.
-> 4. Lưu toàn bộ Cookies, Session Token và LocalStorage vào `/home/light/Downloads/webgpt/cloak-profile`.
-
----
-
-### 3. Cách 2: Đăng Nhập Thủ Công Có Giao Diện (Manual Interactive Fallback)
-Sử dụng khi OpenAI yêu cầu giải Cloudflare CAPTCHA hoặc Turnstile mà robot không tự vượt được:
+Or save while performing an explicit auto-login:
 
 ```bash
-# Mở trình duyệt CloakBrowser có giao diện để đăng nhập trực tiếp
-/home/light/.cloakbrowser/chromium-146.0.7680.177.5/chrome \
-  --user-data-dir=/home/light/Downloads/webgpt/cloak-profile \
-  --remote-debugging-port=9222 \
-  "https://chatgpt.com/auth/login"
+printf '%s\n' 'user@example.com|password|BASE32_TOTP_SECRET' | \
+  gpt-web account login --name personal --auto --stdin --save-credentials
 ```
-1. Điền Email/Password và mã 2FA trên cửa sổ trình duyệt.
-2. Khi thấy giao diện ChatGPT Plus và tên tài khoản xuất hiện ở góc dưới bên trái, **đóng trình duyệt lại**.
-3. Toàn bộ thông tin xác thực đã được lưu vĩnh viễn trong `cloak-profile`.
 
----
+The registry `~/.config/webgpt/accounts.json` contains metadata only. Passwords/TOTP secrets are not stored there, in traces, or in gateway logs.
 
-### 4. Cách 3: Kiểm Tra Trạng Thái Đăng Nhập (Doctor Verification)
-Để xác nhận profile đã đăng nhập thành công và sẵn sàng:
+### Multiple accounts
 
 ```bash
-# Khởi động browser headless trên cổng 9222
-python3 -m gpt.debug cloak-launch \
-  --port 9222 \
-  --profile-dir /home/light/Downloads/webgpt/cloak-profile
-
-# Kiểm tra trạng thái xác thực
-python3 -m gpt.debug doctor \
-  --cdp-url http://127.0.0.1:9222 \
-  --profile-dir /home/light/Downloads/webgpt/cloak-profile \
-  --browser
+gpt-web account login --name personal
+gpt-web account login --name work
+gpt-web account list
 ```
-> Kết quả mong đợi: `{"ok": true, "auth_status": "authenticated", "has_model_picker": true}`.
 
----
+A gateway may use one or more named accounts:
 
-### 5. Cách Sử Dụng Tài Khoản Plus Cho Gateway & Claude Code CLI
-Sau khi profile đã được xác thực:
+```bash
+gpt-web api-server --transport hybrid --account personal --prewarm
 
-1. **Khởi chạy Gateway Daemon**:
-   ```bash
-   python3 -m gpt.debug api-server \
-     --port 8000 \
-     --cdp-url http://127.0.0.1:9222 \
-     --allow-authenticated \
-     --max-workers 3 \
-     --prewarm
-   ```
+gpt-web api-server --transport hybrid \
+  --account personal \
+  --account work \
+  --prewarm
+```
 
-2. **Chạy Claude Code CLI hoặc OpenAI Client trỏ về Gateway**:
-   ```bash
-   ANTHROPIC_BASE_URL="http://127.0.0.1:8000" \
-   ANTHROPIC_API_KEY="dummy-key" \
-   claude -p "Prompt của bạn ở đây"
-   ```
-   Gateway sẽ tự động nhận diện tài khoản Plus, tự khóa model **`GPT-5.5 Thinking (High Effort)`** và xử lý request mà không hiển thị cửa sổ trình duyệt.
+With multiple accounts, new logical conversations are assigned round-robin and the selected account name is persisted with that conversation so later turns and tool results remain on the same ChatGPT account. `--max-workers` applies per account.
 
----
+### Anonymous mode
+
+No account selection means anonymous mode:
+
+```bash
+gpt-web api-server --transport browser
+gpt-web doctor --browser
+gpt-web send --text 'hello'
+```
+
+Anonymous mode uses an ephemeral browser profile and never falls back to a saved authenticated profile.
+
+### Account status and cleanup
+
+```bash
+gpt-web account status --name personal
+gpt-web account status --name personal --live
+gpt-web account credentials-delete --name personal
+gpt-web account remove --name personal
+gpt-web account remove --name personal --delete-profile
+```
+
+`status --live` opens the saved profile headlessly and verifies the ChatGPT session without reading or manipulating the page DOM.
+
+### Using an account from other commands
+
+```bash
+gpt-web doctor --account personal --browser
+gpt-web models --account personal
+gpt-web send --account personal --text 'hello'
+```
+
+Claude Code and OpenCode do not need to know which ChatGPT account is behind the gateway. They continue to use the normal OpenAI/Anthropic-compatible local endpoints.
 
 ## 📋 Task Checklist Tái Cấu Trúc (Đã Hoàn Thành)
 

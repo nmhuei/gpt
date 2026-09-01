@@ -1,0 +1,31 @@
+{
+  "id": "soft-json-array-multi-parse",
+  "desc": "(c) a <json> array under the soft protocol parses into N tool_use blocks",
+  "module": "toolcall",
+  "input": {
+    "protocol": "soft",
+    "text": "<json>[{\"name\": \"Bash\", \"arguments\": {\"command\": \"pwd\"}}, {\"name\": \"Bash\", \"arguments\": {\"command\": \"ls -la\"}}]</json>",
+    "allowed_tools": ["Bash"],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ]
+  },
+  "expect": {
+    "calls": [
+      {"name": "Bash", "arguments": {"command": "pwd"}},
+      {"name": "Bash", "arguments": {"command": "ls -la"}}
+    ],
+    "prose_is_null": true
+  }
+}

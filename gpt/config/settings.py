@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-DEFAULT_PROFILE_DIR = Path.home() / "Downloads" / "webgpt" / "cloak-profile"
+DEFAULT_PROFILE_DIR = Path.home() / ".local" / "share" / "webgpt" / "cloak-profile"
 DEFAULT_CDP_PORT = 9222
 DEFAULT_API_PORT = 8000
 DEFAULT_MODEL = "gpt-5-5-thinking"
@@ -15,7 +15,11 @@ DEFAULT_MAX_WORKERS = 3
 
 @dataclass
 class AppConfig:
-    """Unified application settings and credential store."""
+    """Legacy browser/bootstrap credential settings.
+
+    User-facing agent/gateway configuration lives in ``gpt.core.Settings``.
+    This class remains for login/CDP/profile compatibility only.
+    """
 
     email: str | None = None
     password: str | None = None
@@ -72,63 +76,58 @@ def _parse_int(val: str | None, default: int) -> int:
         return default
 
 
-def load_config(env_file: str | Path | None = None) -> AppConfig:
-    """Load configuration from .env file or environment variables."""
-    target = Path(env_file) if env_file else Path.cwd() / ".env"
-    
-    email = os.environ.get("CHATGPT_EMAIL")
-    password = os.environ.get("CHATGPT_PASSWORD")
-    totp_key = os.environ.get("CHATGPT_TOTP_KEY")
-    cdp_port = _parse_int(os.environ.get("CDP_PORT"), DEFAULT_CDP_PORT)
-    api_port = _parse_int(os.environ.get("API_PORT"), DEFAULT_API_PORT)
-    headless = _parse_bool(os.environ.get("BROWSER_HEADLESS"), True)
-    profile_str = os.environ.get("PROFILE_DIR")
-    profile_dir = Path(profile_str) if profile_str else DEFAULT_PROFILE_DIR
-    default_model = os.environ.get("DEFAULT_MODEL", DEFAULT_MODEL)
-    default_effort = os.environ.get("DEFAULT_EFFORT", DEFAULT_EFFORT)
-    max_workers = _parse_int(os.environ.get("MAX_WORKERS"), DEFAULT_MAX_WORKERS)
+def _read_env_file(target: Path) -> dict[str, str]:
+    """Parse a .env file (or legacy single-line pipe format) into key/value pairs."""
+    values: dict[str, str] = {}
+    try:
+        content = target.read_text(encoding="utf-8").strip()
+    except OSError:
+        return values
+    lines = [line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")]
+    if len(lines) == 1 and "|" in lines[0] and "=" not in lines[0]:
+        parts = lines[0].split("|")
+        if len(parts) >= 1 and parts[0]:
+            values["CHATGPT_EMAIL"] = parts[0].strip()
+        if len(parts) >= 2 and parts[1]:
+            values["CHATGPT_PASSWORD"] = parts[1].strip()
+        if len(parts) >= 3 and parts[2]:
+            values["CHATGPT_TOTP_KEY"] = parts[2].strip()
+        return values
+    for line in lines:
+        if "=" in line:
+            key, val = line.split("=", 1)
+            values[key.strip()] = val.strip().strip("'\"")
+    return values
 
-    if target.exists():
-        try:
-            content = target.read_text(encoding="utf-8").strip()
-            # Check for legacy pipe format: EMAIL|PASSWORD|TOTP
-            lines = [line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")]
-            if len(lines) == 1 and "|" in lines[0] and "=" not in lines[0]:
-                parts = lines[0].split("|")
-                if len(parts) >= 1 and parts[0]:
-                    email = parts[0].strip()
-                if len(parts) >= 2 and parts[1]:
-                    password = parts[1].strip()
-                if len(parts) >= 3 and parts[2]:
-                    totp_key = parts[2].strip()
-            else:
-                for line in lines:
-                    if "=" in line:
-                        key, val = line.split("=", 1)
-                        key = key.strip()
-                        val = val.strip().strip("'\"")
-                        if key == "CHATGPT_EMAIL":
-                            email = val
-                        elif key == "CHATGPT_PASSWORD":
-                            password = val
-                        elif key == "CHATGPT_TOTP_KEY":
-                            totp_key = val
-                        elif key == "CDP_PORT":
-                            cdp_port = _parse_int(val, DEFAULT_CDP_PORT)
-                        elif key == "API_PORT":
-                            api_port = _parse_int(val, DEFAULT_API_PORT)
-                        elif key == "BROWSER_HEADLESS":
-                            headless = _parse_bool(val, True)
-                        elif key == "PROFILE_DIR":
-                            profile_dir = Path(val)
-                        elif key == "DEFAULT_MODEL":
-                            default_model = val
-                        elif key == "DEFAULT_EFFORT":
-                            default_effort = val
-                        elif key == "MAX_WORKERS":
-                            max_workers = _parse_int(val, DEFAULT_MAX_WORKERS)
-        except Exception:
-            pass
+
+def load_config(env_file: str | Path | None = None) -> AppConfig:
+    """Load configuration.
+
+    Precedence is ``environ > .env > default`` so a terminal can scope its own
+    overrides (e.g. ``ANTHROPIC_BASE_URL`` for one shell only) without touching
+    the shared project .env file.
+    """
+    target = Path(env_file) if env_file else Path.cwd() / ".env"
+    file_values = _read_env_file(target) if target.exists() else {}
+
+    def resolve(name: str) -> str | None:
+        # Environment wins over the shared .env file on purpose.
+        val = os.environ.get(name)
+        if val is None:
+            val = file_values.get(name)
+        return val if val else None
+
+    email = resolve("CHATGPT_EMAIL")
+    password = resolve("CHATGPT_PASSWORD")
+    totp_key = resolve("CHATGPT_TOTP_KEY")
+    cdp_port = _parse_int(resolve("CDP_PORT"), DEFAULT_CDP_PORT)
+    api_port = _parse_int(resolve("API_PORT"), DEFAULT_API_PORT)
+    headless = _parse_bool(resolve("BROWSER_HEADLESS"), True)
+    profile_str = resolve("PROFILE_DIR")
+    profile_dir = Path(profile_str) if profile_str else DEFAULT_PROFILE_DIR
+    default_model = resolve("DEFAULT_MODEL") or DEFAULT_MODEL
+    default_effort = resolve("DEFAULT_EFFORT") or DEFAULT_EFFORT
+    max_workers = _parse_int(resolve("MAX_WORKERS"), DEFAULT_MAX_WORKERS)
 
     return AppConfig(
         email=email,

@@ -1,4 +1,20 @@
+import pytest
+
 from gpt.config.settings import AppConfig, load_config
+
+
+@pytest.fixture(autouse=True)
+def _isolate_ambient_env(monkeypatch):
+    # Máy thật export credential vào shell env; precedence environ > .env
+    # của load_config sẽ đè lên .env của test nếu không scrub.
+    for name in (
+        "CHATGPT_EMAIL", "CHATGPT_PASSWORD", "CHATGPT_TOTP_KEY",
+        "CHATGPT_USERNAME", "CHATGPT_2FA", "CHATGPT_2FA_SECRET",
+        "PROFILE_DIR",
+        "CDP_PORT", "API_PORT", "BROWSER_HEADLESS",
+        "DEFAULT_MODEL", "DEFAULT_EFFORT", "MAX_WORKERS",
+    ):
+        monkeypatch.delenv(name, raising=False)
 
 
 def test_load_config_standard_env(tmp_path):

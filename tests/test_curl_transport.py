@@ -94,6 +94,71 @@ async def test_sse_snapshots_emit_only_their_direct_text_deltas():
     assert deltas == [("Hel", "turn-1"), ("lo", "turn-1")]
 
 
+def test_legacy_sse_ignores_user_echo_and_dedupes_assistant_snapshots():
+    records = [
+        {
+            "conversation_id": "conversation-1",
+            "message": {
+                "id": "user-turn",
+                "author": {"role": "user"},
+                "content": {"parts": ["ORIGINAL PROMPT MUST NOT LEAK"]},
+                "status": "finished_successfully",
+                "metadata": {"resolved_model_slug": "gpt-test"},
+            },
+        },
+        {
+            "message": {
+                "id": "assistant-turn",
+                "author": {"role": "assistant"},
+                "content": {"parts": ["<cmd>"]},
+                "status": "in_progress",
+            },
+        },
+        {
+            "message": {
+                "id": "assistant-turn",
+                "author": {"role": "assistant"},
+                "content": {"parts": ["<cmd>pwd"]},
+                "status": "in_progress",
+            },
+        },
+        {
+            "message": {
+                "id": "assistant-turn",
+                "author": {"role": "assistant"},
+                "content": {"parts": ["<cmd>pwd && ls</cmd>"]},
+                "status": "finished_successfully",
+            },
+        },
+    ]
+    text = ""
+    turn_id = "initial-turn"
+    conversation_id = None
+    model = None
+    deltas: list[str] = []
+    complete = False
+
+    import json
+
+    for payload in records:
+        text, turn_id, conversation_id, model, is_complete, delta = (
+            CurlCffiTransport._consume_record(
+                json.dumps(payload), text, turn_id, conversation_id, model
+            )
+        )
+        if delta:
+            deltas.append(delta)
+        complete = complete or is_complete
+
+    assert text == "<cmd>pwd && ls</cmd>"
+    assert "".join(deltas) == text
+    assert "ORIGINAL PROMPT" not in text
+    assert turn_id == "assistant-turn"
+    assert conversation_id == "conversation-1"
+    assert model == "gpt-test"
+    assert complete
+
+
 def test_direct_backend_fails_closed_without_required_credentials():
     bundle = TokenBundle(
         access_token="",

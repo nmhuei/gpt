@@ -1,0 +1,84 @@
+{
+  "id": "v2_tdd_tokenbucket",
+  "version": 2,
+  "title": "Implement TokenBucket with mechanically verified TDD",
+  "language": "en",
+  "timeout_s": 1500,
+  "init_git": true,
+  "baseline": {
+    "pytest_expect": "fail",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "ratelimit",
+  "required_files": [
+    "ratelimit/bucket.py",
+    "tests/test_token_bucket.py"
+  ],
+  "min_visible_tests_passed": 12,
+  "min_grader_tests_passed": 16,
+  "allowed_globs": [
+    "ratelimit/bucket.py",
+    "tests/test_token_bucket.py"
+  ],
+  "locked_paths": [
+    "ratelimit/counter.py",
+    "tests/test_counter_window.py",
+    "tests/test_bucket_stub.py"
+  ],
+  "git_history": {
+    "min_commits": 3,
+    "require_ordered_commits": [
+      {
+        "message_prefix": "[tdd] tests",
+        "paths_glob": "tests/**"
+      },
+      {
+        "message_prefix": "[tdd] impl",
+        "paths_glob": "ratelimit/bucket.py"
+      }
+    ]
+  },
+  "test_strength": {
+    "suite_glob": "tests/test_token_bucket.py",
+    "mutants_ref": [
+      "drain_on_deny",
+      "no_cap_write",
+      "partial_consume",
+      "over_capacity_consume"
+    ],
+    "min_kill": 3
+  },
+  "structural_checks": [
+    {
+      "file": "ratelimit/bucket.py",
+      "regex": "def try_consume\\("
+    },
+    {
+      "file": "ratelimit/bucket.py",
+      "regex": "def available\\("
+    }
+  ],
+  "mutations": [
+    {
+      "id": "drain_on_deny",
+      "kind": "v2tb:drain_on_deny",
+      "attr": "try_consume"
+    },
+    {
+      "id": "no_cap_write",
+      "kind": "v2tb:no_cap_write",
+      "attr": "_refill"
+    },
+    {
+      "id": "partial_consume",
+      "kind": "v2tb:partial_consume",
+      "attr": "try_consume"
+    },
+    {
+      "id": "over_capacity_consume",
+      "kind": "v2tb:over_capacity_consume",
+      "attr": "try_consume"
+    }
+  ],
+  "prompt": "This workspace contains `ratelimit`. `counter.py` is complete; `bucket.py::TokenBucket` is a stub. Implement it using STRICT TDD. FIRST create `tests/test_token_bucket.py` with at least 10 meaningful behaviors from the bucket docstring, run pytest to observe failure, and commit ONLY those tests with a message starting `[tdd] tests`. THEN implement TokenBucket, make the whole suite green, and commit with a message starting `[tdd] impl`. Do not modify counter.py or existing tests. The harness inspects git history and mutation-tests your authored suite."
+}

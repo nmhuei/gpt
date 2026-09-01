@@ -16,7 +16,7 @@ logger = logging.getLogger("gpt.bqa_installer")
 
 DEFAULT_BQA_LOCAL_URL = "http://127.0.0.1:18427/api/v1"
 DEFAULT_BQA_REPO_DIR = Path("/home/light/GitHub/botquanganh_mcp")
-DEFAULT_LOGS_DIR = Path.home() / "Downloads" / "webgpt"
+DEFAULT_LOGS_DIR = Path.home() / ".local" / "share" / "webgpt"
 
 
 @dataclass(frozen=True)

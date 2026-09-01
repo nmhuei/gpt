@@ -1,7 +1,8 @@
-import pytest
 from pathlib import Path
-from gpt.orchestrator.types import ChallengeTask, ChallengeStatus, SolvingStrategy
+
 from gpt.orchestrator.master_agent import MasterAgentOrchestrator
+from gpt.orchestrator.types import ChallengeStatus, ChallengeTask, SolvingStrategy
+
 
 def test_challenge_task_initial_state(tmp_path: Path):
     task = ChallengeTask(

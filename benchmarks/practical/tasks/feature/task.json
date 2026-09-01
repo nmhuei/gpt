@@ -1,0 +1,33 @@
+{
+  "id": "feature",
+  "version": 1,
+  "title": "Implement slugify + unique_slug in slugkit per SPEC",
+  "language": "en",
+  "baseline": {
+    "pytest_expect": "fail",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "slugkit",
+  "required_files": [
+    "slugkit/slugs.py",
+    "tests/test_slugs.py"
+  ],
+  "min_visible_tests_passed": 4,
+  "min_grader_tests_passed": 10,
+  "structural_checks": [],
+  "mutations": [
+    {
+      "id": "keep_case",
+      "kind": "feature:keep_case",
+      "attr": "slugify",
+      "desc": "a slugify that forgets the lowercase step must be caught by the test suite"
+    },
+    {
+      "id": "no_dedupe",
+      "kind": "feature:no_dedupe",
+      "attr": "unique_slug",
+      "desc": "a unique_slug that ignores the taken-slug set must be caught"
+    }
+  ],
+  "prompt": "This workspace contains `slugkit`, a slug-generation library whose two public functions are unimplemented stubs raising NotImplementedError. TASK: implement them EXACTLY per this SPEC. slugify(text, sep='-'): (1) Unicode NFKD-normalize then drop non-ASCII ('café'->'cafe'); (2) lowercase; (3) replace every maximal run of characters outside [a-z0-9] with exactly one `sep`; (4) strip leading/trailing `sep` chars; (5) return '' when no alphanumerics remain. unique_slug(text, existing=None, sep='-'): base = slugify(text, sep); if `existing` is None treat as empty; if base not taken return it; else return base+sep+'2', base+sep+'3', ... first free suffix. Rules: implement inside `slugkit/slugs.py`; do NOT rename files/packages/functions; do NOT edit tests. Verify with `python -m pytest` inside the workspace."
+}

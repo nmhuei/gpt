@@ -29,6 +29,25 @@ BASH_TOOL = {
     },
 }
 
+AGENT_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "Agent",
+        "description": "Launch a new agent for an independent task.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string"},
+                "prompt": {"type": "string"},
+                "subagent_type": {"type": "string"},
+                "run_in_background": {"type": "boolean"},
+            },
+            "required": ["description", "prompt"],
+            "additionalProperties": False,
+        },
+    },
+}
+
 
 def _fake_session() -> MagicMock:
     session = MagicMock()
@@ -165,6 +184,128 @@ def _tool_block(commands: list[str]) -> str:
             "  </invoke>"
         )
     return "<tool_calls>\n" + "\n".join(body) + "\n</tool_calls>"
+
+
+def _agent_fanout_block() -> str:
+    return (
+        '<tool_calls>\n'
+        '  <invoke name="Agent">\n'
+        '    <parameter name="description"><![CDATA[OSINT methodology]]></parameter>\n'
+        '    <parameter name="prompt"><![CDATA[Research a general OSINT challenge workflow.]]></parameter>\n'
+        '    <parameter name="subagent_type"><![CDATA[general-purpose]]></parameter>\n'
+        '    <parameter name="run_in_background"><![CDATA[true]]></parameter>\n'
+        '  </invoke>\n'
+        '  <invoke name="Agent">\n'
+        '    <parameter name="description"><![CDATA[OSINT geolocation]]></parameter>\n'
+        '    <parameter name="prompt"><![CDATA[Research geolocation techniques for OSINT challenges.]]></parameter>\n'
+        '    <parameter name="subagent_type"><![CDATA[general-purpose]]></parameter>\n'
+        '    <parameter name="run_in_background"><![CDATA[true]]></parameter>\n'
+        '  </invoke>\n'
+        '</tool_calls>'
+    )
+
+
+def test_fanout_request_rejects_prose_then_accepts_parallel_agent_calls(monkeypatch):
+    app = create_api_app()
+    server = app.state.server
+    session = _fake_session()
+    session.send = AsyncMock(
+        side_effect=[
+            TurnResult(
+                turn_id="turn_fanout_prose",
+                conversation_id="conv_fanout",
+                text=(
+                    "Mình sẽ dùng skill OSINT/CTF rồi fan-out vài hướng nghiên cứu "
+                    "độc lập để tổng hợp cách tiếp cận."
+                ),
+            ),
+            TurnResult(
+                turn_id="turn_fanout_agents",
+                conversation_id="conv_fanout",
+                text=_agent_fanout_block(),
+            ),
+        ]
+    )
+    monkeypatch.setattr(server, "get_or_create_session", AsyncMock(return_value=session))
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "chatgpt-web",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "fan out subagents research cách làm 1 bài osint",
+                    }
+                ],
+                "tools": [AGENT_TOOL],
+            },
+        )
+
+    assert response.status_code == 200
+    calls = response.json()["choices"][0]["message"]["tool_calls"]
+    assert [call["function"]["name"] for call in calls] == ["Agent", "Agent"]
+    assert session.send.await_count == 2
+    corrections = [
+        event
+        for event in server.trace.snapshot()
+        if event.component == "completionruntime" and event.kind == "tool_correction"
+    ]
+    assert [event.metadata.get("reason") for event in corrections] == ["FALSE_COMPLETION"]
+
+
+def test_fanout_request_rejects_single_agent_then_accepts_parallel_agents(monkeypatch):
+    app = create_api_app()
+    server = app.state.server
+    session = _fake_session()
+    single_agent = (
+        '<tool_calls><invoke name="Agent">'
+        '<parameter name="description"><![CDATA[OSINT methodology]]></parameter>'
+        '<parameter name="prompt"><![CDATA[Research OSINT methodology.]]></parameter>'
+        '</invoke></tool_calls>'
+    )
+    session.send = AsyncMock(
+        side_effect=[
+            TurnResult(
+                turn_id="turn_one_agent",
+                conversation_id="conv_fanout_single",
+                text=single_agent,
+            ),
+            TurnResult(
+                turn_id="turn_two_agents",
+                conversation_id="conv_fanout_single",
+                text=_agent_fanout_block(),
+            ),
+        ]
+    )
+    monkeypatch.setattr(server, "get_or_create_session", AsyncMock(return_value=session))
+
+    with TestClient(app) as client:
+        response = client.post(
+            "/v1/chat/completions",
+            json={
+                "model": "chatgpt-web",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "fan out subagents research cách làm 1 bài osint",
+                    }
+                ],
+                "tools": [AGENT_TOOL],
+            },
+        )
+
+    assert response.status_code == 200
+    calls = response.json()["choices"][0]["message"]["tool_calls"]
+    assert [call["function"]["name"] for call in calls] == ["Agent", "Agent"]
+    assert session.send.await_count == 2
+    corrections = [
+        event
+        for event in server.trace.snapshot()
+        if event.component == "completionruntime" and event.kind == "tool_correction"
+    ]
+    assert [event.metadata.get("reason") for event in corrections] == ["INCOMPLETE_FANOUT"]
 
 
 def test_sixteen_tool_calls_are_reduced_to_one_bounded_correction(monkeypatch):

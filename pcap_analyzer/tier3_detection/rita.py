@@ -59,5 +59,10 @@ def _normalized_entropy(values: list[int]) -> float:
     return entropy / math.log2(len(values))
 
 
-def calculate_beacon_scores(connections: Iterable[ConnRecord], **kwargs: object) -> list[BeaconScore]:
-    return RitaDetector(**kwargs).score(connections)
+def calculate_beacon_scores(
+    connections: Iterable[ConnRecord],
+    *,
+    min_connections: int = 3,
+    threshold: float = 0.65,
+) -> list[BeaconScore]:
+    return RitaDetector(min_connections=min_connections, threshold=threshold).score(connections)

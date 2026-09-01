@@ -1,0 +1,105 @@
+{
+  "id": "v2_refactor_property",
+  "version": 2,
+  "title": "Extract one CSV normalizer and prove parity with properties",
+  "language": "en",
+  "timeout_s": 1800,
+  "baseline": {
+    "pytest_expect": "pass",
+    "grader_suite_expect": "fail"
+  },
+  "entry_package": "csvnorm",
+  "entry_cli": [
+    "{python}",
+    "-m",
+    "csvnorm",
+    "--in",
+    "{input}",
+    "--out",
+    "{output}"
+  ],
+  "required_files": [
+    "csvnorm/core.py",
+    "tests/test_properties.py"
+  ],
+  "min_visible_tests_passed": 6,
+  "min_grader_tests_passed": 10,
+  "allowed_globs": [
+    "csvnorm/**",
+    "tests/test_properties.py"
+  ],
+  "locked_paths": [
+    "tests/test_smoke.py",
+    "tools/gen_rows.py",
+    "golden/input.csv",
+    "golden/expected.jsonl"
+  ],
+  "structural_checks": [
+    {
+      "file": "csvnorm/ingest.py",
+      "regex": "from \\.core import normalize_row"
+    },
+    {
+      "file": "csvnorm/export.py",
+      "regex": "from \\.core import normalize_row"
+    },
+    {
+      "file": "csvnorm/backfill.py",
+      "regex": "from \\.core import normalize_row"
+    }
+  ],
+  "test_strength": {
+    "suite_glob": "tests/test_properties.py",
+    "mutants_ref": [
+      "r1_drop_nfc",
+      "r2_drop_strip",
+      "r3_empty_stays_empty"
+    ],
+    "min_kill": 2
+  },
+  "heldout_corpus": {
+    "generator_cmd": [
+      "{python}",
+      "tools/gen_rows.py",
+      "--seed",
+      "777",
+      "--rows",
+      "80"
+    ],
+    "candidate_cmd": [
+      "{python}",
+      "-m",
+      "csvnorm",
+      "--in",
+      "{input}",
+      "--out",
+      "{output}"
+    ],
+    "reference_cmd": [
+      "{python}",
+      "grader_suites/reference_csvnorm.py",
+      "{input}",
+      "{expected}"
+    ],
+    "compare": "bytes",
+    "timeout_s": 30
+  },
+  "mutations": [
+    {
+      "id": "r1_drop_nfc",
+      "kind": "v2ref:drop_nfc",
+      "attr": "normalize_value"
+    },
+    {
+      "id": "r2_drop_strip",
+      "kind": "v2ref:drop_strip",
+      "attr": "normalize_value"
+    },
+    {
+      "id": "r3_empty_stays_empty",
+      "kind": "v2ref:empty_stays_empty",
+      "attr": "normalize_value"
+    }
+  ],
+  "prompt": "`csvnorm` has three near-identical row normalizers in ingest.py, export.py and backfill.py. Refactor them to a single new `csvnorm/core.py` exporting normalize_key, normalize_value and normalize_row; all three public entry functions must route through it and behavior must remain byte-identical. Add `tests/test_properties.py` covering idempotence, safe normalized keys, stable canonical JSON, empty\u2192None, trim and NFC sentinels. Do not modify golden/, tools/, or existing tests. Verify the golden CLI output and pytest. A held-out generated corpus is graded."
+}

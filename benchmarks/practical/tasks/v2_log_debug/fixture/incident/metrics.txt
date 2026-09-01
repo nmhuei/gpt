@@ -1,0 +1,4 @@
+urlwatch_open_sessions 41
+urlwatch_closed_sessions 17
+urlwatch_retry_queue 6
+urlwatch_duplicate_alerts_5m 6

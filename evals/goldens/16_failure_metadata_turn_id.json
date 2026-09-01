@@ -1,0 +1,56 @@
+{
+  "id": "failure-metadata-turn-id",
+  "desc": "(iv) failure events carry the correction bookkeeping: persistent_tool_failure and submit_failed_before_commit_unknown both report reason, correction_count and the turn_id of the last generation (identical MALFORMED_TOOL reply trips the LIVE-R3 guard on round 2)",
+  "module": "correction_budget",
+  "input": {
+    "op": "runtime",
+    "env": {},
+    "model": "chatgpt-web",
+    "tool_choice": "auto",
+    "tail": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "messages": [
+      {"role": "user", "content": "Run pwd inside the workspace and show me the result."}
+    ],
+    "tools": [
+      {
+        "type": "function",
+        "function": {
+          "name": "Bash",
+          "description": "Executes a shell command inside the client workspace",
+          "parameters": {
+            "type": "object",
+            "properties": {"command": {"type": "string"}},
+            "required": ["command"]
+          }
+        }
+      }
+    ],
+    "replies": [
+      "I will run it.\n<tool_calls>\n  <invoke name=\"Bash\">\n    <parameter name=\"command\">pwd</parameter>\n",
+      "I will run it.\n<tool_calls>\n  <invoke name=\"Bash\">\n    <parameter name=\"command\">pwd</parameter>\n"
+    ]
+  },
+  "expect": {
+    "raises_contains": [
+      "Persistent MALFORMED_TOOL after correction"
+    ],
+    "send_count": 2,
+    "events": [
+      {
+        "kind": "persistent_tool_failure",
+        "previous_reason": "MALFORMED_TOOL",
+        "reason": "MALFORMED_TOOL",
+        "correction_count": 1,
+        "turn_id": "turn-02"
+      },
+      {
+        "kind": "submit_failed_before_commit_unknown",
+        "error_type": "MalformedToolCall",
+        "correction_count": 1,
+        "turn_id": "turn-02"
+      }
+    ]
+  }
+}

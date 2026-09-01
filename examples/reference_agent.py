@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from openai import OpenAI
 
@@ -25,11 +25,11 @@ def run_agent(
     for _ in range(max_steps):
         response = client.chat.completions.create(
             model=model,
-            messages=messages,
-            tools=tools,
+            messages=cast(Any, messages),
+            tools=cast(Any, tools),
         )
         assistant = response.choices[0].message
-        calls = assistant.tool_calls or []
+        calls = cast(Any, assistant.tool_calls or [])
         if not calls:
             return assistant.content or ""
         messages.append(

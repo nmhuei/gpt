@@ -45,6 +45,32 @@ def test_build_tool_instructions_uses_explicit_sentinel():
         ToolTranspiler.build_tool_instructions(TOOLS, "sometimes")
 
 
+def test_agent_tool_instructions_allow_explicit_fanout_only_for_agent_calls():
+    agent_tools = [
+        {
+            "type": "function",
+            "function": {
+                "name": "Agent",
+                "description": "Launch a subagent",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "description": {"type": "string"},
+                        "prompt": {"type": "string"},
+                    },
+                    "required": ["description", "prompt"],
+                },
+            },
+        }
+    ]
+
+    instructions = ToolTranspiler.build_tool_instructions(agent_tools)
+
+    assert "explicit fan-out" in instructions
+    assert "multiple Agent invokes" in instructions
+    assert "Normally use exactly one <invoke>" in instructions
+
+
 def test_parse_explicit_tool_call_and_openai_response():
     clean, calls = ToolTranspiler.parse_tool_calls(
         tool_block({"name": "get_weather", "arguments": {"location": "Hanoi"}}),

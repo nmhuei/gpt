@@ -1,0 +1,5 @@
+v2_bugfix_multi: pristine=FAIL solved=PASS
+v2_tdd_tokenbucket: pristine=FAIL solved=PASS
+v2_refactor_property: pristine=FAIL solved=PASS
+v2_log_debug: pristine=FAIL solved=PASS
+v2_api_integration: pristine=FAIL solved=PASS

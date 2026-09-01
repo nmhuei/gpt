@@ -95,7 +95,7 @@ class ModelInfo:
     label: str
     selected: bool = False
     available: bool = True
-    source: Literal["protocol", "ui"] = "ui"
+    source: Literal["protocol", "ui", "url_protocol"] = "ui"
     reasoning_efforts: list[str] = field(default_factory=list)
     selected_effort: str | None = None
 
@@ -133,6 +133,24 @@ class TurnResult:
     error: str | None = None
     duration_ms: int = 0
     raw_events: list[ProbeEvent] = field(default_factory=list)
+    # MODEL-ROUTING-PHASE1 (2026-08-26): exact model string the gateway sent
+    # upstream for this turn, post alias-map ("auto" turns carry None).  Diff
+    # against ``model`` to detect silent server-side downgrades; the fconv SSE
+    # path also logs a WARNING when the served slug differs.
+    requested_model: str | None = None
+    # MODEL-ROUTING-PHASE2 (2026-08-26): per-request downgrade telemetry.  The
+    # fconv SSE path fills ``resolved_model`` with the slug the server actually
+    # published (None when it never published one) and flags the mismatch via
+    # ``model_downgraded``/``model_downgrade_count`` so callers can count
+    # silent downgrades without re-diffing requested vs served themselves.
+    resolved_model: str | None = None
+    model_downgraded: bool = False
+    model_downgrade_count: int = 0
+    # FCONV-RESUME-HANDOFF (2026-08-26): free-form per-turn telemetry.  The
+    # fconv resume chain (WEBGPT_FCONV_RESUME) stores {"fconv_resume": {...}}
+    # here when a split stream was followed; every other producer leaves the
+    # dict empty, so OFF-path results stay byte-for-byte unchanged.
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

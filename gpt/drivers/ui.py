@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
+import os
+import re
 import time
 import uuid
 from pathlib import Path
@@ -31,6 +34,8 @@ from gpt.types import (
     Turn,
     TurnResult,
 )
+
+logger = logging.getLogger(__name__)
 
 COMPOSER_SELECTORS = (
     "#prompt-textarea",
@@ -108,6 +113,58 @@ def _normalise_label(value: str) -> str:
     return " ".join(value.casefold().split())
 
 
+def _env_float(name: str, default: float) -> float:
+    try:
+        return float(os.environ[name])
+    except (KeyError, TypeError, ValueError):
+        return default
+
+
+DEFAULT_POLL_INTERVAL = 0.12
+DEFAULT_STABLE_GRACE = 0.45
+
+# LIVE-R3 stream hygiene (evidence 2026-08-24, /tmp/cc-live-test2/t1.stdout):
+# the browser/DOM extraction path leaks the reasoning-channel label into the
+# assistant text — the client received the literal string
+# "ThinkingAY OKGATEWAY OK".  This mirrors the F4 fix in CurlCffiTransport
+# (same WEBGPT_STREAM_STRIP_PREFIX kill switch), adapted to cumulative DOM
+# snapshots: while the head is still an ambiguous noise prefix the bytes are
+# held back instead of being emitted and retracted later.
+_STRIP_PREFIX_FLAG = "WEBGPT_STREAM_STRIP_PREFIX"
+_NOISE_PREFIX_PATTERNS = (
+    re.compile(r"^Thinking[^\S\n]*\r?\n"),
+    re.compile(r"^Thought[^\S\n]*:[^\S\n]*"),
+    # T1 live evidence: the label is glued directly onto answer text with no
+    # separator ("ThinkingAY OK...").  Only an uppercase/digit continuation
+    # triggers the cut so ordinary prose ("Thinking about it") passes intact.
+    re.compile(r"^Thinking(?=[A-Z0-9])"),
+)
+_NOISE_PREFIX_WORDS = ("Thinking", "Thought")
+
+
+def _strip_prefix_flag_enabled() -> bool:
+    """Hygiene kill switch; defaults on, ``WEBGPT_STREAM_STRIP_PREFIX=0`` disables."""
+    return os.environ.get(_STRIP_PREFIX_FLAG, "1") != "0"
+
+
+def _strip_leading_noise(text: str) -> tuple[str, bool]:
+    """Cut a leading model-noise prefix once. Returns ``(text, decided)``.
+
+    ``decided=False`` means the head could still grow into a noise prefix
+    (e.g. "Thi", "Thinking"); the caller must hold these bytes back rather
+    than feed them to the accumulator, because a later DOM snapshot may
+    extend them into either noise or legitimate prose.
+    """
+    for pattern in _NOISE_PREFIX_PATTERNS:
+        match = pattern.match(text)
+        if match:
+            return text[match.end():], True
+    if any(word.startswith(text) for word in _NOISE_PREFIX_WORDS):
+        # Ambiguous head: hold it back (feed nothing) until decided.
+        return "", False
+    return text, True
+
+
 def _model_matches(opt_norm: str, target: str) -> bool:
     if opt_norm == target:
         return True
@@ -129,10 +186,37 @@ class UIDriver:
     removes the required roles/ARIA/test ids fails explicitly with ``UIChanged``.
     """
 
-    def __init__(self, page: Page, poll_interval: float = 0.25, stable_grace: float = 0.9):
+    def __init__(
+        self,
+        page: Page,
+        poll_interval: float | None = None,
+        stable_grace: float | None = None,
+    ):
         self.page = page
-        self.poll_interval = poll_interval
-        self.stable_grace = stable_grace
+        # Env-tunable poll cadence (P1 quick-win): WEBGPT_POLL_INTERVAL /
+        # WEBGPT_STABLE_GRACE override the faster defaults; explicit arguments
+        # win over both so existing callers keep full control.
+        self.poll_interval = (
+            _env_float("WEBGPT_POLL_INTERVAL", DEFAULT_POLL_INTERVAL)
+            if poll_interval is None
+            else poll_interval
+        )
+        self.stable_grace = (
+            _env_float("WEBGPT_STABLE_GRACE", DEFAULT_STABLE_GRACE)
+            if stable_grace is None
+            else stable_grace
+        )
+        self._popups_dismissed_url: str | None = None
+        try:
+            registered = self.page.on("framenavigated", self._invalidate_popup_cache)
+            if asyncio.iscoroutine(registered):
+                registered.close()
+        except Exception as exc:
+            logger.debug("Could not register popup-cache navigation listener: %s", exc)
+
+    def _invalidate_popup_cache(self, *_args) -> None:
+        """Any navigation or reload re-arms the popup dismissal pass."""
+        self._popups_dismissed_url = None
 
     async def _first_visible(
         self, selectors: tuple[str, ...], timeout_ms: int = 0
@@ -151,6 +235,12 @@ class UIDriver:
             await asyncio.sleep(min(self.poll_interval, max(0.0, deadline - time.monotonic())))
 
     async def dismiss_popups(self) -> None:
+        # Popups were already dismissed on this page URL and no navigation or
+        # reload happened since (the framenavigated listener clears the cache):
+        # skip the selector sweep entirely.
+        url = str(getattr(self.page, "url", ""))
+        if url and url == self._popups_dismissed_url:
+            return
         selectors = (
             "button:has-text('Stay logged out')",
             "button:has-text('Dismiss')",
@@ -165,6 +255,9 @@ class UIDriver:
                     await button.click(timeout=1_000)
             except Exception:
                 continue
+        after_url = str(getattr(self.page, "url", ""))
+        if after_url and not self._popups_dismissed_url:
+            self._popups_dismissed_url = after_url
 
     async def _raise_known_page_error(self) -> None:
         url = str(getattr(self.page, "url", ""))
@@ -763,6 +856,7 @@ class UIDriver:
         if req.files:
             file_input = self.page.locator('input[type="file"]').first
             resolved_files: list[str] = []
+            inline_fallback_files = 0
             for f_path in req.files:
                 p = Path(f_path).expanduser().resolve()
                 if not p.exists():
@@ -773,26 +867,45 @@ class UIDriver:
                     if len(raw_bytes) <= 100_000 and b"\x00" not in raw_bytes[:1024]:
                         text_content = raw_bytes.decode("utf-8", errors="replace")
                         file_attachment_text += f"\n\n--- ATTACHED FILE: {p.name} ---\n```\n{text_content}\n```"
-                except Exception:
-                    pass
-            if resolved_files and await file_input.count() > 0:
-                try:
-                    await file_input.set_input_files(resolved_files)
-                    await asyncio.sleep(1.5)
-                except Exception:
-                    pass
+                        inline_fallback_files += 1
+                except OSError as exc:
+                    logger.debug("Could not build inline fallback for attachment %s: %s", p, exc)
+            if resolved_files:
+                file_input_count = await file_input.count()
+                if file_input_count > 0:
+                    try:
+                        await file_input.set_input_files(resolved_files)
+                        await asyncio.sleep(1.5)
+                    except Exception as exc:
+                        raise UIChanged(
+                            f"ChatGPT file attachment upload failed for {len(resolved_files)} file(s): {exc}"
+                        ) from exc
+                elif inline_fallback_files != len(resolved_files):
+                    raise UIChanged(
+                        "ChatGPT file input is unavailable and at least one attachment "
+                        "cannot be represented by the small-text inline fallback."
+                    )
 
         full_prompt = (req.text + file_attachment_text) if file_attachment_text else req.text
 
-        # Ensure model/effort is strictly 5.5 High before sending if 5.5 is selected
-        try:
-            pill = await self._first_visible(MODEL_PICKER_SELECTORS, 1_000)
+        # Ensure model/effort is strictly 5.5 High before sending if 5.5 is
+        # selected. Skip when the session layer already positioned and verified
+        # the effort: SendRequest.reasoning_effort only carries a confirmed
+        # selection (capability snapshot or a successful select_reasoning_effort).
+        effort_confirmed = _normalise_label(req.reasoning_effort or "") in {"high", "max"}
+        if not effort_confirmed:
+            try:
+                pill = await self._first_visible(MODEL_PICKER_SELECTORS, 1_000)
+            except Exception as exc:
+                logger.debug("Could not probe model picker before send: %s", exc)
+                pill = None
             if pill is not None:
                 txt = _normalise_label(await pill.inner_text())
                 if "5.5" in txt and "high" not in txt:
+                    # Once we positively identify 5.5 without High, selection
+                    # is a correctness requirement. Do not silently send under
+                    # the wrong effort if readback/selection fails.
                     await self.select_reasoning_effort("high")
-        except Exception:
-            pass
 
         composer = await self.get_composer()
         try:
@@ -862,6 +975,12 @@ class UIDriver:
             await emit(ResponseStarted(turn_id=turn_id, model=req.model.label if req.model else None))
             deadline = started_at + req.timeout_seconds
             accumulator = MutableTextAccumulator()
+            # LIVE-R3: anchored noise-prefix cut, evaluated per DOM snapshot
+            # (snapshots are cumulative, so the prefix sits at the head of
+            # every snapshot until the answer diverges — there is no one-shot
+            # latch like the append-only curl stream).
+            strip_prefix_on = _strip_prefix_flag_enabled()
+            held_noise_only = strip_prefix_on
             last_change = time.monotonic()
             generation_seen = False
             response_seen = False
@@ -879,6 +998,12 @@ class UIDriver:
                         response_seen = True
 
                     latest_text = network_stream_text or current_text
+                    if strip_prefix_on and latest_text:
+                        latest_text, _decided = _strip_leading_noise(latest_text)
+                        # Undecided heads come back as "" — held back so no
+                        # noise bytes reach the accumulator or a delta.
+                    if latest_text:
+                        held_noise_only = False
                     delta = accumulator.update(latest_text) if latest_text else None
                     if delta is not None:
                         last_change = time.monotonic()
@@ -886,7 +1011,18 @@ class UIDriver:
 
                     composer_usable = await self._composer_usable()
                     quiet = time.monotonic() - last_change >= self.stable_grace
-                    if response_seen and accumulator.text and stop_button is None and composer_usable and quiet:
+                    # Normally the accumulator must hold text before stopping;
+                    # if the strip filter held back everything so far, ending
+                    # quietly means the whole visible response was noise —
+                    # surface it as an empty turn instead of burning the full
+                    # timeout.
+                    if (
+                        response_seen
+                        and stop_button is None
+                        and composer_usable
+                        and quiet
+                        and (accumulator.text or held_noise_only)
+                    ):
                         break
                 except (RateLimited, AuthRequired, UIChanged, WebChatError):
                     raise
