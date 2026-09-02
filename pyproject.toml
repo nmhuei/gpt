@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "playwright>=1.40.0",
     "cloakbrowser>=0.5.0",
-    "curl_cffi>=0.7.0",
+    "curl_cffi>=0.16.2",
     "pyotp>=2.9.0",
     "starlette>=0.30.0",
     "uvicorn>=0.25.0",
