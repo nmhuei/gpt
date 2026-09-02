@@ -278,13 +278,15 @@ class CurlCffiTransport:
         session: Any | None = None,
         conversation_url: str = CONVERSATION_URL,
         codex_auth: Any | None = None,
+        proxy: str | None = None,
     ) -> None:
         if session is None:
             if AsyncSession is None:
                 raise RuntimeError(
                     "Hybrid transport requires curl_cffi; install the project dependencies."
                 )
-            session = AsyncSession(impersonate=IMPERSONATE_TARGET)
+            resolved_proxy = proxy or os.environ.get("WEBGPT_PROXY", "").strip() or None
+            session = AsyncSession(impersonate=IMPERSONATE_TARGET, proxy=resolved_proxy)
         self.token_manager = token_manager
         self._session = session
         # CODEX-AUTH-INTEGRATION: optional pre-built OAuth credential source
@@ -1165,13 +1167,17 @@ class CurlCffiTransport:
         }
         if request.conversation_id:
             payload["conversation_id"] = request.conversation_id
-        if request.reasoning_effort:
-            payload["thinking_effort"] = request.reasoning_effort
-        elif route is not None and route.effort:
-            # EFFORT-FIRST: the alias may pin an effort for clients that
-            # cannot send one (Anthropic thinking blocks 400 at ingress).
-            # An explicit client effort always wins.
-            payload["thinking_effort"] = route.effort
+        effort = request.reasoning_effort or (route.effort if route else None)
+        if effort:
+            e = effort.strip().lower()
+            if e in {"high", "max", "extended", "3"}:
+                payload["thinking_effort"] = "extended"
+            elif e in {"medium", "standard", "2"}:
+                payload["thinking_effort"] = "standard"
+            elif e in {"low", "instant", "1"}:
+                payload["thinking_effort"] = "low"
+            else:
+                payload["thinking_effort"] = effort
         return payload
 
     def _build_codex_payload(self, request: SendRequest) -> dict[str, Any]:

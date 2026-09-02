@@ -100,12 +100,29 @@ def build_headers(
         if conduit_token:
             headers["X-Conduit-Token"] = conduit_token
 
-        client_version = os.environ.get(OAI_CLIENT_VERSION_ENV, "").strip()
+        client_version = (
+            os.environ.get(OAI_CLIENT_VERSION_ENV, "").strip()
+            or "prod-e2ad78d66f0382704b60ec11f68f00408b5bea2a"
+        )
         if client_version:
-            headers["OAI-Client-Version"] = client_version
-        client_build = os.environ.get(OAI_CLIENT_BUILD_ENV, "").strip()
+            headers["oai-client-version"] = client_version
+        client_build = (
+            os.environ.get(OAI_CLIENT_BUILD_ENV, "").strip()
+            or "10145581"
+        )
         if client_build:
-            headers["OAI-Client-Build-Number"] = client_build
+            headers["oai-client-build-number"] = client_build
+
+        # Modern Chrome 146 Client Hints
+        headers["sec-ch-ua"] = '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"'
+        headers["sec-ch-ua-mobile"] = "?0"
+        headers["sec-ch-ua-platform"] = '"Windows"'
+        headers["sec-ch-ua-arch"] = '"x86"'
+        headers["sec-ch-ua-bitness"] = '"64"'
+        headers["sec-ch-ua-full-version"] = '"146.0.7680.177"'
+        headers["x-openai-target-path"] = "/backend-api/f/conversation"
+        headers["x-openai-target-route"] = "/backend-api/f/conversation"
+        headers["oai-genui-client-actions"] = "open_entity_detail"
 
         account_id = getattr(bundle, "chatgpt_account_id", None)
         if account_id:

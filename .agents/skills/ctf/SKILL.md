@@ -46,12 +46,29 @@ Luôn chạy với `.venv` activated:
 ## Workflow chuẩn (1 bài)
 
 ```
-1. PICK          scripts/pick_ctf_challenge.py --max-risk low
-2. SPAWN         scripts/ctf_spawn_session.py --chal-dir <X> --name <X>
-3. MONITOR       đợi progress.json update; xem ~/Downloads/ctf-workspace/runs/<X>/session.log
-4. REGISTER      scripts/ctf_flag_registry.py --add <X> <FLAG>
-5. WRITEUP       scripts/ctf_writeup.py --all
+0. PLAYBOOK     đọc docs/automation/SOLVE_PLAYBOOK.md theo category, áp dụng flow cũ trước
+1. PICK         scripts/pick_ctf_challenge.py --max-risk low
+2. SPAWN        scripts/ctf_spawn_session.py --chal-dir <X> --name <X> --timeout 0
+3. MONITOR      pstree + tail -f ~/Downloads/ctf-workspace/runs/<X>/session.log
+4. GUARD        thẩm định toán học script Crypto chạy >10s, kill ngay nếu UNSAT/brute vô vọng
+5. REGISTER     scripts/ctf_flag_registry.py --add <X> <FLAG>
+6. WRITEUP      scripts/ctf_writeup.py --all
+7. UPDATE FLOW  cập nhật flow giải vừa thành công vào đúng category trong SOLVE_PLAYBOOK.md
 ```
+
+## 🛡️ Crypto Feasibility Guard (Cơ chế Thẩm định Toán học & Cắt bẫy Timeout 600s)
+
+Khi solver chạy một script giải Crypto:
+1. **Phân loại:**
+   - Lệnh hệ thống thường (`ls`, `cat`, `pip`, tests $<5$s) $\rightarrow$ cho qua.
+   - Script Crypto / SMT / Brute-force (`z3`, `sage`, vòng lặp lớn) chạy $>10$s $\rightarrow$ thẩm định ngay.
+2. **Thẩm định toán học:**
+   - Kiểm tra xem ràng buộc có vô nghiệm (UNSAT) hoặc mâu thuẫn trạng thái (như so khớp output trung gian với final hash).
+   - Kiểm tra không gian tìm kiếm: Nếu $O(2^{64})$ hoặc Z3 bit-blasting mạch nhân phi tuyến $\rightarrow$ đánh giá BẤT KHẢ THI.
+3. **Can thiệp & Phản biện:**
+   - `kill -9 <child_pid>` ngay lập tức để không lãng phí 600s.
+   - Nạp thông điệp phản biện chỉ rõ lỗi logic và hướng giải tích thay thế vào session.
+
 
 ## Spawn N session song song
 
@@ -68,6 +85,10 @@ wait
 Giữ concurrency ≤5 (gateway overload nếu >5 session cùng lúc).
 
 ## Quy tắc cứng
+
+**Playbook-First Strategy**: BẮT BUỘC đọc `docs/automation/SOLVE_PLAYBOOK.md` theo category của challenge trước khi giải. Thử toàn bộ các flow đã có trước; CHỈ KHI toàn bộ flow cũ thất bại mới tìm kiếm hướng giải mới. Sau khi giải xong, BẮT BUỘC ghi nhận flow giải vào file này để tái sử dụng.
+
+**Strict No-Writeup-Search Policy (No Spoilers, Yes Research)**: CẤM tuyệt đối việc tìm kiếm writeup, flag hay bài giải trực tiếp của đề thi. TUY NHIÊN, agent ĐƯỢC PHÉP và KHUYẾN KHÍCH tra cứu tài liệu kỹ thuật, đặc tả thuật toán gốc (RFC, specification, whitepaper), bài báo khoa học về điểm yếu đại số, và tài liệu các công cụ chuyên sâu (Z3 SMT, SageMath, SAT solvers, thư viện mật mã) để trang bị kiến thức và tự giải bài nhanh nhất.
 
 **Account là ChatGPT Plus** — KHÔNG quota, không cần `preflight_quota.py`.
 

@@ -29,3 +29,4 @@ docs/reports/soak/
 
 # WebGPT runtime data (browser profiles contain session cookies — NEVER commit)
 data/
+personal/

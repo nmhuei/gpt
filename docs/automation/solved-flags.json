@@ -109,23 +109,23 @@
       "flag": "COMPFEST{c0ngr4tzzz_h3ngk3rrrr_g3n3r4l1Zed_w13n3R_4ttacK_458d412622e808ac}",
       "solved_at": "2026-09-01T15:08:02"
     },
-    "/home/light/Workspace/CTF/sekai/web_migurimental/web_migurimental": {
+    "/home/light/Workspace/CTF/sekai/web/migurimental": {
       "flag": "SEKAI{dummy_flag}",
       "solved_at": "2026-09-01T15:08:02"
     },
-    "/home/light/Workspace/CTF/sekai/crypto_needle-in-a-multivariate-sekai/crypto_needle-in-a-multivariate-sekai": {
+    "/home/light/Workspace/CTF/sekai/crypto/needle-in-a-multivariate-sekai": {
       "flag": "SEKAI{dummy_flag}",
       "solved_at": "2026-09-01T15:08:02"
     },
-    "/home/light/Workspace/CTF/sekai/crypto_iihash/crypto_iihash": {
+    "/home/light/Workspace/CTF/sekai/crypto/iihash": {
       "flag": "SEKAI{dummy_flag}",
       "solved_at": "2026-09-01T15:08:02"
     },
-    "/home/light/Workspace/CTF/sekai/pwn_ppp/pwn_ppp": {
+    "/home/light/Workspace/CTF/sekai/pwn/ppp": {
       "flag": "SEKAI{REDACTED}",
       "solved_at": "2026-09-01T15:08:02"
     },
-    "/home/light/Workspace/CTF/sekai/pwn_3in1/pwn_3in1": {
+    "/home/light/Workspace/CTF/sekai/pwn/3in1": {
       "flag": "SEKAI{dummy_flag}",
       "solved_at": "2026-09-01T15:08:02"
     },
@@ -563,7 +563,7 @@
     },
     "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-challenges/let-s-prove-it-again": {
       "flag": "crypto{CRT_1s_m4gic_for_cryptanalysis}",
-      "solved_at": "2026-09-01T15:08:02"
+      "solved_at": "2026-09-02T11:45:25"
     },
     "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/zkp/zkp-challenges/couples": {
       "flag": "crypto{don_t_let_useless_param_and_edge_cases_in_your_code}",
@@ -652,7 +652,15 @@
       "flag": "TDHT{g8pV38UUuG2J4lMKqe30AzKQ}",
       "solved_at": "2026-09-01T19:40:16",
       "writeup": "/home/light/Downloads/ctf-workspace/workspaces/a-jarring-amount-of-cracking/WRITEUP.md"
+    },
+    "/home/light/Workspace/CTF/cryptohack_raw/cryptohack_challenges/misc/passwords/bruce-schneier-s-password-part-2": {
+      "flag": "crypto{!fact_in_#bot-chat}",
+      "solved_at": "2026-09-02T10:05:46"
+    },
+    "/home/light/Workspace/CTF/sekai/crypto/orbital-strike": {
+      "flag": "SEKAI{orbital_strike_like_miku_miku_beam!!!}",
+      "solved_at": "2026-09-02T11:55:33"
     }
   },
-  "updated_at": "2026-09-01T19:40:16"
+  "updated_at": "2026-09-02T11:55:33"
 }

@@ -1743,7 +1743,10 @@ class CompletionRuntime:
         if ui_model is not None:
             await session.select_model(ui_model)
         if reasoning_effort:
-            await session.select_reasoning_effort(reasoning_effort)
+            try:
+                await session.select_reasoning_effort(reasoning_effort)
+            except Exception as exc:
+                self.trace.emit("webchat", "reasoning_effort_unavailable_ignored", error=str(exc))
 
     def _remember_web_conversation(self, record: ConversationRecord) -> None:
         """Record the web thread this record last committed against (BUG-B)."""
@@ -2479,14 +2482,11 @@ class CompletionRuntime:
             metadata={
                 "assistant_chars": len(result.text),
                 "browser_ms": int((time.monotonic() - browser_started) * 1_000),
-                # Real correction spend of this turn (forensics 2026-08-25 Q4:
-                # request_completed.correction_count was always 0) and the turn
-                # id of the final committed web response -- identical to
-                # result.turn_id on success, but tracked through the loop so
-                # every terminal path can report it.
                 "correction_count": correction_count,
                 "multi_tool_turns": multi_tool_turns,
                 "turn_id": last_turn_id,
+                "resolved_model": getattr(result, "resolved_model", None),
+                "model_downgraded": getattr(result, "model_downgraded", False),
             },
         )
         return result, prompt
@@ -2566,7 +2566,10 @@ class CompletionRuntime:
                 if ui_model is not None:
                     await session.select_model(ui_model)
                 if reasoning_effort:
-                    await session.select_reasoning_effort(reasoning_effort)
+                    try:
+                        await session.select_reasoning_effort(reasoning_effort)
+                    except Exception as exc:
+                        self.trace.emit("webchat", "reasoning_effort_unavailable_ignored", error=str(exc))
             reconciliation = await session.reconcile(prompt)
         self.trace.emit(
             "completionruntime",

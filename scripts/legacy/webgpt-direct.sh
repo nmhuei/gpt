@@ -4,6 +4,6 @@ set -euo pipefail
 
 SCRIPT_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
 REPO_ROOT="$(cd "$(dirname "${SCRIPT_PATH}")/../.." && pwd)"
-PYTHON_BIN="${WEBGPT_PYTHON_BIN:-${REPO_ROOT}/.venv/bin/python}"
+PYTHON_BIN="${WEBGPT_PYTHON_BIN:-/home/light/GitHub/gpt/.venv/bin/python}"
 
 exec "${PYTHON_BIN}" -m gpt.cli.main "$@"

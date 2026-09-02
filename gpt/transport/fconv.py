@@ -22,6 +22,7 @@ from gpt.transport.token_manager import (
     resolve_local_timezone,
     solve_sentinel_pow,
 )
+from gpt.transport.model_routing import model_route_for as _model_route_for
 from gpt.types import SendRequest
 
 SENTINEL_PREPARE_URL = (
@@ -157,8 +158,12 @@ async def prepare_turn(
 
     conduit_token: str | None = None
     try:
+        model_name = request.model.id if request.model and request.model.id else None
+        model_name = model_name or (request.model.label if request.model else None)
+        route = _model_route_for(model_name) if model_name else None
+        target_slug = route.slug if route is not None else model_name
         body = build_fconv_prepare_body(
-            model=request.model.id if request.model and request.model.id else None,
+            model=target_slug,
             timezone_name=resolve_local_timezone(),
             timezone_offset_min=local_utc_offset_minutes(),
             conversation_id=request.conversation_id,

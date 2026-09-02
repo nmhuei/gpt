@@ -10,6 +10,56 @@ Toolkit Python điều khiển conversation trên ChatGPT Web bằng Chromium + 
 
 Khi nào dùng: agent cần chạy prompt qua ChatGPT Web, debug session, hoặc start gateway. CTF solver agents (skill `/ctf`) dùng CLI này làm entry point.
 
+## ⚡ Quick Trigger: `/gpt <path>` (CTF Auto-Solve Ngay Lập Tức)
+
+Khi user gõ `/gpt <path>` hoặc yêu cầu "dùng gpt giải bài này":
+**BẮT BUỘC CHẠY NGAY LỆNH SAU (KHÔNG đọc phân tích lại toàn bộ repo để tránh tốn thời gian):**
+
+```bash
+name=$(basename "<CHAL_DIR>")
+.venv/bin/python scripts/ctf_spawn_session.py --chal-dir "<CHAL_DIR>" --name "$name" --timeout 0
+```
+Lệnh trên tự động:
+- Đóng gói file bài tập & chuẩn bị workspace tại `~/Downloads/ctf-workspace/workspaces/$name`
+- Khởi chạy session `gpt` chạy ngầm (detached) với PID riêng và log tại `~/Downloads/ctf-workspace/runs/$name/session.log`
+- Cập nhật `progress.json`.
+
+Lệnh theo dõi và giám sát:
+```bash
+# Xem cây tiến trình con đang chạy
+pstree -pa $(cat ~/Downloads/ctf-workspace/runs/$name/session.pid)
+# Theo dõi trực tiếp log của solver
+tail -f ~/Downloads/ctf-workspace/runs/$name/session.log
+# Kiểm tra trạng thái
+cat ~/Downloads/ctf-workspace/runs/$name/progress.json
+```
+
+## 🛡️ Crypto Feasibility Guard (Giám sát Thẩm định Độ phức tạp Toán học)
+
+**Quy tắc bắt buộc khi giám sát solver chạy script Crypto:**
+Không bao giờ để script giải chạy mù quáng đến mốc 180s hay 600s timeout!
+
+### 1. Phân loại lệnh (Detection Filter)
+- **Lệnh thông thường (Pass-through):** `ls`, `cat`, `file`, `python3 -c "import..."`, kiểm tra file hoặc script chạy kết thúc $\le 5$s $\rightarrow$ Cho qua bình thường.
+- **Script Crypto / SMT / Brute-force:** Script gọi `z3`, `sage`, vòng lặp vét cạn lớn, hoặc chạy chiếm 100% CPU $> 8-10$s $\rightarrow$ Bắt buộc kích hoạt thẩm định tính khả thi.
+
+### 2. Thẩm định tính khả thi (Feasibility Audit)
+Đánh giá nhanh 2 tiêu chí toán học:
+1. **Ràng buộc toán học (Sanity Check):** Ràng buộc có mâu thuẫn (UNSAT) không? (Ví dụ: so khớp accumulator trung gian với hash cuối của toàn bộ payload $\rightarrow$ UNSAT).
+2. **Độ phức tạp (Complexity Check):** Mạch nhân phi tuyến 32x32/64x64 trong Z3 bit-blasting hoặc không gian vét cạn $> 2^{28}$ là bất khả thi trong thời gian thực tế.
+
+### 3. Hành động can thiệp & Bơm phản biện (Intervention & Feedback Injection)
+Nếu script **BẤT KHẢ THI**:
+1. **Kill ngay tiến trình con:** `kill -9 <child_pid>` (không chờ 600s timeout).
+2. **Bơm thông điệp phản biện định hướng vào session** để ép Agent tư duy lại:
+```text
+[-] CRYPTO_GUARD_ALERT: INFEASIBLE_APPROACH
+- Lỗi logic/toán học: [Chỉ rõ phương trình/ràng buộc mâu thuẫn hoặc vô nghiệm]
+- Nút thắt độ phức tạp: [Độ phức tạp O(2^k) hoặc số lượng mệnh đề SAT nhân phi tuyến]
+- Hướng tư duy đề xuất: [Định hướng giải tích: tính khả nghịch, phân rã độc lập, MITM, LLL]
+```
+
+
 ## CLI chính
 
 ```bash
@@ -180,10 +230,16 @@ echo "" | timeout 30 gpt --no-session --new-session --model gpt-5-mini "Reply wi
 | `gpt/transport/hybrid.py` | Hybrid transport |
 | `gpt/transport/fconv.py` | F-conversation prepare |
 | `scripts/ctf_prompting.py` | `frame_local_ctf_prompt()` + `neutralize_ctf_text()` |
+| `docs/automation/ACTIVE_ISSUES.md` | Active bug backlog & resolved archive |
+| `docs/automation/LOG.md` | Session worklogs & engineering history |
+| `docs/automation/SOLVE_PLAYBOOK.md` | Category-based solve flows & playbook |
 | `tests/` | Unit + integration tests |
 
 ## Liên quan
 
+- `docs/automation/SOLVE_PLAYBOOK.md` — Playbook-first solver strategy (đọc flow cũ trước, chỉ nghĩ mới khi fail, solve xong bắt buộc ghi flow mới)
+- `docs/automation/LOG.md` — Nhật ký thao tác & quy tắc ghi log phiên làm việc
+- `docs/automation/ACTIVE_ISSUES.md` — Danh sách lỗi cần sửa & quy tắc ghi nhận / gỡ bỏ lỗi
 - Skill `/ctf` — wrapper giải CTF tự động (dùng CLI này)
 - Skill `/command-code-knowledge` — auth, permissions, providers, model catalog
 - `docs/guides/AUTH_AND_LOGIN_GUIDE.md` — login flow

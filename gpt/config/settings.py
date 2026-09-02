@@ -8,7 +8,7 @@ from typing import Any
 DEFAULT_PROFILE_DIR = Path.home() / ".local" / "share" / "webgpt" / "cloak-profile"
 DEFAULT_CDP_PORT = 9222
 DEFAULT_API_PORT = 8000
-DEFAULT_MODEL = "gpt-5-5-thinking"
+DEFAULT_MODEL = "gpt-5-6-thinking"
 DEFAULT_EFFORT = "high"
 DEFAULT_MAX_WORKERS = 3
 

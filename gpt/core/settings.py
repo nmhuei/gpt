@@ -14,7 +14,7 @@ except ModuleNotFoundError:  # pragma: no cover - supported Python 3.10.
 from .paths import WebGPTPaths
 
 DEFAULT_BASE_URL = "http://127.0.0.1:18000"
-DEFAULT_MODEL = "gpt-5-5-thinking"
+DEFAULT_MODEL = "gpt-5-6-thinking"
 
 
 def _truthy(value: Any, default: bool = False) -> bool:

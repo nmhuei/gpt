@@ -43,6 +43,7 @@ class BrowserManager:
         viewport: ViewportSize | None = None,
         executable_path: str | None = None,
         cdp_url: str | None = None,
+        proxy: str | None = None,
     ):
         self.headless = headless
         self.persistent = persistent
@@ -51,6 +52,7 @@ class BrowserManager:
         self.viewport = viewport or DEFAULT_VIEWPORT
         self.executable_path = executable_path
         self.cdp_url = cdp_url
+        self.proxy = proxy or os.environ.get("WEBGPT_PROXY", "").strip() or None
         self._playwright: Playwright | None = None
         self._browser: Browser | None = None
         self._context: BrowserContext | None = None
@@ -111,10 +113,19 @@ class BrowserManager:
                 if self.persistent:
                     try:
                         from cloakbrowser import launch_persistent_context_async
+                        mem_args = [
+                            "--disable-dev-shm-usage",
+                            "--js-flags=--max-old-space-size=512",
+                            "--renderer-process-limit=2",
+                            "--disable-speech-api",
+                            "--disable-background-networking",
+                        ]
                         self._context = await launch_persistent_context_async(
                             user_data_dir=str(ensure_profile_dir(self.profile_dir)),
                             headless=self.headless,
                             viewport=self.viewport,
+                            proxy=self.proxy,
+                            args=mem_args,
                         )
                         self.launch_backend = "cloakbrowser"
                     except Exception as exc:
@@ -138,6 +149,8 @@ class BrowserManager:
                             "--disable-infobars",
                         ]
                         options["args"] = stealth_args
+                        if self.proxy:
+                            options["proxy"] = {"server": self.proxy}
                         self._context = await self._playwright.chromium.launch_persistent_context(
                             user_data_dir=str(ensure_profile_dir(self.profile_dir)), **options
                         )

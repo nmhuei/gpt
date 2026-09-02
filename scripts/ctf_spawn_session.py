@@ -55,7 +55,7 @@ def frame_local_ctf_prompt(text: str) -> str:
 
 RUNS_DIR = Path("/home/light/GitHub/gpt/scratch/ctf-runs")
 WORK_ROOT = Path("/home/light/GitHub/gpt/scratch/ctf-workspaces")
-FLAG_REGEX = re.compile(r"brunner\{[^}]+\}|flag\{[^}]+\}", re.IGNORECASE)
+FLAG_REGEX = re.compile(r"SEKAI\{[^}]+\}|brunner\{[^}]+\}|flag\{[^}]+\}|crypto\{[^}]+\}", re.IGNORECASE)
 CYBER_REFUSAL_PATTERNS = [
     "this content can't be shown",
     "cybersecurity requests",
@@ -65,15 +65,31 @@ CYBER_REFUSAL_PATTERNS = [
 ]
 
 
+SKIP_DIR_NAMES = {
+    "__pycache__", ".git", "node_modules", "venv", ".venv",
+    ".mypy_cache", ".pytest_cache", ".ruff_cache",
+    "bin", "lib", "lib64", "include", "pwntools-doc", "workspace",
+    "agents", "knowledge",
+}
+
+
 def collect_files(chal_dir: Path) -> list[Path]:
     """Thu thập file đính kèm từ challenge dir (zip, attachment, readme)."""
     files: list[Path] = []
-    for p in sorted(chal_dir.iterdir()):
+    for p in sorted(chal_dir.rglob("*")):
         if p.is_file() and not p.name.startswith("."):
             if p.name == "flag.txt":
                 continue
+            if any(part in SKIP_DIR_NAMES for part in p.parts):
+                continue
+            # Avoid duplicating files inside writeup/ or solve/ if any
+            if "writeup" in p.parts or "solve" in p.parts:
+                continue
+            if _re.match(r"^(solve.*|exploit.*|test.*|z3.*|debug.*|orchestrator.*|requirements.*|interact.*|challenge_debug.*|pyvenv\.cfg)", p.name, _re.I):
+                continue
+            if p.name == "README.md" and (chal_dir / "metadata.json").exists():
+                continue
             files.append(p)
-    # Lấy 1 file zip nếu có
     return files
 
 
@@ -195,7 +211,7 @@ def main() -> int:
     ws = RUNS_DIR / args.name
     ws.mkdir(parents=True, exist_ok=True)
     chal_flag = args.chal_dir / "flag.txt"
-    if chal_flag.exists():
+    if chal_flag.exists() and "dummy" not in chal_flag.read_text().lower():
         print(f"SKIP: {args.name} already solved (flag.txt: "
               f"{chal_flag.read_text().strip()[:50]}...)")
         update_progress(ws, status="solved-skip",
@@ -208,13 +224,15 @@ def main() -> int:
     import shutil as _sh
     copied = []
     for f in collect_files(args.chal_dir):
-        dest = work_dir / f.name
-        if not dest.exists():
-            try:
+        try:
+            rel = f.relative_to(args.chal_dir)
+            dest = work_dir / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if not dest.exists():
                 _sh.copy2(f, dest)
-                copied.append(f.name)
-            except Exception as e:
-                print(f"    warn: cannot copy {f.name}: {e}")
+                copied.append(str(rel))
+        except Exception as e:
+            print(f"    warn: cannot copy {f.name}: {e}")
     if copied:
         print(f"    copied {len(copied)} files: {copied[:5]}{'...' if len(copied) > 5 else ''}")
 
@@ -304,7 +322,13 @@ def main() -> int:
             print(f"[!] Session {args.name} TIMEOUT after {args.timeout}s, killing")
             try:
                 os.killpg(os.getpgid(pid), signal.SIGTERM)
-                proc.wait(timeout=10)
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    os.killpg(os.getpgid(pid), signal.SIGKILL)
+                    proc.wait(timeout=3)
+                except Exception:
+                    pass
             except Exception as e:
                 print(f"    kill error: {e}")
             update_progress(ws, status="timeout")

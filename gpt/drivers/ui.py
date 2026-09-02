@@ -168,9 +168,9 @@ def _strip_leading_noise(text: str) -> tuple[str, bool]:
 def _model_matches(opt_norm: str, target: str) -> bool:
     if opt_norm == target:
         return True
-    if target in {"5.5", "gpt-5.5", "gpt 5.5", "gpt-5.5-thinking", "5.5 thinking"} and ("5.5" in opt_norm or "gpt 5.5" in opt_norm or "gpt-5.5" in opt_norm):
+    if any(k in target for k in ("5.5", "5-5")) and any(k in opt_norm for k in ("5.5", "5-5")):
         return True
-    if target in {"5.6", "gpt-5.6", "gpt 5.6", "sol", "gpt-5.6-sol", "5.6 sol"} and ("5.6" in opt_norm or "sol" in opt_norm):
+    if any(k in target for k in ("5.6", "5-6", "sol")) and any(k in opt_norm for k in ("5.6", "5-6", "sol")):
         return True
     if target in {"o3", "o3-mini", "o3 mini"} and "o3" in opt_norm:
         return True
@@ -543,15 +543,37 @@ class UIDriver:
             "5.5 thinking": "gpt-5-5-thinking",
             "5.5 high": "gpt-5-5-thinking",
             "gpt-5-5-thinking": "gpt-5-5-thinking",
+            "gpt-5.5-thinking": "gpt-5-5-thinking",
             "5.6": "gpt-5-6-thinking",
             "gpt-5.6": "gpt-5-6-thinking",
             "thinking 5.6": "gpt-5-6-thinking",
             "5.6 thinking": "gpt-5-6-thinking",
-            "5.6 sol": "gpt-5-6",
-            "gpt-5-6": "gpt-5-6",
+            "5.6 high": "gpt-5-6-thinking",
+            "gpt-5.6-thinking": "gpt-5-6-thinking",
+            "gpt-5-6-thinking": "gpt-5-6-thinking",
+            "5.6 sol": "gpt-5-6-thinking",
+            "gpt-5-6": "gpt-5-6-thinking",
+            "sol": "gpt-5-6-thinking",
             "o3": "o3",
             "gpt-4o": "gpt-4o",
         }
+
+        # Check if the active picker already displays the requested model or is already top-tier 5.6 Sol/Thinking
+        current_label = _normalise_label(await picker.inner_text())
+        if _model_matches(current_label, target) or (
+            any(k in target for k in ("5.6", "5-6", "sol", "thinking"))
+            and any(k in current_label for k in ("5.6", "5-6", "sol"))
+        ):
+            logger.info("Current UI model '%s' already matches or is top-tier 5.6 Sol/Thinking. Skipping re-selection to avoid downgrade.", current_label)
+            return ModelInfo(
+                id=slug_map.get(target, target),
+                label=current_label,
+                selected=True,
+                available=True,
+                source="ui_already_active",
+                reasoning_efforts=[],
+            )
+
         slug = slug_map.get(target)
         if slug:
             current_url = getattr(self.page, "url", "")
@@ -645,15 +667,52 @@ class UIDriver:
         if picker is None:
             raise ModelUnavailable("This UI exposes no reasoning effort control.")
 
+        # If current picker already indicates High / 3 of 3 / Extended, skip adjusting
+        picker_text = _normalise_label(await picker.inner_text())
+        if target in {"high", "max", "extended"} and any(k in picker_text for k in ("high", "3 of 3", "max", "extended")):
+            logger.info("Current reasoning effort is already High (3 of 3): '%s'. Skipping change.", picker_text)
+            return target
+
         await picker.click(force=True)
         await asyncio.sleep(0.2)
         try:
+            # Modern GPT-5.6 Power Slider: Keyboard arrow control (1=Low/Instant, 2=Medium, 3=High)
+            slider = self.page.locator('[role="slider"], [aria-label*="Power"], [aria-label*="power"]').first
+            if await slider.is_visible(timeout=600):
+                try:
+                    await slider.focus()
+                    if target in {"high", "max", "extended"}:
+                        await self.page.keyboard.press("ArrowRight")
+                        await self.page.keyboard.press("ArrowRight")
+                    elif target in {"medium", "standard"}:
+                        await self.page.keyboard.press("ArrowLeft")
+                        await self.page.keyboard.press("ArrowLeft")
+                        await self.page.keyboard.press("ArrowRight")
+                    elif target in {"instant", "low"}:
+                        await self.page.keyboard.press("ArrowLeft")
+                        await self.page.keyboard.press("ArrowLeft")
+                    await asyncio.sleep(0.3)
+                    await self.page.keyboard.press("Escape")
+                    await asyncio.sleep(0.2)
+                    current_picker = await self._first_visible(MODEL_PICKER_SELECTORS, 1_000)
+                    if current_picker is not None:
+                        observed = _normalise_label(await current_picker.inner_text())
+                        if (
+                            target in observed
+                            or (target in {"instant", "low"} and any(item in observed for item in ("instant", "low", "1 of 3")))
+                            or (target in {"high", "max", "extended"} and any(item in observed for item in ("high", "max", "3 of 3")))
+                            or (target in {"medium", "standard"} and any(item in observed for item in ("medium", "standard", "2 of 3")))
+                        ):
+                            return target
+                except Exception as exc:
+                    logger.debug("Power slider adjustment error: %s", exc)
+
             # Direct slider position click (Instant=0.15, Medium=0.50, High=0.88)
             slider_ctrl = self.page.locator('[aria-label="Power"], [class*="SliderControl"]').first
             if await slider_ctrl.is_visible(timeout=1000):
                 box = await slider_ctrl.bounding_box()
                 if box:
-                    ratio = 0.88 if target in {"high", "max"} else (0.50 if target in {"medium", "standard"} else 0.15)
+                    ratio = 0.88 if target in {"high", "max", "extended"} else (0.50 if target in {"medium", "standard"} else 0.15)
                     target_x = box["x"] + box["width"] * ratio
                     target_y = box["y"] + box["height"] / 2
                     mouse = getattr(self.page, "mouse", None)
@@ -888,11 +947,9 @@ class UIDriver:
 
         full_prompt = (req.text + file_attachment_text) if file_attachment_text else req.text
 
-        # Ensure model/effort is strictly 5.5 High before sending if 5.5 is
-        # selected. Skip when the session layer already positioned and verified
-        # the effort: SendRequest.reasoning_effort only carries a confirmed
-        # selection (capability snapshot or a successful select_reasoning_effort).
-        effort_confirmed = _normalise_label(req.reasoning_effort or "") in {"high", "max"}
+        # Ensure model/effort is strictly High before sending. Skip when the
+        # session layer already positioned and verified the effort.
+        effort_confirmed = _normalise_label(req.reasoning_effort or "") in {"high", "max", "extended"}
         if not effort_confirmed:
             try:
                 pill = await self._first_visible(MODEL_PICKER_SELECTORS, 1_000)
@@ -901,11 +958,16 @@ class UIDriver:
                 pill = None
             if pill is not None:
                 txt = _normalise_label(await pill.inner_text())
-                if "5.5" in txt and "high" not in txt:
-                    # Once we positively identify 5.5 without High, selection
-                    # is a correctness requirement. Do not silently send under
-                    # the wrong effort if readback/selection fails.
-                    await self.select_reasoning_effort("high")
+                if (
+                    ("5.5" in txt or "5.6" in txt or "medium" in txt or "2 of 3" in txt)
+                    and not any(h in txt for h in ("high", "3 of 3", "max", "extended"))
+                ):
+                    # Once we identify non-High reasoning effort, automatically
+                    # select High effort for maximum thinking compute.
+                    try:
+                        await self.select_reasoning_effort("high")
+                    except Exception:
+                        pass
 
         composer = await self.get_composer()
         try:
@@ -924,10 +986,11 @@ class UIDriver:
         # Attach network response listener for direct SSE stream capture
         network_stream_text = ""
         network_conv_id = None
+        network_model_slug = None
         network_error: RateLimited | AuthRequired | None = None
 
         async def _on_network_response(response) -> None:
-            nonlocal network_error, network_stream_text, network_conv_id
+            nonlocal network_error, network_stream_text, network_conv_id, network_model_slug
             url = response.url
             status = getattr(response, "status", None)
             if status == 429:
@@ -945,7 +1008,14 @@ class UIDriver:
                                 payload = json.loads(line[6:])
                                 if payload.get("conversation_id"):
                                     network_conv_id = payload["conversation_id"]
-                                parts = payload.get("message", {}).get("content", {}).get("parts")
+                                msg = payload.get("message", {})
+                                meta = msg.get("metadata", {})
+                                if meta.get("model_slug"):
+                                    network_model_slug = meta["model_slug"]
+                                ste = meta.get("server_ste_metadata", {})
+                                if ste.get("model_slug"):
+                                    network_model_slug = ste["model_slug"]
+                                parts = msg.get("content", {}).get("parts")
                                 if parts and isinstance(parts, list):
                                     network_stream_text = "".join(parts)
                             except Exception:
@@ -1038,11 +1108,25 @@ class UIDriver:
                 )
 
             final_conv_id = network_conv_id or self.conversation_id()
+            downgraded = bool(
+                network_model_slug
+                and any(m in network_model_slug.lower() for m in ("mini", "gpt-5-5-mini", "gpt-5.3-mini", "luna"))
+                and req.model
+                and any(t in (req.model.id or req.model.label).lower() for t in ("5.6", "sol", "thinking"))
+            )
+            if downgraded:
+                logger.warning("SILENT DOWNGRADE DETECTED! Requested %s but server served %s", req.model, network_model_slug)
+            else:
+                logger.info("Turn served by OpenAI model_slug: '%s'", network_model_slug)
+
             result = TurnResult(
                 turn_id=turn_id,
                 conversation_id=final_conv_id,
                 text=accumulator.text,
-                model=req.model.label if req.model else None,
+                model=network_model_slug or (req.model.label if req.model else None),
+                requested_model=req.model.id if req.model else None,
+                resolved_model=network_model_slug,
+                model_downgraded=downgraded,
                 duration_ms=int((time.monotonic() - started_at) * 1_000),
             )
             await emit(

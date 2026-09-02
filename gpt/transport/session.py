@@ -178,10 +178,28 @@ class ChatGPTWebSession:
         if selected is None:
             return False
         wanted = self._norm_choice(model)
-        return wanted in {self._norm_choice(selected.id), self._norm_choice(selected.label)}
+        selected_id = self._norm_choice(selected.id)
+        selected_lbl = self._norm_choice(selected.label)
+        if wanted in {selected_id, selected_lbl}:
+            return True
+        from gpt.drivers.ui import _model_matches
+        if _model_matches(selected_lbl, wanted) or _model_matches(selected_id, wanted):
+            return True
+        # If the currently cached/selected model is already top-tier 5.6 Sol / Thinking
+        # and the incoming request asks for a 5.6/thinking/default model, keep it intact
+        if any(k in selected_lbl or k in selected_id for k in ("5.6", "5-6", "sol")):
+            if any(k in wanted for k in ("5.6", "5-6", "sol", "thinking", "default", "chatgpt-web")):
+                return True
+        return False
 
     def _selected_effort_matches(self, effort: str) -> bool:
-        return self._norm_choice(self._selected_effort) == self._norm_choice(effort)
+        current = self._norm_choice(self._selected_effort)
+        wanted = self._norm_choice(effort)
+        if current == wanted:
+            return True
+        if current in {"high", "max", "extended", "3 of 3"} and wanted in {"high", "max", "extended"}:
+            return True
+        return False
 
     async def _on_state_change(
         self, old: SessionState, new: SessionState, reason: str | None

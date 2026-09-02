@@ -79,128 +79,170 @@ gpt-web api-server --cdp-url http://127.0.0.1:9222 --port 8765
 
 ---
 
-## Primary CLI
+## Hướng Dẫn Sử Dụng Chi Tiết (Usage Guide)
 
-Đường dùng bình thường không cần Claude Code ở giữa:
+Hệ thống hoạt động theo mô hình Gateway cục bộ (`http://127.0.0.1:18000`), kết nối trực tiếp với ChatGPT Web và cung cấp đồng thời 2 giao thức chuẩn: **OpenAI Chat Completions** và **Anthropic Messages**.
 
-```bash
-gpt "inspect this repository and fix the failing tests"
-gpt                         # interactive direct-agent session
-gpt -C /path/to/repo "task"
-
-gpt status
-gpt doctor
-gpt doctor --deep
-gpt config show
-gpt session current
-gpt account list
-
-gpt bench practical
-gpt bench soak
-gpt bench e2e
-gpt bench selfcheck
-gpt bench review
-
-gpt account codex-login     # optional Codex OAuth compatibility flow
-gpt compat claude           # explicit legacy Claude Code bridge
-```
-
-`gpt` talks directly to the local gateway, owns its own tool loop (`Bash` + `ApplyPatch`), session persistence và verification gate. `gpt-web` cho low-level browser/protocol diagnostics.
+> [!TIP]
+> **Cấu hình tối ưu sẵn có:**
+> - **Mô hình**: Mặc định khóa ở `gpt-5-6-thinking` (`GPT-5.6 Sol`) với nấc tư duy `High (3 of 3)`.
+> - **Chống Downgrade**: Cơ chế Cache Lock tự động bỏ qua toàn bộ thao tác click/reload DOM (độ trễ định vị 0ms), ngăn ngừa triệt để việc OpenAI âm thầm hạ cấp về `5.5-mini`.
+> - **Tối ưu RAM**: Cắt giảm hơn 50% RAM (~430MB) nhờ khống chế V8 heap và chạy 1 worker tinh gọn.
 
 ---
 
-## Advanced browser/debug CLI (`gpt-web`)
+### 1. Sử dụng Công Cụ Dòng Lệnh `gpt` (Primary CLI Agent)
+
+Lệnh `gpt` là công cụ chính để lập trình cặp (pair-programming), sinh mã, phân tích mã nguồn và giải quyết các bài toán kỹ thuật mà không cần qua trung gian:
 
 ```bash
-# Reconnaissance JSON, không gửi prompt
-gpt-web probe --headful --persistent
+# 1. Gửi một yêu cầu đơn lẻ (One-shot command)
+gpt "Phân tích thuật toán mã hóa trong file cipher.py và đề xuất phương pháp giải mã"
 
-# Model labels lấy động từ UI
-gpt-web models --headful
+# 2. Mở phiên trò chuyện tương tác trực tiếp (Interactive REPL)
+gpt
 
-# Chẩn đoán profile/CDP
-gpt-web doctor --free
+# 3. Chỉ định thư mục làm việc cho Agent (Working Directory)
+gpt -C /home/light/Workspace/MyProject "Chạy test và sửa các lỗi đang fail"
 
-# Gửi turn mới
-gpt-web send --text "Xin chào" --headful
+# 4. Chạy phiên độc lập, không lưu session (Khuyên dùng cho CTF / Task bảo mật để tránh tích lũy context)
+gpt --new-session --no-session "Giải thích ngắn gọn cơ chế tấn công Bleichenbacher RSA"
 
-# Mở conversation cũ rồi follow-up
-gpt-web send --conversation <conversation-id> --text "Tiếp tục" --json
-
-# Capture một biến duy nhất
-gpt-web experiment --exp-id E00_IDLE --action idle
-gpt-web experiment --exp-id E01_NEW_CHAT --action new-chat
-gpt-web experiment --exp-id E10A_SEND --action send
+# 5. Kiểm tra trạng thái và chẩn đoán sức khỏe hệ thống
+gpt status            # Xem trạng thái gateway, số worker, profile, session đang dùng
+gpt doctor            # Kiểm tra nhanh kết nối browser, token, account
+gpt doctor --deep     # Chẩn đoán chuyên sâu (CDP, cookies, quota, model selector)
+gpt config show       # Hiển thị toàn bộ cấu hình runtime
+gpt session current   # Xem ID phiên chat hiện tại
 ```
-
-Artifacts lưu ngoài repo tại `~/.local/share/bqa/webchat-reverse/`, directory mode `0700`, file mode `0600`.
 
 ---
 
-## Python API
+### 2. Tích hợp qua API Gateway Local (`http://127.0.0.1:18000`)
 
-```python
-from gpt import ChatGPTWebSession
+Gateway chạy ngầm dưới dạng dịch vụ `webgpt-gateway.service`, sẵn sàng phục vụ các ứng dụng hoặc script ngoài:
 
-session = await ChatGPTWebSession.create(
-    persistent=True,
-    headless=False,
-)
-try:
-    await session.select_model("<exact visible label>")
-    result = await session.send("Hello")
-    print(result.text)
+#### A. Gọi qua OpenAI Chat Completions API (`/v1/chat/completions`)
 
-    await session.reload()
-    print(await session.history())
-finally:
-    await session.close()
-```
-
-`ChatGPTWebSession` cung cấp `new_conversation`, `open`, `models`, `select_model`, `send`, `events`, `history`, `reload`, `close`. Mọi send được serialize để tránh double-submit.
-
----
-
-## Local API gateway
-
-Production user service dùng loopback `:18000` với hybrid transport. Ad-hoc dev server có thể dùng port 8765.
-
+**Sử dụng `curl`:**
 ```bash
-# ad-hoc / diagnostic
-gpt-web api-server --transport hybrid --port 8765
-
-# production-style port
-gpt-web api-server --transport hybrid --port 18000
+curl -s -X POST http://127.0.0.1:18000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-5-6-thinking",
+    "messages": [
+      {"role": "user", "content": "Tìm số nguyên x sao cho 2^x = 13 (mod 101). Trình bày ngắn gọn."}
+    ]
+  }'
 ```
 
+**Sử dụng thư viện Python `openai`:**
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="http://127.0.0.1:8765/v1", api_key="unused")
+client = OpenAI(
+    base_url="http://127.0.0.1:18000/v1",
+    api_key="unused",  # Gateway local không yêu cầu key thật
+)
+
 response = client.chat.completions.create(
-    model="chatgpt-web",
-    messages=[{"role": "user", "content": "Hello"}],
+    model="gpt-5-6-thinking",
+    messages=[
+        {"role": "system", "content": "You are an expert cryptographer."},
+        {"role": "user", "content": "Explain Syzygies matrix reduction in 2 sentences."}
+    ],
 )
 print(response.choices[0].message.content)
 ```
 
-Gateway chuẩn hoá request, serialize writer, tự correlate prefix `messages` với conversation trước. Response trả `x-webgpt-session-id`; client gửi lại header để chọn session tường minh.
+---
 
-Tool calling là controller protocol fail-closed, không phải native ChatGPT Web function calling. Hỗ trợ `xml`, `json-fn`, `both`, `soft`. Production dùng `soft`: shell-capable surfaces thương lượng `<cmd>...</cmd>`, function-only thương lượng `<json>...</json>`.
+#### B. Gọi qua Anthropic Messages API (`/v1/messages`)
 
-V1 nhận `model`, `messages`, `tools`, `tool_choice`, `stream`, `temperature`, `reasoning_effort` (hoặc `reasoning.effort`). `temperature` được chấp nhận nhưng bỏ qua (ChatGPT Web không map đáng tin). Model chỉ chọn khi UI có picker.
+Dùng trực tiếp với **Claude Code**, **Cline**, **Cursor** hoặc thư viện Python:
 
-### Responses, Anthropic và Claude Code
+**Cấu hình biến môi trường cho Claude Code / Client ngoài:**
+```bash
+export ANTHROPIC_BASE_URL="http://127.0.0.1:18000"
+export ANTHROPIC_API_KEY="sk-ant-local-placeholder"
+```
 
-Gateway có `POST /v1/responses` và `POST /v1/messages`. Dùng cùng browser/conversation/tool runtime; chỉ subset test offline hỗ trợ. Built-in hosted tools, background mode, encrypted content, batch/prompt-cache semantics, nội dung không map được → trả lỗi rõ ràng thay vì giả lập.
+**Sử dụng thư viện Python `anthropic`:**
+```python
+import anthropic
 
-Claude Code dùng route Anthropic qua `ANTHROPIC_BASE_URL` và key local placeholder. Chỉ dùng loopback; key không forward đến API Anthropic.
+client = anthropic.Anthropic(
+    base_url="http://127.0.0.1:18000",
+    api_key="unused",
+)
 
-Conversation state chỉ persist khi truyền `--conversation-store <path>` cho `api-server`; TTL, directory mode `0700`, file mode `0600`. Không bật trên máy/thư mục không tin cậy.
+message = client.messages.create(
+    model="gpt-5-6-thinking",
+    max_tokens=1024,
+    messages=[
+        {"role": "user", "content": "Xin chào, hãy viết một bài thơ haiku về reverse engineering."}
+    ]
+)
+print(message.content[0].text)
+```
 
 ---
 
-## Kiểm thử
+### 3. Sử dụng Chế Độ Giải CTF Tự Động (`ctf`)
+
+Wrapper `ctf` cung cấp pipeline giải bài tập trung, tự động gọi solver agent, quản lý cờ và tự tạo writeup:
+
+```bash
+# 1. Duyệt và chọn bài CTF sẵn sàng giải (xếp hạng độ khó & rủi ro)
+ctf pick                       # Lọc các bài độ rủi ro thấp (crypto/stego/forensics)
+ctf pick --max-risk medium     # Kèm các bài web-exploit, rev-config
+
+# 2. Khởi chạy 1 Solver Subagent tự động giải 1 bài cụ thể
+ctf solve --chal-dir /home/light/Workspace/CTF/sekai/crypto/orbital-strike
+
+# 3. Chạy giải hàng loạt (Batch Solving)
+ctf solve-batch --max-risk low --parallel 3
+
+# 4. Quản lý cờ (Flag Registry)
+ctf flag --list                # Liệt kê tất cả các bài đã giải và flag tương ứng
+ctf flag --check <chal-dir>    # Kiểm tra xem bài đã giải xong chưa
+ctf flag --sync                # Quét đĩa và đồng bộ toàn bộ file flag.txt vào registry
+
+# 5. Tự động sinh Writeup chi tiết
+ctf writeup --all              # Tạo file WRITEUP.md cho tất cả bài đã solve
+
+# 6. Đồng bộ toàn bộ kho CTF lên GitHub cá nhân
+ctf git status                 # Xem trạng thái git của kho CTF
+ctf git push -m "Solve orbital-strike challenge"  # Tự động commit và push lên GitHub
+```
+
+---
+
+### 4. Quản Lý Dịch Vụ Gateway Nền (`webgpt-gateway.service`)
+
+Dịch vụ chạy ngầm được quản lý qua `systemd` (user-level):
+
+```bash
+# Xem trạng thái dịch vụ và mức tiêu thụ RAM thực tế
+systemctl --user status webgpt-gateway.service
+
+# Khởi động lại dịch vụ khi cập nhật cấu hình
+systemctl --user restart webgpt-gateway.service
+
+# Dừng / Bật dịch vụ
+systemctl --user stop webgpt-gateway.service
+systemctl --user start webgpt-gateway.service
+
+# Xem log hoạt động thời gian thực (Live Stream Logs)
+journalctl --user -u webgpt-gateway.service -f
+
+# Theo dõi chi tiết các event telemetry (State Transitions, Model Downgrade Guard)
+tail -f ~/.local/share/webgpt/logs/trace.jsonl | jq -c '{seq: .sequence, comp: .component, kind: .kind, meta: .metadata}'
+```
+
+---
+
+## Kiểm thử & Đánh giá (Evals & Benchmark)
 
 ```bash
 .venv/bin/python -m pytest -q
@@ -208,10 +250,8 @@ ruff check .
 mypy .
 .venv/bin/python -m compileall -q gpt scripts evals benchmarks
 .venv/bin/python evals/run_evals.py
-gpt bench selfcheck
-
-# Aggregated automation gate: pytest + repo-wide Ruff/mypy + diff danger scan
-gpt bench review
+gpt bench selfcheck            # Chạy kiểm thử tự chẩn đoán của bộ gpt
+gpt bench review               # Aggregated automation gate: pytest + Ruff/mypy + diff danger scan
 ```
 
 ---

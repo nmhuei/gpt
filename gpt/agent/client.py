@@ -41,12 +41,7 @@ class GatewayClient:
             "anthropic-version": ANTHROPIC_VERSION,
             "x-client-name": "webgpt-agent",
         }
-        # Gửi session_id chỉ ở round đầu (round 1). Các round sau KHÔNG gửi
-        # → mỗi round = conversation mới trên ChatGPT Web, tránh 409 conflict
-        # khi nhiều session gpt chạy song song (research: scratch/ctf-runs/
-        # optimizer/RESEARCH-409.md, fix (e) DECISIONS 2026-08-24 chấp nhận
-        # cho soft mode).
-        if self.session_id and not self._first_round_done:
+        if self.session_id:
             headers["x-webgpt-session-id"] = self.session_id
         return headers
 
